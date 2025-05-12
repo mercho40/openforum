@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   output          = "../generated/prisma"
@@ -21,22 +15,48 @@ model User {
   email         String
   emailVerified Boolean
   image         String?
+  bio           String? // User biography or description
+  signature     String? // Forum signature
+  website       String? // Personal website
+  location      String? // User location
+  reputation    Int       @default(0) // Forum reputation points
   createdAt     DateTime
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
 
+  // Moderation & Security
   twoFactorEnabled Boolean?
-  role             String?
-  banned           Boolean?
+  role             UserRole     @default(USER)
+  banned           Boolean      @default(false)
   banReason        String?
   banExpires       DateTime?
   twofactors       TwoFactor[]
   members          Member[]
   invitations      Invitation[]
 
+  // Forum Activities
+  threads         Thread[] // Threads created by user
+  posts           Post[] // Posts created by user
+  reactions       Reaction[] // Reactions made by user
+  badges          UserBadge[] // Badges earned by user
+  threadViews     ThreadView[] // Thread view history
+  bookmarks       Bookmark[] // Bookmarked threads
+  notifications   Notification[] // User notifications
+  reportsMade     Report[]       @relation("ReportedBy")
+  reportsReceived Report[]       @relation("ReportedUser")
+
+  // Moderator activities
+  moderatedCategories CategoryModerator[]
+
   @@unique([email])
   @@map("user")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
 }
 
 model Session {
@@ -135,4 +155,273 @@ model Invitation {
   user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@map("invitation")
+}
+
+// ----- FORUM MODELS -----
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  slug        String     @unique
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  parentId    String? // For nested categories/subcategories
+  parent      Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("SubCategories")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  threads    Thread[]
+  moderators CategoryModerator[]
+
+  @@map("category")
+}
+
+model CategoryModerator {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([categoryId, userId])
+  @@map("category_moderator")
+}
+
+model Thread {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String
+  content   String   @db.Text
+  isPinned  Boolean  @default(false)
+  isLocked  Boolean  @default(false)
+  isSolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  categoryId String
+  category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  posts      Post[]
+  tags       ThreadTag[]
+  views      ThreadView[]
+  reactions  Reaction[]
+  bookmarks  Bookmark[]
+  reports    Report[]
+
+  // Best answer for solved threads
+  solutionPostId String?
+  solutionPost   Post?   @relation("ThreadSolution", fields: [solutionPostId], references: [id], onDelete: SetNull)
+
+  @@unique([slug, categoryId])
+  @@index([categoryId])
+  @@index([authorId])
+  @@map("thread")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  isEdited  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  threadId  String
+  thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String? // For nested replies
+  parent    Post?      @relation("PostReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies   Post[]     @relation("PostReplies")
+  reactions Reaction[]
+  reports   Report[]
+
+  // Thread solution relation (when this post is marked as solution)
+  threadSolutions Thread[] @relation("ThreadSolution")
+
+  @@index([threadId])
+  @@index([authorId])
+  @@map("post")
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?
+  color       String? // Hex color code for the tag
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  threads     ThreadTag[]
+
+  @@map("tag")
+}
+
+model ThreadTag {
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([threadId, tagId])
+  @@map("thread_tag")
+}
+
+model ThreadView {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@unique([threadId, userId])
+  @@index([threadId])
+  @@map("thread_view")
+}
+
+model Reaction {
+  id        String       @id @default(cuid())
+  type      ReactionType
+  threadId  String?
+  thread    Thread?      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@unique([userId, threadId, postId, type])
+  @@map("reaction")
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+  LAUGH
+  HEART
+  CELEBRATE
+  THINKING
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([threadId, userId])
+  @@map("bookmark")
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  type       NotificationType
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actorId    String? // User who triggered notification
+  entityId   String // ID of related entity (thread, post, etc.)
+  entityType EntityType // Type of the entity
+  isRead     Boolean          @default(false)
+  title      String?
+  message    String?
+  link       String?
+  createdAt  DateTime         @default(now())
+
+  @@index([userId])
+  @@map("notification")
+}
+
+enum NotificationType {
+  MENTION
+  REPLY
+  LIKE
+  SOLUTION
+  THREAD
+  MODERATION
+  BADGE
+  SYSTEM
+}
+
+enum EntityType {
+  THREAD
+  POST
+  USER
+  TAG
+  BADGE
+  CATEGORY
+  SYSTEM
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  image       String?
+  criteria    String? // JSON criteria for badge achievement
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userBadges  UserBadge[]
+
+  @@map("badge")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@map("user_badge")
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  type       ReportType
+  reason     String
+  details    String?      @db.Text
+  status     ReportStatus @default(PENDING)
+  threadId   String?
+  thread     Thread?      @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  postId     String?
+  post       Post?        @relation(fields: [postId], references: [id], onDelete: SetNull)
+  reporterId String
+  reporter   User         @relation("ReportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedId String?
+  reported   User?        @relation("ReportedUser", fields: [reportedId], references: [id], onDelete: SetNull)
+  resolution String?
+  closedById String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@map("report")
+}
+
+enum ReportType {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE
+  OFF_TOPIC
+  ILLEGAL
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REJECTED
+  RESOLVED
+  IN_PROGRESS
 }
