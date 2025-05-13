@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
+import Link from "next/link";
 
 export default function Page() {
   return (
@@ -26,8 +27,10 @@ export default function Page() {
           </button>
         </div>
         <div className="flex items-center justify-end w-full">
-          <Button variant="default" className="rounded-full text-white font-semibold">
-            Sign In
+          <Button variant="default" className="rounded-full text-white font-semibold" asChild >
+            <Link href="/signin">
+              Sign In
+            </Link>
           </Button>
         </div>
       </header>
