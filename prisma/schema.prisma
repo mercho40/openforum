@@ -27,7 +27,7 @@ model User {
 
   // Moderation & Security
   twoFactorEnabled Boolean?
-  role             UserRole     @default(USER)
+  role             UserRole     @default(user)
   banned           Boolean      @default(false)
   banReason        String?
   banExpires       DateTime?
@@ -54,9 +54,9 @@ model User {
 }
 
 enum UserRole {
-  USER
-  MODERATOR
-  ADMIN
+  user
+  moderator
+  admin
 }
 
 model Session {
