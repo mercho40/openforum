@@ -16,6 +16,10 @@ export default function Page() {
     )
   }
 
+  if (error) {
+    console.error("Error fetching session:", error)
+  }
+
   if (session) {
     redirect("/")
   }
