@@ -6,6 +6,7 @@ import { admin } from "better-auth/plugins"
 import { organization } from "better-auth/plugins"
 import { magicLink } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins"
+import { username } from "better-auth/plugins"
 import { prisma } from "@/prisma"
 
 export const auth = betterAuth({
@@ -22,6 +23,7 @@ export const auth = betterAuth({
   plugins: [
     twoFactor(),
     admin(),
+    username(),
     organization(),
     magicLink({
       sendMagicLink: async ({ email, token, url }, request) => {
