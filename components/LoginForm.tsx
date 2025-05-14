@@ -81,6 +81,8 @@ export function LoginForm() {
                 placeholder="email@domain.com"
                 type="email"
                 className="bg-card/30 backdrop-blur-sm border border-border/10"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 />
             </div>
             </div>
@@ -94,6 +96,8 @@ export function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Type your password"
                 className="bg-card/30 backdrop-blur-sm border border-border/10 pr-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                 type="button"
