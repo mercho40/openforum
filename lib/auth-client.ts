@@ -14,7 +14,7 @@ export const authClient = createAuthClient({
     magicLinkClient(),
     emailOTPClient()
   ],
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
 })
 export const {
   signIn,
