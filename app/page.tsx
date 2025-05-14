@@ -27,7 +27,7 @@ export default function Page() {
           </button>
         </div>
         <div className="flex items-center justify-end w-full">
-          <Button variant="default" className="rounded-full text-white font-semibold" asChild >
+          <Button variant="default" className="rounded-full font-semibold" asChild >
             <Link href="/signin">
               Sign In
             </Link>
