@@ -9,10 +9,14 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ArrowRight, ArrowLeft, Upload, User, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "./ui/label"
+import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 type Step = "bio" | "avatar" | "welcome"
 
 export function CompleteProfileForm() {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState<Step>("bio")
   const [bio, setBio] = useState("")
   const [avatar, setAvatar] = useState<File | null>(null)
@@ -35,16 +39,31 @@ export function CompleteProfileForm() {
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === "bio") {
       setCurrentStep("avatar")
     } else if (currentStep === "avatar") {
-      // In a real app, you would save the profile data here
+      // Save profile data
       setLoading(true)
-      setTimeout(() => {
-        setLoading(false)
+      
+      try {
+        // Update the user profile with bio and avatar
+        const result = await updateUserProfile({ 
+          bio, 
+          image: avatarPreview ? avatarPreview : undefined
+        })
+        
+        if (!result.success) {
+          throw new Error(result.error || "Failed to update profile")
+        }
+        
         setCurrentStep("welcome")
-      }, 1000)
+      } catch (error) {
+        console.error("Error saving profile:", error)
+        toast.error("Failed to save profile. Please try again.")
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -54,14 +73,19 @@ export function CompleteProfileForm() {
     }
   }
 
-  const handleFinish = () => {
-    console.log("Profile completed with bio:", bio)
-    if (avatar) {
-      console.log("Avatar file:", avatar)
-    } else {
-      console.log("No avatar uploaded")
+  const handleFinish = async () => {
+    setLoading(true)
+    try {
+      // Mark that the user has seen the profile setup
+      await markProfileSetupSeen()
+      router.push("/")
+    } catch (error) {
+      console.error("Error completing profile setup:", error)
+      toast.error("Failed to complete profile setup. Redirecting to homepage.")
+      router.push("/")
+    } finally {
+      setLoading(false)
     }
-    window.location.href = "/"
   }
 
   const handleRemoveAvatar = (e: React.MouseEvent) => {
@@ -212,8 +236,12 @@ export function CompleteProfileForm() {
             </Button>
           </>
         ) : (
-          <Button onClick={handleFinish} className="w-full bg-primary text-background hover:bg-primary/60">
-            Get Started
+          <Button 
+            onClick={handleFinish} 
+            className="w-full bg-primary text-background hover:bg-primary/60"
+            disabled={loading}
+          >
+            {loading ? "Redirecting..." : "Get Started"}
           </Button>
         )}
       </CardFooter>

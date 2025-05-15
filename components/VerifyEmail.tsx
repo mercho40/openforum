@@ -7,6 +7,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Mail, ArrowRight, Check } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { authClient } from "@/lib/auth-client"
+
 
 interface VerifyEmailProps {
   email: string
@@ -18,33 +20,83 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
   const [isCodeSent, setIsCodeSent] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
-  const [otpCode, setOtpCode] = useState("")
   const [otpInputs, setOtpInputs] = useState(["", "", "", "", "", ""])
+  const [resendOptTimer, setResendOptTimer] = useState(0)
+  const [resendOptDisabled, setResendOptDisabled] = useState(false)
+
+  const getOtpCode = () => otpInputs.join("")
 
   const handleSendCode = async () => {
     setIsSending(true)
+
+    // Check if the email is already verified
+    const session = await authClient.getSession()
+    if (session?.data?.user?.emailVerified) {
+      toast.error("Email is already verified.")
+      return
+    }
+
+    // Check if the resend timer is active
+    if (resendOptDisabled) {
+      toast.error(`Plaease wait ${resendOptTimer} seconds before resending the code.`)
+      return
+    }
     
     try {
-      // Simulate API call to send verification code
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Use Better Auth's emailOTP plugin to send verification code
+      const response = await authClient.emailOtp.sendVerificationOtp({
+        email,
+        type: "email-verification",
+      })
+
+      if (response.error) {
+        toast.error(response.error.message || "Failed to send verification code")
+        throw new Error(response.error.message || "Failed to send verification code")
+      }
+      // Reset OTP inputs
+      setOtpInputs(["", "", "", "", "", ""])
       
       // Show OTP input after successful send
       setIsCodeSent(true)
       toast.success("Verification code sent to your email!")
+      // Start resend timer
+      // Set resend timer to 120 seconds
+      setResendOptTimer(120)
+      setResendOptDisabled(true)
+      const interval = setInterval(() => {
+        setResendOptTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval)
+            setResendOptDisabled(false)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
     } catch (error) {
       console.error("Error sending verification code:", error)
-      toast.error("Failed to send verification code. Please try again.")
+      toast.error(error instanceof Error ? error.message : "Failed to send verification code. Please try again.")
     } finally {
       setIsSending(false)
     }
   }
 
   const handleVerifyCode = async () => {
+    const otpCode = getOtpCode();
+    if (otpCode.length !== 6) return;
+    
     setIsVerifying(true)
     
     try {
-      // Simulate API call to verify code
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const response = await authClient.emailOtp.verifyEmail({
+        email,
+        otp: otpCode,
+      })
+      
+      if (response.error) {
+        toast.error(response.error.message || "Failed to verify code")
+        throw new Error(response.error.message || "Failed to verify code")
+      }
       
       // Show success state
       setIsVerified(true)
@@ -60,7 +112,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
       }, 2000)
     } catch (error) {
       console.error("Error verifying code:", error)
-      toast.error("Invalid verification code. Please try again.")
+      toast.error(error instanceof Error ? error.message : "Invalid verification code. Please try again.")
     } finally {
       setIsVerifying(false)
     }
@@ -83,7 +135,6 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
     }
 
     setOtpInputs(newOtpInputs)
-    setOtpCode(newOtpInputs.join(""))
   }
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -198,7 +249,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
           <Button
             onClick={handleVerifyCode}
             className="w-full bg-primary text-background hover:bg-primary/60"
-            disabled={isVerifying || otpCode.length !== 6}
+            disabled={isVerifying || getOtpCode().length !== 6}
             size="lg"
           >
             {isVerifying ? "Verifying..." : "Verify Email"}

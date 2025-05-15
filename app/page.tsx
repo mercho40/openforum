@@ -47,6 +47,8 @@ export default function Page() {
             <div className="text-center">
               <h2 className="text-xl font-semibold mb-2">Welcome, {session.user.name}</h2>
               <p className="text-muted-foreground">You are logged in as {session.user.email}</p>
+              <Button></Button>
+              {/* Show user profile picture */}
               <Button 
               onClick={
                 handleSignOut

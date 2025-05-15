@@ -53,24 +53,18 @@ function CallbackContent() {
               isSocialProvider 
             })
 
-            if (isNewUser) {
-              // New user registration flow
-              if (isSocialProvider) {
-                // Social registration: skip verification, go directly to complete profile
-                router.push("/auth/complete-profile")
-              } else {
-                // Email registration: verify email first, then complete profile
-                router.push(`/auth/verify-email?next=complete-profile`)
-              }
+            // Check if email needs verification with OTP
+            if (providerParam === "email") {
+              // For both new users and existing users, verify email first
+              router.push(isNewUser 
+                ? "/auth/verify-email?next=complete-profile" 
+                : "/auth/verify-email")
+            } else if (isNewUser) {
+              // Social registration: skip verification, go directly to complete profile
+              router.push("/auth/complete-profile")
             } else {
-              // Login flow
-              if (isSocialProvider) {
-                // Social login: go directly to homepage
-                router.push("/")
-              } else {
-                // Email login: verify email first  
-                router.push("/auth/verify-email")
-              }
+              // Social login for existing user: go directly to homepage
+              router.push("/")
             }
           } else {
             // No session, redirect to sign in
@@ -88,7 +82,7 @@ function CallbackContent() {
 
   return (
     <div className="text-center">
-      <Loader2 className="animate-spin text-muted-foreground" />
+      <Loader2 className="mx-auto animate-spin text-muted-foreground mb-4" />
       <h2 className="text-xl font-semibold mb-2">Processing your authentication</h2>
       <p className="text-muted-foreground">Please wait while we complete your request...</p>
     </div>
