@@ -22,7 +22,7 @@ export function LoginForm() {
                 {
                     email,
                     password,
-                    callbackURL: "/auth/callback?provider=email"
+                    callbackURL,
                 },
                 {
                     onRequest: () => {
@@ -31,9 +31,11 @@ export function LoginForm() {
                     onResponse: () => {
                         setLoading(false)
                     },
-                    onError: (error) => {
-                        console.error("Error during sign-in:", error)
-                        setLoading(false)
+                    onError: (ctx: { error: { message: string } }) => {
+                        console.error("Sign-in error:", ctx.error.message);
+                        setError(ctx.error.message);
+                        toast.error(error || "Failed to sign in with social provider");
+                        setLoading(false);
                     },
                     onSuccess: () => {
                         setLoading(false)
@@ -70,10 +72,11 @@ export function LoginForm() {
                     }
                 }
             );
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Exception during social sign-in:", error);
-            setError(error?.message || "An unexpected error occurred");
-            toast.error(error?.message || "An unexpected error occurred");
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+            setError(errorMessage);
+            toast.error(errorMessage);
             setLoading(false);
         }
     };

@@ -6,7 +6,7 @@ import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function Page() {
-  const { data: session, error } = useSession()
+  const { data: session } = useSession()
 
   return (
     <>

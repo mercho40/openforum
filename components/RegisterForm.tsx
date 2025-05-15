@@ -75,7 +75,7 @@ export function RegisterForm() {
                         onError: (ctx: { error: { message: string } }) => {
                             console.error("Error during sign-up:", ctx.error.message)
                             setError(ctx.error.message)
-                            toast.error(error)
+                            toast.error(error ||  "Failed to sign up")
                             setLoading(false)
                         },
                         onSuccess: async () => {
@@ -127,10 +127,11 @@ export function RegisterForm() {
                     }
                 }
             );
-        } catch (error: any) {
+        } catch (error) {
             console.error("Exception during social sign-up:", error);
-            setError(error?.message || "An unexpected error occurred");
-            toast.error(error?.message || "An unexpected error occurred");
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+            setError(errorMessage);
+            toast.error(errorMessage);
             setLoading(false);
         }
     };
