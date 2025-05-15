@@ -19,6 +19,7 @@
     "@vercel/speed-insights": "^1.2.0",
     "better-auth": "^1.2.7",
     "class-variance-authority": "^0.7.1",
+    "client@latest": "link:prisma/client@latest",
     "clsx": "^2.1.1",
     "lucide-react": "^0.510.0",
     "next": "15.3.2",
@@ -40,7 +41,7 @@
     "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
-    "prisma": "^6.7.0",
+    "prisma": "^6.8.0",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.2.9",
     "typescript": "^5"
