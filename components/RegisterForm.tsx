@@ -64,7 +64,7 @@ export function RegisterForm() {
                     email,
                     password,
                     name: username,
-                    callbackURL: "/signup/complete-profile",
+                    callbackURL: "/signup?verify-email",
                     fetchOptions: {
                         onResponse: () => {
                             setLoading(false)
@@ -79,8 +79,8 @@ export function RegisterForm() {
                             setLoading(false)
                         },
                         onSuccess: async () => {
-                            // Redirect to complete profile page
-                            router.push("/signup/complete-profile")
+                            // Redirect to verify email page
+                            router.push("/signup?verify-email")
                             setLoading(false)
                         },
                     },
