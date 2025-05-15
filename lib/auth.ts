@@ -15,11 +15,6 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    async sendResetPassword(data, request) {
-      // Send an email to the user with a link to reset their password
-      console.log(data, request);
-    },
-    requireEmailVerification: true,
   },
   plugins: [
     twoFactor(),
@@ -29,7 +24,6 @@ export const auth = betterAuth({
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         // Implement the sendVerificationOTP method to send the OTP to the user's email address
-        console.log(email, otp, type);
         if (type === "email-verification") {
           await sendVerificationEmail({ email, otp, type });
         } else if (type === "forget-password") {
@@ -41,7 +35,7 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 900, // 15 minutes
       disableSignUp: true,
-      sendVerificationOnSignUp: true,
+      sendVerificationOnSignUp: false,
 
     })
   ], socialProviders: {
