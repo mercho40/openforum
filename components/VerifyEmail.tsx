@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Mail, ArrowRight } from 'lucide-react'
+import { Mail, ArrowRight, Check } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -17,6 +17,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
   const [isSending, setIsSending] = useState(false)
   const [isCodeSent, setIsCodeSent] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [isVerified, setIsVerified] = useState(false)
   const [otpCode, setOtpCode] = useState("")
   const [otpInputs, setOtpInputs] = useState(["", "", "", "", "", ""])
 
@@ -45,12 +46,21 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
       // Simulate API call to verify code
       await new Promise(resolve => setTimeout(resolve, 1500))
       
-      // Call the completion callback
-      if (onVerificationComplete) {
-        onVerificationComplete()
-      }
+      // Show success state
+      setIsVerified(true)
+      toast.success("Email verified successfully!", {
+        description: "Your email has been verified, redirecting you shortly..."
+      })
+      
+      // Call the completion callback after a short delay
+      setTimeout(() => {
+        if (onVerificationComplete) {
+          onVerificationComplete()
+        }
+      }, 2000)
     } catch (error) {
       console.error("Error verifying code:", error)
+      toast.error("Invalid verification code. Please try again.")
     } finally {
       setIsVerifying(false)
     }
@@ -87,7 +97,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
   }
 
   return (
-    <Card className="w-full shadow-none backdrop-blur-sm bg-card/0 border-border/0">
+    <Card className="w-full max-w-md shadow-none backdrop-blur-sm bg-card/0 border-border/0">
       <CardHeader className="space-y-2 pb-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Verify Your Email</h1>
@@ -133,20 +143,26 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
                 value={digit}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-10 h-12 text-center text-lg font-medium bg-card/30 backdrop-blur-sm border border-border/10"
+                className={cn(
+                  "w-10 h-12 text-center text-lg font-medium bg-card/30 backdrop-blur-sm border border-border/10",
+                  isVerified && "border-green-500/50 bg-green-50/10"
+                )}
+                disabled={isVerified}
               />
             ))}
           </div>
           
           <div className="text-center">
-            <button 
-              type="button" 
-              onClick={handleSendCode}
-              className="text-sm text-primary hover:underline"
-              disabled={isSending}
-            >
-              Didn&apos;t receive a code? Send again
-            </button>
+            {!isVerified && (
+              <button 
+                type="button" 
+                onClick={handleSendCode}
+                className="text-sm text-primary hover:underline"
+                disabled={isSending || isVerified}
+              >
+                Didn&apos;t receive a code? Send again
+              </button>
+            )}
           </div>
         </div>
       </CardContent>
@@ -170,13 +186,13 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
           </Button>
         </div>
         
-        {/* Verify Button - Only shown after code is sent */}
+        {/* Verify Button - Only shown after code is sent and until verified */}
         <div 
           className={cn(
             "transition-all duration-500 ease-in-out w-full",
-            isCodeSent 
-              ? "opacity-100 max-h-20" 
-              : "opacity-0 max-h-0 overflow-hidden absolute"
+            isCodeSent && !isVerified
+              ? "opacity-100 max-h-20 transform translate-y-0" 
+              : "opacity-0 max-h-0 overflow-hidden transform translate-y-5 absolute"
           )}
         >
           <Button
@@ -187,6 +203,28 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
           >
             {isVerifying ? "Verifying..." : "Verify Email"}
             {!isVerifying && <ArrowRight className="ml-2 h-4 w-4" />}
+          </Button>
+        </div>
+        
+        {/* Verified State Button - Only shown after verification success */}
+        <div 
+          className={cn(
+            "transition-all duration-700 ease-in-out w-full",
+            isVerified
+              ? "opacity-100 max-h-20 transform scale-100" 
+              : "opacity-0 max-h-0 overflow-hidden transform scale-95 absolute"
+          )}
+        >
+          <Button
+            className="w-full bg-green-600 text-background hover:bg-green-600 cursor-default shadow-md shadow-green-600/20"
+            disabled={true}
+            size="lg"
+          >
+            <span className="relative">
+              Email Verified
+              <Check className="ml-2 h-4 w-4 inline-block animate-bounce-subtle" />
+              <span className="absolute inset-0 bg-white/20 rounded-full blur-2xl animate-pulse-subtle -z-10"></span>
+            </span>
           </Button>
         </div>
       </CardFooter>

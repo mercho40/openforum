@@ -2,7 +2,6 @@
 import { BackButton } from "@/components/BackButton"
 import { CompleteProfileForm } from "@/components/CompleteProfileForm"
 import { RegisterForm } from "@/components/RegisterForm"
-import { VerifyEmail } from "@/components/VerifyEmail"
 import { useSession } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { redirect, useSearchParams } from "next/navigation"
@@ -12,13 +11,10 @@ function SignupContent() {
   const searchParams = useSearchParams()
 
   const showCompleteProfile = searchParams.get("complete-profile") !== null
-  const showVerifyEmail = searchParams.get("verify-email") !== null
 
   let content
   if (showCompleteProfile) {
     content = <CompleteProfileForm />
-  } else if (showVerifyEmail) {
-    content = <VerifyEmail email={"example@domain.com"} />
   } else {
     content = <RegisterForm />
   }
@@ -42,9 +38,7 @@ export default function Page() {
   // Check if the session is loading
   if (session === undefined) {
     return (
-      <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-        <Loader2 className="animate-spin text-muted-foreground" />
-      </main>
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
     )
   }
 
@@ -54,7 +48,7 @@ export default function Page() {
 
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-      <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
+      <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-primary" />}>
         <SignupContent />
       </Suspense>
     </main>

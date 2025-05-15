@@ -54,18 +54,6 @@ export function CompleteProfileForm() {
     }
   }
 
-  const handleSkip = () => {
-    if (currentStep === "bio") {
-      setCurrentStep("avatar")
-    } else if (currentStep === "avatar") {
-      setLoading(true)
-      setTimeout(() => {
-        setLoading(false)
-        setCurrentStep("welcome")
-      }, 1000)
-    }
-  }
-
   const handleFinish = () => {
     console.log("Profile completed with bio:", bio)
     if (avatar) {
@@ -94,7 +82,7 @@ export function CompleteProfileForm() {
   }
 
   return (
-    <Card className="w-full shadow-none backdrop-blur-sm bg-card/0 border-border/0">
+    <Card className="w-full max-w-md shadow-none backdrop-blur-sm bg-card/0 border-border/0">
       <CardHeader className="space-y-6 pb-4">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight">Complete Your Profile</h1>
@@ -129,7 +117,7 @@ export function CompleteProfileForm() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">This will be displayed on your public profile</p>
+              <p className="text-xs text-muted-foreground">This will be displayed on your public profile. You can change this later</p>
             </div>
           </div>
 
@@ -176,7 +164,7 @@ export function CompleteProfileForm() {
 
               <div className="text-center">
                 <p className="font-medium">Upload a profile picture</p>
-                <p className="text-sm text-muted-foreground mt-1">Choose a square image for best results</p>
+                <p className="text-sm text-muted-foreground mt-1">Choose a square image for best results.<br />You can change this later</p>
               </div>
             </div>
           </div>
@@ -204,17 +192,22 @@ export function CompleteProfileForm() {
         {currentStep !== "welcome" ? (
           <>
             {currentStep === "bio" ? (
-              <Button variant="ghost" onClick={handleSkip} className="text-muted-foreground" disabled={loading}>
-                Skip
-              </Button>
+              <div />
             ) : (
               <Button variant="outline" onClick={handleBack} className="flex items-center" disabled={loading}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
             )}
-            <Button onClick={handleNext} className="bg-primary text-background hover:bg-primary/60" disabled={loading}>
-              {loading ? "Saving..." : "Continue"}
+            <Button 
+              onClick={handleNext} 
+              className="bg-primary text-background hover:bg-primary/60" 
+              disabled={loading}>
+              {loading ? "Saving..." : (
+                currentStep === "bio" 
+                  ? (bio.trim() ? "Next" : "Skip") 
+                  : (avatar ? "Finish" : "Skip")
+              )}
               {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
             </Button>
           </>

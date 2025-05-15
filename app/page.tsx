@@ -28,7 +28,7 @@ export default function Page() {
         </div>
         <div className="flex items-center justify-end w-full">
           <Button variant="default" className="rounded-full font-semibold" asChild >
-            <Link href="/signin">
+            <Link href="/auth/signin">
               Sign In
             </Link>
           </Button>

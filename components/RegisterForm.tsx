@@ -55,7 +55,7 @@ export function RegisterForm() {
         }
     }, [password])
 
-    const handleSignUp = async () => {
+    const handleSignUp = async (callbackURL: string) => {
         if (!passwordMeetsRequirements || !passwordsMatch) return
         setLoading(true)
         try {
@@ -64,7 +64,7 @@ export function RegisterForm() {
                     email,
                     password,
                     name: username,
-                    callbackURL: "/signup?verify-email",
+                    callbackURL,
                     fetchOptions: {
                         onResponse: () => {
                             setLoading(false)
@@ -80,7 +80,7 @@ export function RegisterForm() {
                         },
                         onSuccess: async () => {
                             // Redirect to verify email page
-                            router.push("/signup?verify-email")
+                            router.push(callbackURL)
                             setLoading(false)
                         },
                     },
@@ -125,8 +125,7 @@ export function RegisterForm() {
                     setLoading(false)
                 },
                 onSuccess: async () => {
-                    // Redirect to complete profile page
-                    router.push("/signup?complete-profile")
+                    router.push(callbackURL)
                     setLoading(false)
                 },
             },
@@ -140,7 +139,7 @@ export function RegisterForm() {
     }
 
     return (
-        <Card className="w-full shadow-none bg-card/0 border-border/0">
+        <Card className="w-full max-w-md shadow-none bg-card/0 border-border/0">
             <CardHeader className="space-y-6 pb-4">
                 <div className="text-center">
                 <h1 className="text-3xl font-bold tracking-tight">OpenForum</h1>
@@ -285,7 +284,9 @@ export function RegisterForm() {
                 <Button
                     className="w-full bg-primary text-background hover:bg-primary/60 cursor-pointer"
                     size={"lg"}
-                    onClick={handleSignUp}
+                    onClick={
+                        async () => await handleSignUp("/auth/callback?new=true")
+                    }
                     disabled={loading || !passwordMeetsRequirements || !passwordsMatch || !username || !email}
                     >
                     {loading ? "Creating Account..." : "Create Account"}
@@ -305,7 +306,9 @@ export function RegisterForm() {
                         variant="outline"
                         size={"lg"}
                         className="bg-card/30 backdrop-blur-sm border-2 border-border/10 hover:bg-card/50 cursor-pointer"
-                        onClick={() => handleSocialSignUp("/", "google")}
+                        onClick={
+                            async () => await handleSocialSignUp("/auth/callback?new=true", "google")
+                        }
                         disabled={loading}
                     >
                         <svg className="mr-1 h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -333,7 +336,9 @@ export function RegisterForm() {
                         variant="outline"
                         size={"lg"}
                         className="bg-card/30 backdrop-blur-sm border-2 border-border/10 hover:bg-card/50 cursor-pointer"
-                        onClick={() => handleSocialSignUp("/", "github")}
+                        onClick={
+                            async () => await handleSocialSignUp("/auth/callback?new=true", "github")
+                        }
                         disabled={loading}
                     >
                         <svg
