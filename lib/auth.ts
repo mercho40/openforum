@@ -4,10 +4,10 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { twoFactor } from "better-auth/plugins"
 import { admin } from "better-auth/plugins"
 import { organization } from "better-auth/plugins"
-import { magicLink } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins"
 import { username } from "better-auth/plugins"
 import { prisma } from "@/prisma"
+import { sendVerificationEmail, sendForgotPassEmail } from "@/actions/email"
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -19,25 +19,30 @@ export const auth = betterAuth({
       // Send an email to the user with a link to reset their password
       console.log(data, request);
     },
+    requireEmailVerification: true,
   },
   plugins: [
     twoFactor(),
     admin(),
     username(),
     organization(),
-    magicLink({
-      sendMagicLink: async ({ email, token, url }, request) => {
-        // send email to user
-        console.log(email, token, url, request);
-      }
-    }),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         // Implement the sendVerificationOTP method to send the OTP to the user's email address
         console.log(email, otp, type);
+        if (type === "email-verification") {
+          await sendVerificationEmail({ email, otp, type });
+        } else if (type === "forget-password") {
+          await sendForgotPassEmail({ email, otp, type });
+        } else {
+          throw new Error("Invalid type");
+        }
       },
       otpLength: 6,
       expiresIn: 900, // 15 minutes
+      disableSignUp: true,
+      sendVerificationOnSignUp: true,
+
     })
   ], socialProviders: {
     google: {
@@ -48,6 +53,6 @@ export const auth = betterAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     },
   },
-  appName: process.env.NEXT_PUBLIC_APP_NAME || "OpenForum",
+  appName: process.env.APP_NAME || "OpenForum",
 });
 

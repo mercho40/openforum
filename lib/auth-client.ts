@@ -2,7 +2,6 @@ import { createAuthClient } from "better-auth/react"
 import { twoFactorClient } from "better-auth/client/plugins"
 import { adminClient } from "better-auth/client/plugins"
 import { organizationClient } from "better-auth/client/plugins"
-import { magicLinkClient } from "better-auth/client/plugins"
 import { emailOTPClient } from "better-auth/client/plugins"
 import { usernameClient } from "better-auth/client/plugins"
 
@@ -12,7 +11,6 @@ export const authClient = createAuthClient({
     twoFactorClient(),
     adminClient(),
     organizationClient(),
-    magicLinkClient(),
     emailOTPClient(),
     usernameClient()
   ],
