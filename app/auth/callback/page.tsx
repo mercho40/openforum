@@ -88,7 +88,7 @@ function CallbackContent() {
 
   return (
     <div className="text-center">
-      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+      <Loader2 className="animate-spin text-muted-foreground" />
       <h2 className="text-xl font-semibold mb-2">Processing your authentication</h2>
       <p className="text-muted-foreground">Please wait while we complete your request...</p>
     </div>
@@ -99,7 +99,7 @@ function CallbackContent() {
 export default function CallbackPage() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-      <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-primary" />}>
+      <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
         <CallbackContent />
       </Suspense>
     </main>

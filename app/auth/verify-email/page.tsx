@@ -12,7 +12,7 @@ export default function VerifyEmailPage() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto">
-        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground h-8 w-8" />}>
+        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
           <VerifyEmailContent />
         </Suspense>
       </div>
@@ -67,7 +67,7 @@ function VerifyEmailContent() {
     <>
       <BackButton />
       {session === undefined || isLoading ? (
-        <Loader2 className="animate-spin text-muted-foreground h-8 w-8" />
+        <Loader2 className="animate-spin text-muted-foreground" />
       ) : (
         <VerifyEmail 
           email={email} 

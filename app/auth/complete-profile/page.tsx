@@ -10,7 +10,7 @@ import { CompleteProfileForm } from "@/components/CompleteProfileForm"
 export default function CompleteProfilePage() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground h-8 w-8" />}>
+        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
           <CompleteProfileContent />
         </Suspense>
     </main>
@@ -47,7 +47,7 @@ function CompleteProfileContent() {
       <BackButton />
       {session === undefined || isLoading ? (
         <div className="flex justify-center mt-8">
-          <Loader2 className="animate-spin text-muted-foreground h-8 w-8" />
+          <Loader2 className="animate-spin text-muted-foreground" />
         </div>
       ) : (
         <CompleteProfileForm />

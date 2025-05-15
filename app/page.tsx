@@ -1,13 +1,15 @@
 "use client"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function Page() {
   const { data: session } = useSession()
-
+  const handleSignOut = () => {
+    authClient.signOut()
+  }
   return (
     <>
       <header className="w-full py-4 px-6 flex items-center justify-between border-b-2 border-b-muted-foreground/20">
@@ -45,6 +47,13 @@ export default function Page() {
             <div className="text-center">
               <h2 className="text-xl font-semibold mb-2">Welcome, {session.user.name}</h2>
               <p className="text-muted-foreground">You are logged in as {session.user.email}</p>
+              <Button 
+              onClick={
+                handleSignOut
+              } className="mt-4 cursor-pointer" variant="destructive" size="sm"
+              >
+                Sign Out
+              </Button>
             </div>
           ) : (
             <div className="text-center">
