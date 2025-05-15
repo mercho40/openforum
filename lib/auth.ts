@@ -36,6 +36,8 @@ export const auth = betterAuth({
         // Implement the sendVerificationOTP method to send the OTP to the user's email address
         console.log(email, otp, type);
       },
+      otpLength: 6,
+      expiresIn: 900, // 15 minutes
     })
   ], socialProviders: {
     google: {

@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { signIn } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 export function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const handleSignIn = async (callbackURL: string, provider?: "github" | "google") => {
         if (provider) {
@@ -28,11 +30,22 @@ export function LoginForm() {
                         },
                         onResponse: () => {
                             setLoading(false)
+                        },
+                        onError: (ctx: { error: { message: string } }) => {
+                            console.error("Error during sign-in:", ctx.error.message)
+                            setError(ctx.error.message)
+                            toast.error(error)
+                            setLoading(false)
+                        },
+                        onSuccess: () => {
+                            setLoading(false)
                         }
                     }
                 )
             } catch (error) {
                 console.error("Error during sign-in:", error)
+                setError("An error occurred during sign-in. Please try again.")
+                toast.error("An error occurred during sign-in. Please try again.")
                 setLoading(false)
             } finally {
                 setLoading(false)
@@ -51,6 +64,13 @@ export function LoginForm() {
                         },
                         onResponse: () => {
                             setLoading(false)
+                        },
+                        onError: (error) => {
+                            console.error("Error during sign-in:", error)
+                            setLoading(false)
+                        },
+                        onSuccess: () => {
+                            setLoading(false)
                         }
                     }
                 )
@@ -64,7 +84,7 @@ export function LoginForm() {
     }
 
     return (
-        <Card className="w-full shadow-none backdrop-blur-sm bg-card/0 border-border/0">
+        <Card className="w-full shadow-none bg-card/0 border-border/0">
         <CardHeader className="space-y-6 pb-4">
             <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight">OpenForum</h1>
@@ -198,7 +218,7 @@ export function LoginForm() {
         <CardFooter className="flex flex-col space-y-4 pt-0">
             <div className="text-center text-sm">
             <span className="text-muted-foreground">Don&apos;t have an account? </span>
-            <Link href="#" className="font-medium text-foreground hover:underline">
+            <Link href="/signup" className="font-medium text-foreground hover:underline">
                 Sign Up
             </Link>
             </div>
