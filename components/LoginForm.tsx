@@ -16,72 +16,67 @@ export function LoginForm() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const handleSignIn = async (callbackURL: string, provider?: "github" | "google") => {
-        if (provider) {
-            try {
-                await signIn.social(
-                    {
-                        provider,
-                        callbackURL
+    const handleSignIn = async (callbackURL: string) => {
+        try {
+            await signIn.email(
+                {
+                    email,
+                    password,
+                    callbackURL: "/auth/callback?provider=email"
+                },
+                {
+                    onRequest: () => {
+                        setLoading(true)
                     },
-                    {
-                        onRequest: () => {
-                            setLoading(true)
-                        },
-                        onResponse: () => {
-                            setLoading(false)
-                        },
-                        onError: (ctx: { error: { message: string } }) => {
-                            console.error("Error during sign-in:", ctx.error.message)
-                            setError(ctx.error.message)
-                            toast.error(error)
-                            setLoading(false)
-                        },
-                        onSuccess: () => {
-                            setLoading(false)
-                        }
-                    }
-                )
-            } catch (error) {
-                console.error("Error during sign-in:", error)
-                setError("An error occurred during sign-in. Please try again.")
-                toast.error("An error occurred during sign-in. Please try again.")
-                setLoading(false)
-            } finally {
-                setLoading(false)
-            }
-        } else {
-            try {
-                await signIn.email(
-                    {
-                        email,
-                        password,
-                        callbackURL
+                    onResponse: () => {
+                        setLoading(false)
                     },
-                    {
-                        onRequest: () => {
-                            setLoading(true)
-                        },
-                        onResponse: () => {
-                            setLoading(false)
-                        },
-                        onError: (error) => {
-                            console.error("Error during sign-in:", error)
-                            setLoading(false)
-                        },
-                        onSuccess: () => {
-                            setLoading(false)
-                        }
+                    onError: (error) => {
+                        console.error("Error during sign-in:", error)
+                        setLoading(false)
+                    },
+                    onSuccess: () => {
+                        setLoading(false)
                     }
-                )
-            } catch (error) {
-                console.error("Error during sign-in:", error)
-                setLoading(false)
-            } finally {
-                setLoading(false)
-            }
+                }
+            )
+        } catch (error) {
+            console.error("Error during sign-in:", error)
+            setLoading(false)
+        } finally {
+            setLoading(false)
         }
     }
+
+    const handleSocialSignIn = async (provider: "github" | "google") => {
+        try {
+            setLoading(true);
+            
+            // Clear any previous errors
+            setError(null);
+            
+            await signIn.social(
+                {
+                    provider,
+                    // Use a consistent callback URL format
+                    callbackURL: `/auth/callback?provider=${provider}`
+                },
+                {
+                    onError: (ctx: { error: { message: string } }) => {
+                        console.error("Social sign-in error:", ctx.error.message);
+                        setError(ctx.error.message);
+                        toast.error(ctx.error.message || "Failed to sign in");
+                        setLoading(false);
+                    }
+                }
+            );
+        } catch (error: any) {
+            console.error("Exception during social sign-in:", error);
+            setError(error?.message || "An unexpected error occurred");
+            toast.error(error?.message || "An unexpected error occurred");
+            setLoading(false);
+        }
+    };
 
     return (
         <Card className="w-full max-w-md shadow-none bg-card/0 border-border/0">
@@ -138,7 +133,7 @@ export function LoginForm() {
                     className="w-full bg-primary text-background hover:bg-primary/60 cursor-pointer" 
                     size={"lg"}
                     onClick={
-                        async () => await handleSignIn("/auth/callback")
+                        async () => await handleSignIn("/auth/callback?provider=email")
                     }
                     disabled={loading}
                 >
@@ -157,9 +152,7 @@ export function LoginForm() {
                         variant="outline" 
                         size={"lg"} 
                         className="bg-card/30 backdrop-blur-sm border-2 border-border/10 hover:bg-card/50 cursor-pointer"
-                        onClick={
-                            async () => await handleSignIn("/", "google")
-                        }
+                        onClick={() => handleSocialSignIn("google")}
                         disabled={loading}
                     >
                         <svg className="mr-1 h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -187,9 +180,7 @@ export function LoginForm() {
                         variant="outline" 
                         size={"lg"} 
                         className="bg-card/30 backdrop-blur-sm border-2 border-border/10 hover:bg-card/50 cursor-pointer"
-                        onClick={
-                            async () => await handleSignIn("/", "github")
-                        }
+                        onClick={() => handleSocialSignIn("github")}
                         disabled={loading}
                     >
                     <svg

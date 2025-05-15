@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, Suspense } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
@@ -11,15 +11,32 @@ function CallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, error } = useSession()
+  const [loading, setLoading] = useState(true)
+
+  // Add debug logging to diagnose session issues
+  useEffect(() => {
+    console.log("Callback session state:", {
+      session: session === undefined ? "loading" : (session ? "authenticated" : "not authenticated"),
+      error: error || "none"
+    });
+    
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+    
+    return () => clearTimeout(timeout);
+  }, [session, error]);
 
   useEffect(() => {
-    // Handle authentication callback processing
-    if (session !== undefined) {
+    // Don't try to process until we know the session status
+    if (session !== undefined || !loading) {
       const processCallback = async () => {
         try {
           // If there's an error in the session, show it
           if (error) {
             console.error("Authentication error:", error)
+            router.push("/auth/signin?error=auth_error")
             return
           }
 
@@ -27,32 +44,47 @@ function CallbackContent() {
           if (session) {
             // Check if the session is new (just created)
             const isNewUser = searchParams.get("new") === "true"
-            const needsEmailVerification = true // This would be determined by your auth logic
-            const hasCompletedProfile = false // This would be stored in the user's profile
+            const providerParam = searchParams.get("provider") || ""
+            const isSocialProvider = ["github", "google"].includes(providerParam)
+            
+            console.log("Auth callback:", { 
+              isNewUser, 
+              provider: providerParam, 
+              isSocialProvider 
+            })
 
-            if (needsEmailVerification) {
-              // Redirect to email verification with appropriate next steps
-              const nextStep = isNewUser && !hasCompletedProfile ? "complete-profile" : ""
-              router.push(`/auth/verify-email?next=${nextStep}`)
-            } else if (isNewUser && !hasCompletedProfile) {
-              // If email is already verified but profile is incomplete
-              router.push("/auth/complete-profile")
+            if (isNewUser) {
+              // New user registration flow
+              if (isSocialProvider) {
+                // Social registration: skip verification, go directly to complete profile
+                router.push("/auth/complete-profile")
+              } else {
+                // Email registration: verify email first, then complete profile
+                router.push(`/auth/verify-email?next=complete-profile`)
+              }
             } else {
-              // Everything is complete, go to home
-              router.push("/")
+              // Login flow
+              if (isSocialProvider) {
+                // Social login: go directly to homepage
+                router.push("/")
+              } else {
+                // Email login: verify email first  
+                router.push("/auth/verify-email")
+              }
             }
           } else {
             // No session, redirect to sign in
-            router.push("/auth/signin")
+            router.push("/auth/signin?error=no_session")
           }
         } catch (err) {
           console.error("Error processing authentication:", err)
+          router.push("/auth/signin?error=process_error")
         }
       }
 
       processCallback()
     }
-  }, [session, error, router, searchParams])
+  }, [session, error, router, searchParams, loading])
 
   return (
     <div className="text-center">

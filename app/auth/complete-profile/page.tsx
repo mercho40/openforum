@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, Suspense } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
@@ -20,6 +20,15 @@ export default function CompleteProfilePage() {
 function CompleteProfileContent() {
   const router = useRouter()
   const { data: session, error } = useSession()
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsLoading(false)
+    }, 3000)
+    
+    return () => clearTimeout(timeout)
+  }, [])
 
   useEffect(() => {
     if (session !== undefined) {
@@ -27,22 +36,16 @@ function CompleteProfileContent() {
         console.error("Error fetching session:", error)
       }
       
-      if (!session) {
+      if (!session && !isLoading) {
         router.push("/auth/signin")
       }
-      
-      // In a real app, check if profile is already completed
-      // const profileCompleted = session.user?.hasCompletedProfile
-      // if (profileCompleted) {
-      //   router.push("/")
-      // }
     }
-  }, [session, error, router])
+  }, [session, error, router, isLoading])
 
   return (
     <>
       <BackButton />
-      {session === undefined ? (
+      {session === undefined || isLoading ? (
         <div className="flex justify-center mt-8">
           <Loader2 className="animate-spin text-muted-foreground h-8 w-8" />
         </div>

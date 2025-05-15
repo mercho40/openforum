@@ -64,7 +64,7 @@ export function RegisterForm() {
                     email,
                     password,
                     name: username,
-                    callbackURL,
+                    callbackURL: `${callbackURL}&provider=email`,
                     fetchOptions: {
                         onResponse: () => {
                             setLoading(false)
@@ -104,39 +104,36 @@ export function RegisterForm() {
         }
     }
 
-    const handleSocialSignUp = async (callbackURL: string, provider: "github" | "google") => {
+    const handleSocialSignUp = async (provider: "github" | "google") => {
         try {
-        await signIn.social(
-            {
-                provider,
-                callbackURL,
-            },
-            {
-                onRequest: () => {
-                    setLoading(true)
+            setLoading(true);
+            
+            // Clear any previous errors
+            setError(null);
+            
+            // Use a more straightforward approach without unnecessary parameters
+            await signIn.social(
+                {
+                    provider,
+                    // Use the standard callback URL with proper parameters
+                    callbackURL: `/auth/callback?new=true&provider=${provider}`
                 },
-                onResponse: () => {
-                    setLoading(false)
-                },
-                onError: (ctx: { error: { message: string } }) => {
-                    console.error("Error during social sign-up:", ctx.error.message)
-                    setError(ctx.error.message)
-                    toast.error(error)
-                    setLoading(false)
-                },
-                onSuccess: async () => {
-                    router.push(callbackURL)
-                    setLoading(false)
-                },
-            },
-        )
-        } catch (error) {
-            console.error("Error during social sign-up:", error)
-            setLoading(false)
-        } finally {
-            setLoading(false)
+                {
+                    onError: (ctx: { error: { message: string } }) => {
+                        console.error("Social sign-up error:", ctx.error.message);
+                        setError(ctx.error.message);
+                        toast.error(ctx.error.message || "Failed to sign in with social provider");
+                        setLoading(false);
+                    }
+                }
+            );
+        } catch (error: any) {
+            console.error("Exception during social sign-up:", error);
+            setError(error?.message || "An unexpected error occurred");
+            toast.error(error?.message || "An unexpected error occurred");
+            setLoading(false);
         }
-    }
+    };
 
     return (
         <Card className="w-full max-w-md shadow-none bg-card/0 border-border/0">
@@ -306,9 +303,7 @@ export function RegisterForm() {
                         variant="outline"
                         size={"lg"}
                         className="bg-card/30 backdrop-blur-sm border-2 border-border/10 hover:bg-card/50 cursor-pointer"
-                        onClick={
-                            async () => await handleSocialSignUp("/auth/callback?new=true", "google")
-                        }
+                        onClick={() => handleSocialSignUp("google")}
                         disabled={loading}
                     >
                         <svg className="mr-1 h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -336,9 +331,7 @@ export function RegisterForm() {
                         variant="outline"
                         size={"lg"}
                         className="bg-card/30 backdrop-blur-sm border-2 border-border/10 hover:bg-card/50 cursor-pointer"
-                        onClick={
-                            async () => await handleSocialSignUp("/auth/callback?new=true", "github")
-                        }
+                        onClick={() => handleSocialSignUp("github")}
                         disabled={loading}
                     >
                         <svg

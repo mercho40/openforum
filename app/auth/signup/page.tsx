@@ -13,6 +13,14 @@ export default function Page() {
   // Handle error
   if (error) {
     console.error("Error fetching session:", error)
+    return (
+      <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md mx-auto">
+          <BackButton />
+          <p className="text-red-500 text-center">Error fetching session. Please try again.</p>
+        </div>
+      </main>
+    )
   }
 
   // Check if the session is loading

@@ -27,9 +27,18 @@ function VerifyEmailContent() {
   const router = useRouter()
   const { data: session, error } = useSession()
   const [email, setEmail] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
   
   // Get the nextStep
   const nextStep = searchParams.get("next")
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsLoading(false)
+    }, 3000)
+    
+    return () => clearTimeout(timeout)
+  }, [])
 
   useEffect(() => {
     if (session !== undefined) {
@@ -37,14 +46,14 @@ function VerifyEmailContent() {
         console.error("Error fetching session:", error)
       }
       
-      if (!session) {
+      if (!session && !isLoading) {
         router.push("/auth/signin")
-      } else if (session.user?.email) {
+      } else if (session?.user?.email) {
         // Set the email from the session
         setEmail(session.user.email)
       }
     }
-  }, [session, error, router])
+  }, [session, error, router, isLoading])
 
   const handleVerificationComplete = () => {
     if (nextStep === "complete-profile") {
@@ -57,7 +66,7 @@ function VerifyEmailContent() {
   return (
     <>
       <BackButton />
-      {session === undefined ? (
+      {session === undefined || isLoading ? (
         <Loader2 className="animate-spin text-muted-foreground h-8 w-8" />
       ) : (
         <VerifyEmail 

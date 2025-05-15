@@ -1,9 +1,13 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSession } from "@/lib/auth-client";
 import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function Page() {
+  const { data: session, error } = useSession()
+
   return (
     <>
       <header className="w-full py-4 px-6 flex items-center justify-between border-b-2 border-b-muted-foreground/20">
@@ -35,6 +39,20 @@ export default function Page() {
         </div>
       </header>
       <main className="h-full w-full">
+        {/* Displays session info */}
+        <div className="flex flex-col items-center justify-center h-full">
+          {session ? (
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-2">Welcome, {session.user.name}</h2>
+              <p className="text-muted-foreground">You are logged in as {session.user.email}</p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-2">Welcome to OpenForum</h2>
+              <p className="text-muted-foreground">Please sign in to continue</p>
+            </div>
+          )}
+        </div>
       </main>
     </>
   );
