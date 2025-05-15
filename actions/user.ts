@@ -119,3 +119,41 @@ export async function checkProfileCompletion() {
     }
   }
 }
+
+// Fetch user profile data
+export async function fetchUserProfile() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+    
+    if (!session?.user?.id) {
+      throw new Error("Not authenticated")
+    }
+    
+    const user = await prisma.user.findUnique({
+      where: {
+        id: session.user.id
+      },
+      select: {
+        bio: true,
+        image: true,
+        metadata: true
+      }
+    })
+    
+    // Parse metadata if it exists
+    const metadata = user?.metadata ? JSON.parse(user.metadata as string) : {}
+    
+    return { 
+      success: true, 
+      user: { ...user, metadata } 
+    }
+  } catch (error) {
+    console.error("Error fetching user profile:", error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to fetch profile" 
+    }
+  }
+}

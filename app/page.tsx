@@ -1,15 +1,30 @@
 "use client"
+import { fetchUserProfile } from "@/actions/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { SearchIcon } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Page() {
   const { data: session } = useSession()
   const handleSignOut = () => {
     authClient.signOut()
   }
+  const [UserProfileData, setUserProfileData] = useState<{
+    metadata: any;
+    image?: string | null;
+    bio?: string | null;
+  } | null>(null);
+  const fetchUserProfileData = async () => {
+    try {
+      const data = await fetchUserProfile();
+      setUserProfileData(data.user ? data.user : null);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
   return (
     <>
       <header className="w-full py-4 px-6 flex items-center justify-between border-b-2 border-b-muted-foreground/20">
@@ -47,7 +62,27 @@ export default function Page() {
             <div className="text-center">
               <h2 className="text-xl font-semibold mb-2">Welcome, {session.user.name}</h2>
               <p className="text-muted-foreground">You are logged in as {session.user.email}</p>
-              <Button></Button>
+              <div className="mt-4">
+                {UserProfileData?.image ? (
+                  <img
+                    src={UserProfileData.image}
+                    alt="User Profile"
+                    className="w-16 h-16 rounded-full"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500">No Image</span>
+                  </div>
+                )}
+              </div>
+              <div className="mt-2">
+                {UserProfileData?.bio ? (
+                  <p className="text-muted-foreground">{UserProfileData.bio}</p>
+                ) : (
+                  <p className="text-muted-foreground">No bio available</p>
+                )}
+              </div>
+              
               {/* Show user profile picture */}
               <Button 
               onClick={
