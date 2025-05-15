@@ -360,7 +360,7 @@ export function RegisterForm() {
             <CardFooter className="flex flex-col space-y-4 pt-0">
                 <div className="text-center text-sm">
                 <span className="text-muted-foreground">Already have an account? </span>
-                <Link href="/signin" className="font-medium text-foreground hover:underline">
+                <Link href="/auth/signin" className="font-medium text-foreground hover:underline">
                     Sign In
                 </Link>
                 </div>
