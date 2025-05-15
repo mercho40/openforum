@@ -7,26 +7,6 @@ import { Loader2 } from "lucide-react"
 import { redirect, useSearchParams } from "next/navigation"
 import React, { Suspense } from "react"
 
-function SignupContent() {
-  const searchParams = useSearchParams()
-
-  const showCompleteProfile = searchParams.get("complete-profile") !== null
-
-  let content
-  if (showCompleteProfile) {
-    content = <CompleteProfileForm />
-  } else {
-    content = <RegisterForm />
-  }
-
-  return (
-    <div className="w-full max-w-md mx-auto">
-      <BackButton />
-      {content}
-    </div>
-  )
-}
-
 export default function Page() {
   const { data: session, error } = useSession()
 
@@ -52,5 +32,25 @@ export default function Page() {
         <SignupContent />
       </Suspense>
     </main>
+  )
+}
+
+function SignupContent() {
+  const searchParams = useSearchParams()
+
+  const showCompleteProfile = searchParams.get("complete-profile") !== null
+
+  let content
+  if (showCompleteProfile) {
+    content = <CompleteProfileForm />
+  } else {
+    content = <RegisterForm />
+  }
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <BackButton />
+      {content}
+    </div>
   )
 }

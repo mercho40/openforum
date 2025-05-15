@@ -8,6 +8,18 @@ import { BackButton } from "@/components/BackButton"
 import { VerifyEmail } from "@/components/VerifyEmail"
 import { useSearchParams } from "next/navigation"
 
+export default function VerifyEmailPage() {
+  return (
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md mx-auto">
+        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground h-8 w-8" />}>
+          <VerifyEmailContent />
+        </Suspense>
+      </div>
+    </main>
+  )
+}
+
 // Import useSearchParams only within the component that uses it
 function VerifyEmailContent() {
   // Import useSearchParams here
@@ -54,17 +66,5 @@ function VerifyEmailContent() {
         />
       )}
     </>
-  )
-}
-
-export default function VerifyEmailPage() {
-  return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md mx-auto">
-        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground h-8 w-8" />}>
-          <VerifyEmailContent />
-        </Suspense>
-      </div>
-    </main>
   )
 }
