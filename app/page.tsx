@@ -91,8 +91,10 @@ export default function Page() {
                   <p className="text-muted-foreground">No bio available</p>
                 )}
               </div>
-              
-              {/* Show user profile picture */}
+              {/* Show email verified state */}
+              <p className="text-muted-foreground mt-2">
+                {session.user.emailVerified ? "Email Verified" : "Email Not Verified"}
+              </p>
               <Button 
               onClick={
                 handleSignOut

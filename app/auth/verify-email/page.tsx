@@ -8,54 +8,55 @@ import { BackButton } from "@/components/BackButton"
 import { VerifyEmail } from "@/components/VerifyEmail"
 import { useSearchParams } from "next/navigation"
 
-// Import useSearchParams only within the component that uses it
 function VerifyEmailContent() {
-  // Import useSearchParams here
   const searchParams = useSearchParams()
-  const { data: session, error } = useSession()
+  const { data: session } = useSession()
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   
-  // Get the nextStep
   const nextStep = searchParams.get("next")
 
-  // Check if session is available
+  // Use the email from URL params if available (for fresh registrations)
   useEffect(() => {
+    const emailParam = searchParams.get("email")
+    if (emailParam) {
+      setEmail(emailParam)
+      setIsLoading(false)
+    }
+  }, [searchParams])
+  
+  // Handle session changes and redirects
+  useEffect(() => {
+    if (session === undefined) {
+      setIsLoading(true)
+      return
+    }
+
+    // Critical fix: Don't redirect to signin when in registration flow
+    if (session === null) {
+      router.push("/auth/signin")
+      return
+    }
+
+    if (session?.user?.emailVerified) {
+      router.push(nextStep === "complete-profile" ? "/auth/complete-profile" : "/")
+      return
+    }
+
     if (session) {
       setEmail(session.user.email)
       setIsLoading(false)
-    } else {
-      setIsLoading(true)
     }
-  }, [session])
+  }, [session, router, nextStep])
 
-  // Check if session is loading
-  if (session === undefined) {
-    setIsLoading(true)
-    return <Loader2 className="animate-spin text-muted-foreground" />
-  }
-
-  // Check if session is loading
-  if (session === null) {
-    router.push("/auth/signin")
-  }
-
-  if (session?.user.emailVerified) {
-    // If the email is already verified, redirect to the home page
-    router.push("/")
-  }
-
-  // Check if there is an error
-  if (error) {
-    console.error("Error fetching session:", error)
-    return (
-      <>
-        <BackButton />
-        <p className="text-red-500 text-center">Error fetching session. Please try again.</p>
-      </>
-    )
-  }
+  // Reset loading after a timeout (fallback)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) setIsLoading(false)
+    }, 3000)
+    return () => clearTimeout(timeout)
+  }, [isLoading])
 
   const handleVerificationComplete = () => {
     if (nextStep === "complete-profile") {
@@ -68,7 +69,7 @@ function VerifyEmailContent() {
   return (
     <>
       <BackButton />
-      {session === undefined || isLoading ? (
+      {isLoading && !email ? (
         <Loader2 className="animate-spin text-muted-foreground" />
       ) : (
         <VerifyEmail 

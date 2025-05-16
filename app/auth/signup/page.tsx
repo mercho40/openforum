@@ -4,10 +4,18 @@ import { RegisterForm } from "@/components/RegisterForm"
 import { useSession } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function Page() {
   const { data: session, error } = useSession()
   const router = useRouter()
+
+  // Move navigation to useEffect
+  useEffect(() => {
+    if (session) {
+      router.push("/")
+    }
+  }, [session, router])
 
   // Handle error
   if (error) {
@@ -27,11 +35,6 @@ export default function Page() {
     return (
       <Loader2 className="animate-spin text-primary" />
     )
-  }
-
-  // Check if the user is already logged in
-  if (session) {
-    router.push("/")
   }
 
   return (

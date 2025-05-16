@@ -9,7 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ArrowRight, ArrowLeft, Upload, User, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "./ui/label"
-import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
+import { updateUserProfile, markProfileSetupSeen, checkProfileCompletion } from "@/actions/user"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useSession } from "@/lib/auth-client"
@@ -24,6 +24,17 @@ export function CompleteProfileForm() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  // Check if the user has already completed their profile using checkProfileCompletion function
+  useEffect(() => {
+    const checkProfile = async () => {
+      const result = await checkProfileCompletion()
+      if (result.success && result.hasSeenSetup) {
+        router.push("/")
+      }
+    }
+    checkProfile()
+  }, [router])
 
   // Load user's existing avatar if available
   useEffect(() => {
@@ -66,8 +77,8 @@ export function CompleteProfileForm() {
         }
         
         setCurrentStep("welcome")
-      } catch (error) {
-        console.error("Error saving profile:", error)
+      } catch (err) {
+        console.error("Error saving profile:", err)
         toast.error("Failed to save profile. Please try again.")
       } finally {
         setLoading(false)

@@ -10,7 +10,6 @@ import { signIn, signUp } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { checkProfileCompletion } from "@/actions/user"
 
 export function RegisterForm() {
     const [username, setUsername] = useState("")
@@ -22,7 +21,6 @@ export function RegisterForm() {
     const [loading, setLoading] = useState(false)
     const [passwordMeetsRequirements, setPasswordMeetsRequirements] = useState(false)
     const [passwordsMatch, setPasswordsMatch] = useState(false)
-    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
     // Password requirements
@@ -57,63 +55,57 @@ export function RegisterForm() {
     }, [password])
 
     const handleSignUp = async () => {
-        if (!passwordMeetsRequirements || !passwordsMatch) return
-        setLoading(true)
+        if (!passwordMeetsRequirements || !passwordsMatch) return;
+        setLoading(true);
         try {
             await signUp.email(
                 {
                     email,
                     password,
                     name: username,
-                    callbackURL: "/auth/verify-email",
+                    callbackURL: `/auth/verify-email?next=complete-profile&email=${encodeURIComponent(email)}`,
                 },
                 {
                     onResponse: () => {
-                        setLoading(false)
+                        setLoading(false);
                     },
                     onRequest: () => {
-                        setLoading(true)
+                        setLoading(true);
                     },
                     onError: (ctx: { error: { message: string } }) => {
-                        console.error("Error during sign-up:", ctx.error.message)
-                        setError(ctx.error.message)
-                        toast.error(error ||  "Failed to sign up")
-                        setLoading(false)
+                        console.error("Error during sign-up:", ctx.error.message);
+                        toast.error(ctx.error.message || "Failed to sign up");
+                        setLoading(false);
                     },
                     onSuccess: async () => {
-                        // Redirect to verify email page
-                        setLoading(false)
-                        toast.success("Registration successful!")
-                        router.push("/auth/verify-email");
+                        setLoading(false);
+                        toast.success("Registration successful!");
+                        router.push(`/auth/verify-email?next=complete-profile&email=${encodeURIComponent(email)}`);
                     },
-                },
-            )
+                }
+            );
         } catch (error) {
-            console.error("Error during sign-up:", error)
-            setError("An error occurred during sign-up. Please try again.")
-            toast.error("An error occurred during sign-up. Please try again.")
-            setLoading(false)
-        } finally {
-            setLoading(false)
+            // Error handling
+            console.error("Exception during sign-up:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+            toast.error(errorMessage);
+            setLoading(false);
         }
-    }
+    };
 
     const handleSocialSignUp = async (provider: "github" | "google") => {
         try {
             setLoading(true);
-            setError(null);
             
-            // Use a more straightforward approach without unnecessary parameters
             await signIn.social(
                 {
                     provider,
-                    // Use the standard callback URL with proper parameters
-                    callbackURL: (await checkProfileCompletion()).hasSeenSetup ? "/auth/complete-profile" : "/",
+                    // Always direct to complete-profile for new users
+                    callbackURL: "/auth/complete-profile",
                 },
                 {
                     onError: (ctx: { error: { message: string } }) => {
                         console.error("Social sign-up error:", ctx.error.message);
-                        setError(ctx.error.message);
                         toast.error(ctx.error.message || "Failed to sign in with social provider");
                         setLoading(false);
                     },
@@ -124,11 +116,8 @@ export function RegisterForm() {
                         setLoading(true);
                     },
                     onSuccess: async () => {
-                        // Redirect to verify email page
                         setLoading(false);
-                        toast.success("Registration successful!",
-                            { description: "Please check your email to verify your account." }
-                        );
+                        toast.success("Registration successful!");
                         router.push("/auth/complete-profile");
                     },
                 }
@@ -136,7 +125,6 @@ export function RegisterForm() {
         } catch (error) {
             console.error("Exception during social sign-up:", error);
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-            setError(errorMessage);
             toast.error(errorMessage);
             setLoading(false);
         }

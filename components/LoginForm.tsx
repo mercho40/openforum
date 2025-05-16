@@ -16,13 +16,11 @@ export function LoginForm() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
     const handleSignIn = async () => {
         try {
             setLoading(true)
-            setError(null)
             
             await signIn.email(
                 {
@@ -39,8 +37,7 @@ export function LoginForm() {
                     },
                     onError: (ctx: { error: { message: string } }) => {
                         console.error("Sign-in error:", ctx.error.message);
-                        setError(ctx.error.message);
-                        toast.error(error || "Failed to sign in");
+                        toast.error(ctx.error.message || "Failed to sign in");
                         setLoading(false);
                     },
                     onSuccess: async () => {
@@ -58,7 +55,6 @@ export function LoginForm() {
         } catch (error) {
             console.error("Error during sign-in:", error)
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
-            setError(errorMessage)
             toast.error(errorMessage)
             setLoading(false)
         } finally {
@@ -69,7 +65,6 @@ export function LoginForm() {
     const handleSocialSignIn = async (provider: "github" | "google") => {
         try {
             setLoading(true);
-            setError(null);
             
             await signIn.social(
                 {
@@ -86,7 +81,6 @@ export function LoginForm() {
                     },
                     onError: (ctx: { error: { message: string } }) => {
                         console.error("Social sign-in error:", ctx.error.message);
-                        setError(ctx.error.message);
                         toast.error(ctx.error.message || "Failed to sign in");
                         setLoading(false);
                     },
@@ -105,7 +99,6 @@ export function LoginForm() {
         } catch (error: unknown) {
             console.error("Exception during social sign-in:", error);
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-            setError(errorMessage);
             toast.error(errorMessage);
             setLoading(false);
         }

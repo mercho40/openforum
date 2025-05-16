@@ -155,6 +155,41 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
     }
   }
 
+  // Add this function to handle paste events
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>, currentIndex: number) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    
+    // Check if pasted content contains only digits
+    if (!/^\d+$/.test(pastedData)) return;
+    
+    // Create new array for OTP inputs
+    const newOtpInputs = [...otpInputs];
+    
+    // Fill inputs starting from current position
+    for (let i = 0; i < pastedData.length && i + currentIndex < 6; i++) {
+      newOtpInputs[i + currentIndex] = pastedData[i];
+    }
+    
+    setOtpInputs(newOtpInputs);
+    
+    // Focus the next empty input or the last input if all are filled
+    const nextEmptyIndex = newOtpInputs.findIndex((val, idx) => idx >= currentIndex && !val);
+    const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : 5;
+    
+    setTimeout(() => {
+      const nextInput = document.getElementById(`otp-input-${focusIndex}`);
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }, 0);
+    
+    // If all inputs are filled, auto-verify after a short delay
+    if (!newOtpInputs.includes('')) {
+      setTimeout(handleVerifyCode, 300);
+    }
+  }
+
   return (
     <Card className="w-full max-w-md shadow-none backdrop-blur-sm bg-card/0 border-border/0">
       <CardHeader className="space-y-2 pb-4">
@@ -202,6 +237,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
                 value={digit}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
+                onPaste={(e) => handlePaste(e, index)}
                 className={cn(
                   "w-10 h-12 text-center text-lg font-medium bg-card/30 backdrop-blur-sm border border-border/10",
                   isVerified && "border-green-500/50 bg-green-50/10"

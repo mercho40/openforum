@@ -26,7 +26,7 @@ export async function sendVerificationEmail({ email, otp, type }: VerificationEm
     const username = session?.user?.name || email.split('@')[0]
     
     await resend.emails.send({
-      from: `OpenForum <noreply@${process.env.EMAIL_DOMAIN || 'example.com'}>`,
+      from: `${process.env.APP_NAME || 'OpenForum'} <noreply@${process.env.APP_DOMAIN || 'restoman.tech'}>`,
       to: email,
       subject: 'Verify your email address',
       react: await EmailTemplate({ 

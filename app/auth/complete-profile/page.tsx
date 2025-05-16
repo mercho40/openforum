@@ -21,12 +21,8 @@ function CompleteProfileContent() {
   }, [])
 
   useEffect(() => {
-    if (session) {
-      if (error) {
-        console.error("Error fetching session:", error)
-      }
-      
-      if (!session && !isLoading) {
+    if (!isLoading) {
+      if (!session && !error) {
         router.push("/auth/signin")
       }
     }
