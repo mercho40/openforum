@@ -2,19 +2,21 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
-import { useSession } from "@/lib/auth-client"
+// import { useSession } from "@/lib/auth-client"
+import { authClient } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { VerifyEmail } from "@/components/VerifyEmail"
 import { useSearchParams } from "next/navigation"
 
+const { data: session } = await authClient.getSession()
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
-  const { data: session } = useSession()
+  // const { data: session } = useSession()
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  
+
   const nextStep = searchParams.get("next")
 
   // Use the email from URL params if available (for fresh registrations)
@@ -25,7 +27,7 @@ function VerifyEmailContent() {
       setIsLoading(false)
     }
   }, [searchParams])
-  
+
   // Handle session changes and redirects
   useEffect(() => {
     if (session === undefined) {
@@ -72,8 +74,8 @@ function VerifyEmailContent() {
       {isLoading && !email ? (
         <Loader2 className="animate-spin text-muted-foreground" />
       ) : (
-        <VerifyEmail 
-          email={email} 
+        <VerifyEmail
+          email={email}
           onVerificationComplete={handleVerificationComplete}
         />
       )}

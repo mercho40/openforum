@@ -28,7 +28,7 @@ export async function updateUserProfile(data: ProfileUpdateData) {
     const updatableData = Object.fromEntries(
       Object.entries(data).filter(([_, value]) => value !== undefined)
     )
-    
+
     // Update the user profile
     const updatedUser = await prisma.user.update({
       where: {
@@ -36,17 +36,17 @@ export async function updateUserProfile(data: ProfileUpdateData) {
       },
       data: updatableData
     })
-    
+
     // Revalidate relevant paths
     revalidatePath('/profile')
     revalidatePath('/')
-    
+
     return { success: true, user: updatedUser }
   } catch (error) {
     console.error("Error updating user profile:", error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to update profile" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update profile"
     }
   }
 }
@@ -57,11 +57,11 @@ export async function markProfileSetupSeen() {
     const session = await auth.api.getSession({
       headers: await headers()
     })
-    
+
     if (!session?.user?.id) {
       throw new Error("Not authenticated")
     }
-    
+
     // Store this information in the user's metadata
     await prisma.user.update({
       where: {
@@ -72,7 +72,7 @@ export async function markProfileSetupSeen() {
         metadata: JSON.stringify({ profileSetupSeen: true })
       }
     })
-    
+
     return { success: true }
   } catch (error) {
     console.error("Error marking profile setup as seen:", error)
@@ -86,11 +86,11 @@ export async function checkProfileCompletion() {
     const session = await auth.api.getSession({
       headers: await headers()
     })
-    
+
     if (!session?.user?.id) {
       throw new Error("Not authenticated")
     }
-    
+
     const user = await prisma.user.findUnique({
       where: {
         id: session.user.id
@@ -101,19 +101,21 @@ export async function checkProfileCompletion() {
         metadata: true
       }
     })
-    
+
     // Parse metadata if it exists
     const metadata = user?.metadata ? JSON.parse(user.metadata as string) : {}
-    
-    return { 
-      success: true, 
+
+    console.log("isComplete: ", Boolean(user?.bio || user?.image), "haSeenSetup:  ", Boolean(metadata.profileSetupSeen))
+
+    return {
+      success: true,
       isComplete: Boolean(user?.bio || user?.image),
       hasSeenSetup: Boolean(metadata.profileSetupSeen)
     }
   } catch (error) {
     console.error("Error checking profile completion:", error)
-    return { 
-      success: false, 
+    return {
+      success: false,
       isComplete: false,
       hasSeenSetup: false
     }
@@ -126,11 +128,11 @@ export async function fetchUserProfile() {
     const session = await auth.api.getSession({
       headers: await headers()
     })
-    
+
     if (!session?.user?.id) {
       throw new Error("Not authenticated")
     }
-    
+
     const user = await prisma.user.findUnique({
       where: {
         id: session.user.id
@@ -141,19 +143,19 @@ export async function fetchUserProfile() {
         metadata: true
       }
     })
-    
+
     // Parse metadata if it exists
     const metadata = user?.metadata ? JSON.parse(user.metadata as string) : {}
-    
-    return { 
-      success: true, 
-      user: { ...user, metadata } 
+
+    return {
+      success: true,
+      user: { ...user, metadata }
     }
   } catch (error) {
     console.error("Error fetching user profile:", error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to fetch profile" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch profile"
     }
   }
 }

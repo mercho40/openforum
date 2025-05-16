@@ -1,5 +1,4 @@
 "use client"
-import { fetchUserProfile } from "@/actions/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
@@ -8,32 +7,27 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Page() {
-  const { data: session } = useSession()
+  const { data: session } = useSession();
+
   const handleSignOut = () => {
-    authClient.signOut()
+    authClient.signOut();
   }
-  const [UserProfileData, setUserProfileData] = useState<{
-    metadata: string | null;
+
+  // Update the type to match what's actually available in the session user object
+  const [userProfileData, setUserProfileData] = useState<{
     image?: string | null;
     bio?: string | null;
+    name?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
   } | null>(null);
-  const fetchUserProfileData = async () => {
-    try {
-      const data = await fetchUserProfile();
-      setUserProfileData(data.user ? data.user : null);
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-    }
-  };
 
-  // Fetch user profile data when the session is available
-  // and the component mounts
   useEffect(() => {
-    if (session) {
-      fetchUserProfileData();
+    if (session?.user) {
+      setUserProfileData(session.user);
     }
   }, [session]);
-  
+
   return (
     <>
       <header className="w-full py-4 px-6 flex items-center justify-between border-b-2 border-b-muted-foreground/20">
@@ -57,24 +51,34 @@ export default function Page() {
           </button>
         </div>
         <div className="flex items-center justify-end w-full">
-          <Button variant="default" className="rounded-full font-semibold" asChild >
-            <Link href="/auth/signin">
-              Sign In
-            </Link>
-          </Button>
+          {!session ? (
+            <Button variant="default" className="rounded-full font-semibold" asChild>
+              <Link href="/auth/signin">
+                Sign In
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSignOut}
+              className="rounded-full font-semibold"
+              variant="outline"
+              size="sm"
+            >
+              Sign Out
+            </Button>
+          )}
         </div>
       </header>
       <main className="h-full w-full">
-        {/* Displays session info */}
         <div className="flex flex-col items-center justify-center h-full">
           {session ? (
             <div className="text-center">
               <h2 className="text-xl font-semibold mb-2">Welcome, {session.user.name}</h2>
               <p className="text-muted-foreground">You are logged in as {session.user.email}</p>
               <div className="mt-4">
-                {UserProfileData?.image ? (
+                {userProfileData?.image ? (
                   <img
-                    src={UserProfileData.image}
+                    src={userProfileData.image}
                     alt="User Profile"
                     className="w-16 h-16 rounded-full"
                   />
@@ -85,20 +89,20 @@ export default function Page() {
                 )}
               </div>
               <div className="mt-2">
-                {UserProfileData?.bio ? (
-                  <p className="text-muted-foreground">{UserProfileData.bio}</p>
+                {userProfileData?.bio ? (
+                  <p className="text-muted-foreground">{userProfileData.bio}</p>
                 ) : (
                   <p className="text-muted-foreground">No bio available</p>
                 )}
               </div>
-              {/* Show email verified state */}
               <p className="text-muted-foreground mt-2">
                 {session.user.emailVerified ? "Email Verified" : "Email Not Verified"}
               </p>
-              <Button 
-              onClick={
-                handleSignOut
-              } className="mt-4 cursor-pointer" variant="destructive" size="sm"
+              <Button
+                onClick={handleSignOut}
+                className="mt-4 cursor-pointer"
+                variant="destructive"
+                size="sm"
               >
                 Sign Out
               </Button>
