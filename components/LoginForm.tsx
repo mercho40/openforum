@@ -8,6 +8,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { signIn } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { checkProfileCompletion } from "@/actions/user"
 
 export function LoginForm() {
     const [email, setEmail] = useState("");
@@ -15,8 +17,9 @@ export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
 
-    const handleSignIn = async (callbackURL: string) => {
+    const handleSignIn = async () => {
         try {
             setLoading(true)
             setError(null)
@@ -25,7 +28,7 @@ export function LoginForm() {
                 {
                     email,
                     password,
-                    callbackURL,
+                    callbackURL: (await checkProfileCompletion()).hasSeenSetup ? "/auth/complete-profile" : "/",
                 },
                 {
                     onRequest: () => {
@@ -40,9 +43,15 @@ export function LoginForm() {
                         toast.error(error || "Failed to sign in");
                         setLoading(false);
                     },
-                    onSuccess: () => {
-                        setLoading(false)
-                        toast.success("Authentication successful")
+                    onSuccess: async () => {
+                        setLoading(false);
+                        toast.success("Authentication successful");
+                        const hasCompletedProfile = await checkProfileCompletion();
+                        if (hasCompletedProfile) {
+                            router.push("/");
+                        } else {
+                            router.push("/auth/complete-profile");
+                        }
                     }
                 }
             )
@@ -60,23 +69,37 @@ export function LoginForm() {
     const handleSocialSignIn = async (provider: "github" | "google") => {
         try {
             setLoading(true);
-            
-            // Clear any previous errors
             setError(null);
             
             await signIn.social(
                 {
                     provider,
                     // Use a consistent callback URL format
-                    callbackURL: `/auth/callback?provider=${provider}`
+                    callbackURL: (await checkProfileCompletion()).hasSeenSetup ? "/auth/complete-profile" : "/",
                 },
-                {
+                {   
+                    onRequest: () => {
+                        setLoading(true);
+                    },
+                    onResponse: () => {
+                        setLoading(false);
+                    },
                     onError: (ctx: { error: { message: string } }) => {
                         console.error("Social sign-in error:", ctx.error.message);
                         setError(ctx.error.message);
                         toast.error(ctx.error.message || "Failed to sign in");
                         setLoading(false);
-                    }
+                    },
+                    onSuccess: async () => {
+                        setLoading(false);
+                        toast.success("Authentication successful");
+                        const hasCompletedProfile = await checkProfileCompletion();
+                        if (hasCompletedProfile) {
+                            router.push("/");
+                        } else {
+                            router.push("/auth/complete-profile");
+                        }
+                    },
                 }
             );
         } catch (error: unknown) {
@@ -143,7 +166,7 @@ export function LoginForm() {
                     className="w-full bg-primary text-background hover:bg-primary/60 cursor-pointer" 
                     size={"lg"}
                     onClick={
-                        async () => await handleSignIn("/auth/callback?provider=email")
+                        async () => await handleSignIn()
                     }
                     disabled={loading}
                 >

@@ -7,16 +7,6 @@ import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { CompleteProfileForm } from "@/components/CompleteProfileForm"
 
-export default function CompleteProfilePage() {
-  return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
-          <CompleteProfileContent />
-        </Suspense>
-    </main>
-  )
-}
-
 function CompleteProfileContent() {
   const router = useRouter()
   const { data: session, error } = useSession()
@@ -31,7 +21,7 @@ function CompleteProfileContent() {
   }, [])
 
   useEffect(() => {
-    if (session !== undefined) {
+    if (session) {
       if (error) {
         console.error("Error fetching session:", error)
       }
@@ -53,5 +43,15 @@ function CompleteProfileContent() {
         <CompleteProfileForm />
       )}
     </>
+  )
+}
+
+export default function CompleteProfilePage() {
+  return (
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
+          <CompleteProfileContent />
+        </Suspense>
+    </main>
   )
 }

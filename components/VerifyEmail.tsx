@@ -88,28 +88,36 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
     setIsVerifying(true)
     
     try {
-      const response = await authClient.emailOtp.verifyEmail({
+      await authClient.emailOtp.verifyEmail(
+        {
         email,
         otp: otpCode,
-      })
-      
-      if (response.error) {
-        toast.error(response.error.message || "Failed to verify code")
-        throw new Error(response.error.message || "Failed to verify code")
-      }
-      
-      // Show success state
-      setIsVerified(true)
-      toast.success("Email verified successfully!", {
-        description: "Your email has been verified, redirecting you shortly..."
-      })
-      
-      // Call the completion callback after a short delay
-      setTimeout(() => {
-        if (onVerificationComplete) {
-          onVerificationComplete()
+        },
+        {   
+            onRequest: () => {
+              setIsVerifying(true);
+            },
+            onResponse: () => {
+              setIsVerifying(false);
+            },
+            onError: (ctx: { error: { message: string } }) => {
+              toast.error(ctx.error.message || "Failed to verify code");
+              setIsVerifying(false);
+            },
+            onSuccess: async () => {
+                setIsVerifying(false);
+                // Fetch the session again to check if the email is verified
+                const session = await authClient.getSession();
+                if (session?.data?.user?.emailVerified) {
+                  toast.success("Email verified successfully!");
+                  setIsVerified(true);
+                  if (onVerificationComplete) {
+                    onVerificationComplete();
+                  }
+                }
+            },
         }
-      }, 2000)
+      )
     } catch (error) {
       console.error("Error verifying code:", error)
       toast.error(error instanceof Error ? error.message : "Invalid verification code. Please try again.")

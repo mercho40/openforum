@@ -3,10 +3,25 @@ import { BackButton } from "@/components/BackButton"
 import { LoginForm } from "@/components/LoginForm"
 import { useSession } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export default function Page() {
   const { data: session, error } = useSession()
+  const router = useRouter()
+
+  // Handle error
+  if (error) {
+    console.error("Error fetching session:", error)
+    return (
+      <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md mx-auto">
+          <BackButton />
+          <p className="text-red-500 text-center">Error fetching session. Please try again.</p>
+        </div>
+      </main>
+    )
+  }
+
   // Check if the session is loading
   if (session === undefined) {
     return (
@@ -16,12 +31,9 @@ export default function Page() {
     )
   }
 
-  if (error) {
-    console.error("Error fetching session:", error)
-  }
-
+  // Check if the user is already logged in
   if (session) {
-    redirect("/")
+    router.push("/")
   }
 
   return (

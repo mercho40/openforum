@@ -8,52 +8,54 @@ import { BackButton } from "@/components/BackButton"
 import { VerifyEmail } from "@/components/VerifyEmail"
 import { useSearchParams } from "next/navigation"
 
-export default function VerifyEmailPage() {
-  return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md mx-auto">
-        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
-          <VerifyEmailContent />
-        </Suspense>
-      </div>
-    </main>
-  )
-}
-
 // Import useSearchParams only within the component that uses it
 function VerifyEmailContent() {
   // Import useSearchParams here
   const searchParams = useSearchParams()
-  const router = useRouter()
   const { data: session, error } = useSession()
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
   
   // Get the nextStep
   const nextStep = searchParams.get("next")
 
+  // Check if session is available
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    if (session) {
+      setEmail(session.user.email)
       setIsLoading(false)
-    }, 3000)
-    
-    return () => clearTimeout(timeout)
-  }, [])
-
-  useEffect(() => {
-    if (session !== undefined) {
-      if (error) {
-        console.error("Error fetching session:", error)
-      }
-      
-      if (!session && !isLoading) {
-        router.push("/auth/signin")
-      } else if (session?.user?.email) {
-        // Set the email from the session
-        setEmail(session.user.email)
-      }
+    } else {
+      setIsLoading(true)
     }
-  }, [session, error, router, isLoading])
+  }, [session])
+
+  // Check if session is loading
+  if (session === undefined) {
+    setIsLoading(true)
+    return <Loader2 className="animate-spin text-muted-foreground" />
+  }
+
+  // Check if session is loading
+  if (session === null) {
+    router.push("/auth/signin")
+  }
+
+  if (session?.user.emailVerified) {
+    // If the email is already verified, redirect to the home page
+    router.push("/")
+  }
+
+  // Check if there is an error
+  if (error) {
+    console.error("Error fetching session:", error)
+    return (
+      <>
+        <BackButton />
+        <p className="text-red-500 text-center">Error fetching session. Please try again.</p>
+      </>
+    )
+  }
 
   const handleVerificationComplete = () => {
     if (nextStep === "complete-profile") {
@@ -75,5 +77,15 @@ function VerifyEmailContent() {
         />
       )}
     </>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+      <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
+        <VerifyEmailContent />
+      </Suspense>
+    </main>
   )
 }

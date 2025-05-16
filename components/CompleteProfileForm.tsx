@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -12,16 +12,25 @@ import { Label } from "./ui/label"
 import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { useSession } from "@/lib/auth-client"
 
 type Step = "bio" | "avatar" | "welcome"
 
 export function CompleteProfileForm() {
-  const router = useRouter()
+  const { data: session } = useSession()
   const [currentStep, setCurrentStep] = useState<Step>("bio")
   const [bio, setBio] = useState("")
   const [avatar, setAvatar] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  // Load user's existing avatar if available
+  useEffect(() => {
+    if (session?.user?.image) {
+      setAvatarPreview(session.user.image)
+    }
+  }, [session])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -43,7 +52,6 @@ export function CompleteProfileForm() {
     if (currentStep === "bio") {
       setCurrentStep("avatar")
     } else if (currentStep === "avatar") {
-      // Save profile data
       setLoading(true)
       
       try {
@@ -81,7 +89,7 @@ export function CompleteProfileForm() {
       router.push("/")
     } catch (error) {
       console.error("Error completing profile setup:", error)
-      toast.error("Failed to complete profile setup. Redirecting to homepage.")
+      toast.error("Failed to complete profile setup.")
       router.push("/")
     } finally {
       setLoading(false)

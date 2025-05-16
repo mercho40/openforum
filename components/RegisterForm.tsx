@@ -10,9 +10,9 @@ import { signIn, signUp } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { checkProfileCompletion } from "@/actions/user"
 
 export function RegisterForm() {
-    const router = useRouter()
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -23,6 +23,7 @@ export function RegisterForm() {
     const [passwordMeetsRequirements, setPasswordMeetsRequirements] = useState(false)
     const [passwordsMatch, setPasswordsMatch] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
 
     // Password requirements
     const requirements = [
@@ -55,7 +56,7 @@ export function RegisterForm() {
         }
     }, [password])
 
-    const handleSignUp = async (callbackURL: string) => {
+    const handleSignUp = async () => {
         if (!passwordMeetsRequirements || !passwordsMatch) return
         setLoading(true)
         try {
@@ -64,33 +65,31 @@ export function RegisterForm() {
                     email,
                     password,
                     name: username,
-                    callbackURL: `${callbackURL}&provider=email`,
-                    fetchOptions: {
-                        onResponse: () => {
-                            setLoading(false)
-                        },
-                        onRequest: () => {
-                            setLoading(true)
-                        },
-                        onError: (ctx: { error: { message: string } }) => {
-                            console.error("Error during sign-up:", ctx.error.message)
-                            setError(ctx.error.message)
-                            toast.error(error ||  "Failed to sign up")
-                            setLoading(false)
-                        },
-                        onSuccess: async () => {
-                            // Redirect to verify email page
-                            router.push(callbackURL)
-                            setLoading(false)
-                        },
-                    },
+                    callbackURL: "/auth/verify-email",
                 },
                 {
+                    onResponse: () => {
+                        setLoading(false)
+                    },
                     onRequest: () => {
                         setLoading(true)
                     },
-                    onResponse: () => {
+                    onError: (ctx: { error: { message: string } }) => {
+                        console.error("Error during sign-up:", ctx.error.message)
+                        setError(ctx.error.message)
+                        toast.error(error ||  "Failed to sign up")
                         setLoading(false)
+                    },
+                    onSuccess: async () => {
+                        // Redirect to verify email page
+                        setLoading(false)
+                        toast.success("Registration successful!")
+                        const hasCompletedProfile = await checkProfileCompletion();
+                        if (hasCompletedProfile) {
+                            router.push("/");
+                        } else {
+                            router.push("/auth/complete-profile");
+                        }
                     },
                 },
             )
@@ -107,8 +106,6 @@ export function RegisterForm() {
     const handleSocialSignUp = async (provider: "github" | "google") => {
         try {
             setLoading(true);
-            
-            // Clear any previous errors
             setError(null);
             
             // Use a more straightforward approach without unnecessary parameters
@@ -116,7 +113,7 @@ export function RegisterForm() {
                 {
                     provider,
                     // Use the standard callback URL with proper parameters
-                    callbackURL: `/auth/callback?new=true&provider=${provider}`
+                    callbackURL: (await checkProfileCompletion()).hasSeenSetup ? "/auth/complete-profile" : "/",
                 },
                 {
                     onError: (ctx: { error: { message: string } }) => {
@@ -124,7 +121,21 @@ export function RegisterForm() {
                         setError(ctx.error.message);
                         toast.error(ctx.error.message || "Failed to sign in with social provider");
                         setLoading(false);
-                    }
+                    },
+                    onResponse: () => {
+                        setLoading(false);
+                    },
+                    onRequest: () => {
+                        setLoading(true);
+                    },
+                    onSuccess: async () => {
+                        // Redirect to verify email page
+                        setLoading(false);
+                        toast.success("Registration successful!",
+                            { description: "Please check your email to verify your account." }
+                        );
+                        router.push("/auth/verify-email");
+                    },
                 }
             );
         } catch (error) {
@@ -283,7 +294,7 @@ export function RegisterForm() {
                     className="w-full bg-primary text-background hover:bg-primary/60 cursor-pointer"
                     size={"lg"}
                     onClick={
-                        async () => await handleSignUp("/auth/callback?new=true")
+                        async () => await handleSignUp()
                     }
                     disabled={loading || !passwordMeetsRequirements || !passwordsMatch || !username || !email}
                     >

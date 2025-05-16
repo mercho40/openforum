@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { SearchIcon } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Page() {
   const { data: session } = useSession()
@@ -13,7 +13,7 @@ export default function Page() {
     authClient.signOut()
   }
   const [UserProfileData, setUserProfileData] = useState<{
-    metadata: any;
+    metadata: string | null;
     image?: string | null;
     bio?: string | null;
   } | null>(null);
@@ -25,6 +25,15 @@ export default function Page() {
       console.error("Error fetching user profile:", error);
     }
   };
+
+  // Fetch user profile data when the session is available
+  // and the component mounts
+  useEffect(() => {
+    if (session) {
+      fetchUserProfileData();
+    }
+  }, [session]);
+  
   return (
     <>
       <header className="w-full py-4 px-6 flex items-center justify-between border-b-2 border-b-muted-foreground/20">
