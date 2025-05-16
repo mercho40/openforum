@@ -2,47 +2,42 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
-// import { useSession } from "@/lib/auth-client"
-import { authClient } from "@/lib/auth-client"
+import { useSession } from "@/lib/auth-client"
+// import { authClient } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { VerifyEmail } from "@/components/VerifyEmail"
-import { useSearchParams } from "next/navigation"
+// import { useSearchParams } from "next/navigation"
 
-const { data: session } = await authClient.getSession()
-function VerifyEmailContent() {
-  const searchParams = useSearchParams()
-  // const { data: session } = useSession()
+// const { data: session } = await authClient.getSession()
+export default function VerifyEmailContent() {
+  // const searchParams = useSearchParams()
+  const { data: session } = useSession()
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  const nextStep = searchParams.get("next")
+  // const nextStep = searchParams.get("next")
 
   // Use the email from URL params if available (for fresh registrations)
-  useEffect(() => {
-    const emailParam = searchParams.get("email")
-    if (emailParam) {
-      setEmail(emailParam)
-      setIsLoading(false)
-    }
-  }, [searchParams])
+  // useEffect(() => {
+  //   const emailParam = searchParams.get("email")
+  //   if (emailParam) {
+  //     setEmail(emailParam)
+  //     setIsLoading(false)
+  //   }
+  // }, [searchParams])
 
   // Handle session changes and redirects
   useEffect(() => {
     if (session === undefined) {
       setIsLoading(true)
-      return
     }
 
-    // Critical fix: Don't redirect to signin when in registration flow
-    if (session === null) {
-      router.push("/auth/signin")
-      return
-    }
 
     if (session?.user?.emailVerified) {
-      router.push(nextStep === "complete-profile" ? "/auth/complete-profile" : "/")
+      // router.push(nextStep === "complete-profile" ? "/auth/complete-profile" : "/")
+      router.push("/auth/complete-profile")
       return
     }
 
@@ -50,26 +45,27 @@ function VerifyEmailContent() {
       setEmail(session.user.email)
       setIsLoading(false)
     }
-  }, [session, router, nextStep])
+  }, [session, router])
+
 
   // Reset loading after a timeout (fallback)
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (isLoading) setIsLoading(false)
+      router.push("/auth/signin")
     }, 3000)
     return () => clearTimeout(timeout)
-  }, [isLoading])
+  }, [isLoading, router])
 
   const handleVerificationComplete = () => {
-    if (nextStep === "complete-profile") {
-      router.push("/auth/complete-profile")
-    } else {
-      router.push("/")
-    }
+    // if (nextStep === "complete-profile") {
+    //   router.push("/auth/complete-profile")
+    // } else {
+    router.push("/auth/complete-profile")
+    // }
   }
 
   return (
-    <>
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
       <BackButton />
       {isLoading && !email ? (
         <Loader2 className="animate-spin text-muted-foreground" />
@@ -79,16 +75,16 @@ function VerifyEmailContent() {
           onVerificationComplete={handleVerificationComplete}
         />
       )}
-    </>
-  )
-}
-
-export default function VerifyEmailPage() {
-  return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-      <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
-        <VerifyEmailContent />
-      </Suspense>
     </main>
   )
 }
+
+// export default function VerifyEmailPage() {
+//   return (
+//     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+//       <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
+//         <VerifyEmailContent />
+//       </Suspense>
+//     </main>
+//   )
+// }
