@@ -84,12 +84,7 @@ export function RegisterForm() {
                         // Redirect to verify email page
                         setLoading(false)
                         toast.success("Registration successful!")
-                        const hasCompletedProfile = await checkProfileCompletion();
-                        if (hasCompletedProfile) {
-                            router.push("/");
-                        } else {
-                            router.push("/auth/complete-profile");
-                        }
+                        router.push("/auth/verify-email");
                     },
                 },
             )
@@ -134,7 +129,7 @@ export function RegisterForm() {
                         toast.success("Registration successful!",
                             { description: "Please check your email to verify your account." }
                         );
-                        router.push("/auth/verify-email");
+                        router.push("/auth/complete-profile");
                     },
                 }
             );
