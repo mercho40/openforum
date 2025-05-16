@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "@/lib/auth-client"
 // import { authClient } from "@/lib/auth-client"
@@ -51,10 +51,12 @@ export default function VerifyEmailContent() {
   // Reset loading after a timeout (fallback)
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.push("/auth/signin")
+      if (!session) {
+        router.push("/auth/signin")
+      }
     }, 3000)
     return () => clearTimeout(timeout)
-  }, [isLoading, router])
+  }, [isLoading, router, session])
 
   const handleVerificationComplete = () => {
     // if (nextStep === "complete-profile") {
