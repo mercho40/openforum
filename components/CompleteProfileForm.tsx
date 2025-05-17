@@ -6,37 +6,53 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, Upload, User, Check, X } from "lucide-react"
+import { ArrowRight, ArrowLeft, Upload, User, Check, X, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "./ui/label"
 import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { useSession } from "@/lib/auth-client"
+import { authClient } from "@/lib/auth-client"
 import Image from "next/image"
+import { User as UserInterface } from "@/generated/prisma"
 
 type Step = "bio" | "avatar" | "welcome"
 
 export function CompleteProfileForm() {
-  const { data: session } = useSession()
+  const [session, setSession] = useState<UserInterface | null>(null)
+  const [isLoadingSession, setIsLoadingSession] = useState(true)
   const [currentStep, setCurrentStep] = useState<Step>("bio")
   const [bio, setBio] = useState("")
-  const [avatar, setAvatar] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  
+  // Load session using async/await pattern
+  useEffect(() => {
+    async function loadSession() {
+      try {
+        const sessionData = await authClient.getSession()
+        setSession(sessionData.data?.user as UserInterface | null)
+      } catch (error) {
+        console.error("Error loading session:", error)
+      } finally {
+        setIsLoadingSession(false)
+      }
+    }
+    
+    loadSession()
+  }, [])
 
   // Load user's existing avatar if available
   useEffect(() => {
-    if (session?.user?.image) {
-      setAvatarPreview(session.user.image)
+    if (session?.image) {
+      setAvatarPreview(session.image)
     }
   }, [session])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
-      setAvatar(file)
 
       // Create a preview
       const reader = new FileReader()
@@ -100,7 +116,6 @@ export function CompleteProfileForm() {
   const handleRemoveAvatar = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setAvatar(null)
     setAvatarPreview(null)
   }
 
@@ -112,6 +127,10 @@ export function CompleteProfileForm() {
       case "welcome": return 2;
       default: return 0;
     }
+  }
+
+  if (isLoadingSession) {
+    return <Loader2 className="animate-spin text-muted-foreground" />
   }
 
   return (
@@ -253,7 +272,7 @@ export function CompleteProfileForm() {
               {loading ? "Saving..." : (
                 currentStep === "bio" 
                   ? (bio.trim() ? "Next" : "Skip") 
-                  : (avatar ? "Finish" : "Skip")
+                  : (avatarPreview ? "Finish" : "Skip")
               )}
               {!loading && <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />}
             </Button>
