@@ -122,10 +122,6 @@
   }
 }
 
-* {
-  transition: all 0.2s ease-in-out;
-}
-
 /* Custom animations */
 @keyframes bounce-subtle {
   0%, 100% {
