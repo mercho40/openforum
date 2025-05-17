@@ -138,7 +138,11 @@ export function CompleteProfileForm() {
       <CardContent className="relative overflow-hidden" style={{ minHeight: "280px" }}>
         <div className="flex flex-nowrap w-[300%]" style={{ transform: `translateX(${getStepIndex(currentStep) * -33.333}%)` }}>
           {/* Bio Step */}
-          <div className={`w-1/3 px-0.5 transition-all duration-500 ease-in-out ${currentStep !== "bio" ? "opacity-0" : "opacity-100"}`}>
+          <div 
+            className={`w-1/3 px-0.5 transition-all duration-500 ease-in-out ${currentStep !== "bio" ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+            tabIndex={currentStep !== "bio" ? -1 : undefined}
+            inert={currentStep !== "bio" ? true : undefined}
+          >
             <div className="flex flex-col space-y-2">
               <label className="font-semibold text-foreground" htmlFor="bio">
                 Biography
@@ -155,7 +159,11 @@ export function CompleteProfileForm() {
           </div>
 
           {/* Avatar Step */}
-          <div className={`w-1/3 px-0.5 transition-all duration-500 ease-in-out ${currentStep !== "avatar" ? "opacity-0" : "opacity-100"}`}>
+          <div 
+            className={`w-1/3 px-0.5 transition-all duration-500 ease-in-out ${currentStep !== "avatar" ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+            tabIndex={currentStep !== "avatar" ? -1 : undefined}
+            inert={currentStep !== "avatar" ? true : undefined}
+            >
             <div className="flex flex-col items-center space-y-6">
               <div className="relative">
                 {avatarPreview ? (
@@ -205,7 +213,11 @@ export function CompleteProfileForm() {
           </div>
 
           {/* Welcome Step */}
-          <div className={`w-1/3 px-0.5 transition-all duration-500 ease-in-out text-center ${currentStep !== "welcome" ? "opacity-0" : "opacity-100"}`}>
+          <div 
+            className={`w-1/3 px-0.5 transition-all duration-500 ease-in-out text-center ${currentStep !== "welcome" ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+            tabIndex={currentStep !== "welcome" ? -1 : undefined}
+            inert={currentStep !== "welcome" ? true : undefined}
+            >
             <div className="flex flex-col items-center space-y-6">
               <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
                 <Check className="h-12 w-12 text-primary" />
