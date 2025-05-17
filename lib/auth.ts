@@ -1,6 +1,5 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-// If your Prisma file is located elsewhere, you can change the path
 import { twoFactor } from "better-auth/plugins"
 import { admin } from "better-auth/plugins"
 import { organization } from "better-auth/plugins"
@@ -8,10 +7,11 @@ import { emailOTP } from "better-auth/plugins"
 import { username } from "better-auth/plugins"
 import { prisma } from "@/prisma"
 import { sendVerificationEmail, sendForgotPassEmail } from "@/actions/email"
+import { nextCookies } from "better-auth/next-js";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
-    provider: "postgresql", // or "mysql", "postgresql", ...etc
+    provider: "postgresql",
   }),
   emailAndPassword: {
     enabled: true,
@@ -37,7 +37,8 @@ export const auth = betterAuth({
       disableSignUp: true,
       sendVerificationOnSignUp: false,
 
-    })
+    }),
+    nextCookies()
   ], socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -47,6 +48,20 @@ export const auth = betterAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     },
   },
+  user: {
+    additionalFields: {
+      metadata: {
+        type: "string",
+        nullable: true,
+      },
+      bio: {
+        type: "string",
+        nullable: true,
+      },
+    },
+
+  },
   appName: process.env.APP_NAME || "OpenForum",
 });
 
+export type Session = typeof auth.$Infer.Session

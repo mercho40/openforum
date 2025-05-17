@@ -4,6 +4,8 @@ import { adminClient } from "better-auth/client/plugins"
 import { organizationClient } from "better-auth/client/plugins"
 import { emailOTPClient } from "better-auth/client/plugins"
 import { usernameClient } from "better-auth/client/plugins"
+// import { inferAdditionalFields } from "better-auth/client/plugins";
+// import type { auth } from "./auth";
 
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
@@ -12,7 +14,18 @@ export const authClient = createAuthClient({
     adminClient(),
     organizationClient(),
     emailOTPClient(),
-    usernameClient()
+    usernameClient(),
+    // inferAdditionalFields({
+    //   user: {
+    //     metadata: {
+    //       type: "string",
+    //     },
+    //     bio: {
+    //       type: "string",
+    //     },
+    //   },
+    // }),
+    // inferAdditionalFields<typeof auth>()
   ],
   // baseURL: process.env.BETTER_AUTH_URL
 })
@@ -22,3 +35,5 @@ export const {
   signUp,
   useSession
 } = authClient;
+
+export type Session = typeof authClient.$Infer.Session

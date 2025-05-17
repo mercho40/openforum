@@ -1,81 +1,82 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { CompleteProfileForm } from "@/components/CompleteProfileForm"
-import { checkProfileCompletion } from "@/actions/user"
+import { Session } from "@/lib/auth"
 import React from "react"
+
+function checkProfileCompletion(session: Session) {
+  // Safely parse metadata with optional chaining and nullish coalescing
+  const metadata = session.user?.metadata
+    ? JSON.parse(session.user.metadata as string)
+    : {}
+
+  return {
+    success: true,
+    isComplete: Boolean(session.user?.bio && session.user?.image),
+    hasSeenSetup: Boolean(metadata.profileSetupSeen)
+  }
+}
 
 function CompleteProfileContent() {
   const router = useRouter()
-  const { data: session, error } = useSession()
-  const [isLoading, setIsLoading] = useState(true)
+  // Update to use isPending instead of status
+  const { data: session, isPending } = useSession() as {
+    data: Session | null,
+    isPending: boolean
+  }
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (session === undefined) {
-        setIsLoading(true)
-      } else {
-        setIsLoading(false)
-      }
-    }, 3000)
-    
-    return () => clearTimeout(timeout)
-  }, [session])
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (!session && !error) {
-        router.push("/auth/signin")
-      }
+    // Redirect to sign in if not authenticated and not loading
+    if (!isPending && !session) {
+      router.push("/auth/signin")
     }
-  }, [session, error, router, isLoading])
+  }, [session, isPending, router])
 
-  // Check if user already has a profile
+  // Check if user already has a complete profile
   useEffect(() => {
     const checkProfile = async () => {
       if (session) {
-        const result = await checkProfileCompletion()
+        const result = checkProfileCompletion(session)
+        // If profile setup is seen, redirect to home
         if (result.success && result.hasSeenSetup) {
           router.push("/")
         }
       }
     }
-    
-    checkProfile()
-  }, [session, router])
 
-  // Handle error
-  if (error) {
-    console.error("Error fetching session:", error)
-    router.push("/auth/complete-profile")
-    setIsLoading(false)
-    return null
+    if (!isPending && session) {
+      checkProfile()
+    }
+  }, [session, router, isPending])
+
+  if (isPending) {
+    return <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
   }
 
-  return (
-    <>
-      {session === undefined || isLoading ? (
-          <Loader2 className="animate-spin text-muted-foreground" />
-      ) : (
-        <>
-          <BackButton />
-          <CompleteProfileForm />
-        </>
-      )}
-    </>
-  )
+  // Only show the form if authenticated
+  if (session) {
+    return (
+      <>
+        <BackButton />
+        <CompleteProfileForm />
+      </>
+    )
+  }
+
+  return null
 }
 
 export default function CompleteProfilePage() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-        <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
-          <CompleteProfileContent />
-        </Suspense>
+      <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}>
+        <CompleteProfileContent />
+      </Suspense>
     </main>
   )
 }

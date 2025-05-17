@@ -1,15 +1,15 @@
 "use client"
-import { fetchUserProfile } from "@/actions/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { SearchIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Session } from "@/lib/auth";
 import { useEffect, useState } from "react";
 
 export default function Page() {
-  const { data: session } = useSession();
+  const { data: session } = useSession() as { data: Session | null };
 
   const handleSignOut = () => {
     authClient.signOut();
@@ -26,27 +26,15 @@ export default function Page() {
 
   useEffect(() => {
     if (session?.user) {
-      // First set basic user data from session
-      setUserProfileData(session.user);
-      
-      // Then fetch complete profile with bio
-      const loadUserProfile = async () => {
-        try {
-          const profileData = await fetchUserProfile();
-          if (profileData && profileData.user) {
-            setUserProfileData(prev => ({
-              ...prev,
-              ...profileData.user,
-              bio: profileData.user.bio,
-              image: profileData.user.image,
-            }));
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
-      };
-      
-      loadUserProfile();
+      // Get metadata from session if available
+      // const metadata = session.user.metadata;
+      // const parsedMetadata = metadata ? JSON.parse(metadata as string) : {};
+
+      // Set user data from session and parsed metadata
+      setUserProfileData({
+        ...session.user,
+      });
+
     }
   }, [session]);
 
@@ -122,12 +110,12 @@ export default function Page() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-6">
                 <h3 className="font-medium text-sm uppercase text-muted-foreground tracking-wide mb-2">About</h3>
                 <div className="bg-muted/40 p-3 rounded-md">
-                  {userProfileData?.bio ? (
-                    <p className="text-foreground/90">{userProfileData.bio}</p>
+                  {session.user.bio ? (
+                    <p className="text-foreground/90">{session.user.bio}</p>
                   ) : (
                     <p className="text-muted-foreground italic">No bio available. Complete your profile to add a bio.</p>
                   )}
