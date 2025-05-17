@@ -37,7 +37,6 @@ export async function updateUserProfile(data: ProfileUpdateData) {
       data: updatableData
     })
 
-    // Revalidate relevant paths
     revalidatePath('/profile')
     revalidatePath('/')
 
@@ -105,11 +104,9 @@ export async function checkProfileCompletion() {
     // Parse metadata if it exists
     const metadata = user?.metadata ? JSON.parse(user.metadata as string) : {}
 
-    console.log("isComplete: ", Boolean(user?.bio || user?.image), "haSeenSetup:  ", Boolean(metadata.profileSetupSeen))
-
     return {
       success: true,
-      isComplete: Boolean(user?.bio || user?.image),
+      isComplete: Boolean(user?.bio && user?.image),
       hasSeenSetup: Boolean(metadata.profileSetupSeen)
     }
   } catch (error) {

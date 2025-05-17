@@ -16,8 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`antialiased w-full h-[100dvh] bg-background dark`}
-      ><main>{children}</main>
+        className={`antialiased w-full h-[100dvh] bg-background dark flex flex-col`}
+      >
+        {children}
         <Toaster position="top-right" duration={5000} swipeDirections={["top", "left"]} />
         <SpeedInsights />
       </body>

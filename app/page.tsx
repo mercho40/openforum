@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { SearchIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -30,11 +31,11 @@ export default function Page() {
 
   return (
     <>
-      <header className="w-full py-4 px-6 flex items-center justify-between border-b-2 border-b-muted-foreground/20">
+      <header className="w-full h-auto py-4 px-6 flex items-center justify-between border-b-2 border-b-muted-foreground/20">
         <div className="flex items-center justify-start w-full">
           <h1 className="text-2xl font-bold">OpenForum</h1>
         </div>
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full hidden md:block">
           <Input
             className="peer ps-9 pe-9 rounded-full"
             placeholder="Search..."
@@ -69,48 +70,58 @@ export default function Page() {
           )}
         </div>
       </header>
-      <main className="h-full w-full">
+      <main className="flex h-full w-full p-4 items-center justify-center">
         <div className="flex flex-col items-center justify-center h-full">
           {session ? (
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-2">Welcome, {session.user.name}</h2>
-              <p className="text-muted-foreground">You are logged in as {session.user.email}</p>
-              <div className="mt-4">
-                {userProfileData?.image ? (
-                  <img
-                    src={userProfileData.image}
-                    alt="User Profile"
-                    className="w-16 h-16 rounded-full"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500">No Image</span>
+            <div className="max-w-md w-full bg-card rounded-lg shadow-md overflow-hidden border border-border">
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  {userProfileData?.image ? (
+                    <Image
+                      width={80}
+                      height={80}
+                      src={userProfileData.image}
+                      alt="User Profile"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-2xl font-medium text-muted-foreground">
+                        {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "?"}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h2 className="text-xl font-semibold">{session.user.name || "User"}</h2>
+                    <p className="text-muted-foreground text-sm">{session.user.email}</p>
+                    <div className="flex items-center mt-1.5">
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${session.user.emailVerified ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+                      <span className="text-xs font-medium">
+                        {session.user.emailVerified ? "Verified Account" : "Verification Pending"}
+                      </span>
+                    </div>
                   </div>
-                )}
+                </div>
+                
+                <div className="mt-6">
+                  <h3 className="font-medium text-sm uppercase text-muted-foreground tracking-wide mb-2">About</h3>
+                  <div className="bg-muted/40 p-3 rounded-md">
+                    {userProfileData?.bio ? (
+                      <p className="text-foreground/90">{userProfileData.bio}</p>
+                    ) : (
+                      <p className="text-muted-foreground italic">No bio available. Complete your profile to add a bio.</p>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="mt-2">
-                {userProfileData?.bio ? (
-                  <p className="text-muted-foreground">{userProfileData.bio}</p>
-                ) : (
-                  <p className="text-muted-foreground">No bio available</p>
-                )}
-              </div>
-              <p className="text-muted-foreground mt-2">
-                {session.user.emailVerified ? "Email Verified" : "Email Not Verified"}
-              </p>
-              <Button
-                onClick={handleSignOut}
-                className="mt-4 cursor-pointer"
-                variant="destructive"
-                size="sm"
-              >
-                Sign Out
-              </Button>
             </div>
           ) : (
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-2">Welcome to OpenForum</h2>
-              <p className="text-muted-foreground">Please sign in to continue</p>
+            <div className="max-w-md w-full bg-card rounded-lg shadow-md overflow-hidden border border-border p-6 text-center">
+              <h2 className="text-xl font-semibold mb-4">Welcome to OpenForum</h2>
+              <p className="text-muted-foreground mb-6">Join the discussion by signing in to your account</p>
+              <Button className="rounded-full" asChild>
+                <Link href="/auth/signin">Get Started</Link>
+              </Button>
             </div>
           )}
         </div>

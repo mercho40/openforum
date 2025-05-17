@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,7 +8,6 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { signIn, signUp } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export function RegisterForm() {
@@ -21,22 +20,20 @@ export function RegisterForm() {
   const [loading, setLoading] = useState(false)
   const [passwordMeetsRequirements, setPasswordMeetsRequirements] = useState(false)
   const [passwordsMatch, setPasswordsMatch] = useState(false)
-  const router = useRouter()
 
-  // Password requirements
-  const requirements = [
+  const requirements = useMemo(() => [
     { id: "length", label: "At least 8 characters", met: password.length >= 8 },
     { id: "uppercase", label: "At least 1 uppercase letter", met: /[A-Z]/.test(password) },
     { id: "lowercase", label: "At least 1 lowercase letter", met: /[a-z]/.test(password) },
     { id: "number", label: "At least 1 number", met: /\d/.test(password) },
     { id: "special", label: "At least 1 special character", met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
-  ]
+  ], [password]);
 
   // Check if password meets all requirements
   useEffect(() => {
     const meetsAllRequirements = requirements.every((req) => req.met)
     setPasswordMeetsRequirements(meetsAllRequirements)
-  }, [password])
+  }, [requirements])
 
   // Check if passwords match
   useEffect(() => {
@@ -63,7 +60,7 @@ export function RegisterForm() {
           email,
           password,
           name: username,
-          callbackURL: `/auth/verify-email?next=complete-profile`,
+          callbackURL: `/auth/callback`,
         },
         {
           onResponse: () => {
@@ -80,7 +77,6 @@ export function RegisterForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Registration successful!");
-            router.push(`/auth/verify-email?next=complete-profile`);
           },
         }
       );
@@ -100,8 +96,7 @@ export function RegisterForm() {
       await signIn.social(
         {
           provider,
-          // Always direct to complete-profile for new users
-          callbackURL: "/auth/complete-profile",
+          callbackURL: "/auth/callback",
         },
         {
           onError: (ctx: { error: { message: string } }) => {
@@ -118,7 +113,6 @@ export function RegisterForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Registration successful!");
-            router.push("/auth/complete-profile");
           },
         }
       );

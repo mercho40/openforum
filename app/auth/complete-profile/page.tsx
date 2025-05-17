@@ -6,6 +6,8 @@ import { useSession } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { CompleteProfileForm } from "@/components/CompleteProfileForm"
+import { checkProfileCompletion } from "@/actions/user"
+import React from "react"
 
 function CompleteProfileContent() {
   const router = useRouter()
@@ -14,11 +16,15 @@ function CompleteProfileContent() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setIsLoading(false)
+      if (session === undefined) {
+        setIsLoading(true)
+      } else {
+        setIsLoading(false)
+      }
     }, 3000)
     
     return () => clearTimeout(timeout)
-  }, [])
+  }, [session])
 
   useEffect(() => {
     if (!isLoading) {
@@ -28,15 +34,37 @@ function CompleteProfileContent() {
     }
   }, [session, error, router, isLoading])
 
+  // Check if user already has a profile
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (session) {
+        const result = await checkProfileCompletion()
+        if (result.success && result.hasSeenSetup) {
+          router.push("/")
+        }
+      }
+    }
+    
+    checkProfile()
+  }, [session, router])
+
+  // Handle error
+  if (error) {
+    console.error("Error fetching session:", error)
+    router.push("/auth/complete-profile")
+    setIsLoading(false)
+    return null
+  }
+
   return (
     <>
-      <BackButton />
       {session === undefined || isLoading ? (
-        <div className="flex justify-center mt-8">
           <Loader2 className="animate-spin text-muted-foreground" />
-        </div>
       ) : (
-        <CompleteProfileForm />
+        <>
+          <BackButton />
+          <CompleteProfileForm />
+        </>
       )}
     </>
   )

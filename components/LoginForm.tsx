@@ -8,15 +8,12 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { signIn } from "@/lib/auth-client"
 import { toast } from "sonner"
-// import { useRouter } from "next/navigation"
-// import { checkProfileCompletion } from "@/actions/user"
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  // const router = useRouter()
 
   const handleSignIn = async () => {
     try {
@@ -26,7 +23,7 @@ export function LoginForm() {
         {
           email,
           password,
-          callbackURL: "/",
+          callbackURL: "/auth/callback",
         },
         {
           onRequest: () => {
@@ -42,13 +39,7 @@ export function LoginForm() {
           },
           onSuccess: async () => {
             setLoading(false);
-            // toast.success("Authentication successful");
-            // const hasCompletedProfile = await checkProfileCompletion();
-            // if (hasCompletedProfile) {
-            //   router.push("/");
-            // } else {
-            //   router.push("/auth/complete-profile");
-            // }
+            toast.success("Authentication successful");
           }
         }
       )
@@ -70,7 +61,7 @@ export function LoginForm() {
         {
           provider,
           // Use a consistent callback URL format
-          callbackURL: "/",
+          callbackURL: "/auth/callback",
         },
         {
           onRequest: () => {
@@ -87,12 +78,6 @@ export function LoginForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Authentication successful");
-            // const hasCompletedProfile = await checkProfileCompletion();
-            // if (hasCompletedProfile) {
-            //   router.push("/");
-            // } else {
-            //   router.push("/auth/complete-profile");
-            // }
           },
         }
       );

@@ -1,92 +1,89 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "@/lib/auth-client"
-// import { authClient } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import { VerifyEmail } from "@/components/VerifyEmail"
-// import { useSearchParams } from "next/navigation"
+import React from "react"
 
-// const { data: session } = await authClient.getSession()
-export default function VerifyEmailContent() {
-  // const searchParams = useSearchParams()
-  const { data: session } = useSession()
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
+function VerifyEmailContent() {
   const router = useRouter()
+  const { data: session, error } = useSession()
+  const [isLoading, setIsLoading] = useState(true)
+  const [email, setEmail] = useState("")
 
-  // const nextStep = searchParams.get("next")
-
-  // Use the email from URL params if available (for fresh registrations)
-  // useEffect(() => {
-  //   const emailParam = searchParams.get("email")
-  //   if (emailParam) {
-  //     setEmail(emailParam)
-  //     setIsLoading(false)
-  //   }
-  // }, [searchParams])
-
-  // Handle session changes and redirects
-  useEffect(() => {
-    if (session === undefined) {
-      setIsLoading(true)
-    }
-
-
-    if (session?.user?.emailVerified) {
-      // router.push(nextStep === "complete-profile" ? "/auth/complete-profile" : "/")
-      router.push("/auth/complete-profile")
-      return
-    }
-
-    if (session) {
-      setEmail(session.user.email)
-      setIsLoading(false)
-    }
-  }, [session, router])
-
-
-  // Reset loading after a timeout (fallback)
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (!session) {
-        router.push("/auth/signin")
+      if (session === undefined) {
+        setIsLoading(true)
+      } else {
+        setIsLoading(false)
       }
     }, 3000)
+    
     return () => clearTimeout(timeout)
-  }, [isLoading, router, session])
+  }, [session])
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!session && !error) {
+        router.push("/auth/signin")
+      }
+    }
+  }, [session, error, router, isLoading])
+
+  // Check if the email is verified
+  useEffect(() => {
+    const checkEmailVerification = () => {
+      if (session) {
+        setEmail(session.user.email)
+        
+        if (session.user.emailVerified) {
+          router.push("/auth/callback")
+        }
+      }
+    }
+    
+    checkEmailVerification()
+  }, [session, router])
+
+  // Handle error
+  if (error) {
+    console.error("Error fetching session:", error)
+    router.push("/auth/verify-email")
+    setIsLoading(false)
+    return null
+  }
 
   const handleVerificationComplete = () => {
-    // if (nextStep === "complete-profile") {
-    //   router.push("/auth/complete-profile")
-    // } else {
-    router.push("/auth/complete-profile")
-    // }
+    router.push("/auth/callback")
   }
 
   return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-      <BackButton />
-      {isLoading && !email ? (
-        <Loader2 className="animate-spin text-muted-foreground" />
+    <>
+      {session === undefined || isLoading ? (
+          <Loader2 className="animate-spin text-muted-foreground" />
       ) : (
-        <VerifyEmail
-          email={email}
-          onVerificationComplete={handleVerificationComplete}
-        />
+        <>
+          <BackButton />
+          <VerifyEmail
+            email={email}
+            onVerificationComplete={handleVerificationComplete}
+          />
+        </>
       )}
-    </main>
+    </>
   )
 }
 
-// export default function VerifyEmailPage() {
-//   return (
-//     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-//       <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
-//         <VerifyEmailContent />
-//       </Suspense>
-//     </main>
-//   )
-// }
+export default function VerifyEmailPage() {
+  return (
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+      <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
+        <VerifyEmailContent />
+      </Suspense>
+    </main>
+  )
+}

@@ -9,10 +9,11 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ArrowRight, ArrowLeft, Upload, User, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "./ui/label"
-import { updateUserProfile, markProfileSetupSeen, checkProfileCompletion } from "@/actions/user"
+import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useSession } from "@/lib/auth-client"
+import Image from "next/image"
 
 type Step = "bio" | "avatar" | "welcome"
 
@@ -24,17 +25,6 @@ export function CompleteProfileForm() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-
-  // Check if the user has already completed their profile using checkProfileCompletion function
-  useEffect(() => {
-    const checkProfile = async () => {
-      const result = await checkProfileCompletion()
-      if (result.success && result.hasSeenSetup) {
-        router.push("/")
-      }
-    }
-    checkProfile()
-  }, [router])
 
   // Load user's existing avatar if available
   useEffect(() => {
@@ -68,7 +58,7 @@ export function CompleteProfileForm() {
       try {
         // Update the user profile with bio and avatar
         const result = await updateUserProfile({ 
-          bio, 
+          bio: bio.trim() || undefined,
           image: avatarPreview ? avatarPreview : undefined
         })
         
@@ -170,7 +160,9 @@ export function CompleteProfileForm() {
               <div className="relative">
                 {avatarPreview ? (
                   <div className="h-32 w-32 rounded-full overflow-hidden border-2 border-primary">
-                    <img
+                    <Image
+                      width={128}
+                      height={128}
                       src={avatarPreview || "/placeholder.svg"}
                       alt="Profile preview"
                       className="h-full w-full object-cover"
