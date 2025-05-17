@@ -21,8 +21,8 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
   const [isVerifying, setIsVerifying] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [otpInputs, setOtpInputs] = useState(["", "", "", "", "", ""])
-  const [resendOptTimer, setResendOptTimer] = useState(0)
-  const [resendOptDisabled, setResendOptDisabled] = useState(false)
+  const [resendOtpTimer, setResendOtpTimer] = useState(0)
+  const [resendOtpDisabled, setResendOtpDisabled] = useState(false)
 
   const getOtpCode = () => otpInputs.join("")
 
@@ -37,8 +37,8 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
     }
 
     // Check if the resend timer is active
-    if (resendOptDisabled) {
-      toast.error(`Plaease wait ${resendOptTimer} seconds before resending the code.`)
+    if (resendOtpDisabled) {
+      toast.error(`Plaease wait ${resendOtpTimer} seconds before resending the code.`)
       return
     }
     
@@ -61,13 +61,13 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
       toast.success("Verification code sent to your email!")
       // Start resend timer
       // Set resend timer to 120 seconds
-      setResendOptTimer(120)
-      setResendOptDisabled(true)
+      setResendOtpTimer(120)
+      setResendOtpDisabled(true)
       const interval = setInterval(() => {
-        setResendOptTimer((prev) => {
+        setResendOtpTimer((prev) => {
           if (prev <= 1) {
             clearInterval(interval)
-            setResendOptDisabled(false)
+            setResendOtpDisabled(false)
             return 0
           }
           return prev - 1
@@ -191,7 +191,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
   }
 
   return (
-    <Card className="w-full max-w-md shadow-none backdrop-blur-sm bg-card/0 border-border/0">
+    <Card className="w-full max-w-md shadow-none bg-card/0 border-border/0">
       <CardHeader className="space-y-2 pb-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Verify Your Email</h1>
@@ -255,7 +255,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
                 className="text-sm text-primary hover:underline"
                 disabled={isSending || isVerified}
               >
-                Didn&apos;t receive a code? Send again
+                {resendOtpDisabled ? `Resend code in ${resendOtpTimer}s` : "Didn't receive a code? Send again"}
               </button>
             )}
           </div>

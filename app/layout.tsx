@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`antialiased w-full h-[100dvh] bg-background dark flex flex-col`}
+        className={`antialiased w-full h-[100dvh] bg-background dark flex flex-col items-center justify-start p-0 m-0`}
       >
         {children}
         <Toaster position="top-right" duration={5000} swipeDirections={["top", "left"]} />

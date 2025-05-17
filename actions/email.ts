@@ -52,7 +52,7 @@ export async function sendVerificationEmail({ email, otp, type }: VerificationEm
 export async function sendForgotPassEmail({ email, otp, type }: VerificationEmailProps) {
   try {
     await resend.emails.send({
-      from: `OpenForum <noreply@${process.env.EMAIL_DOMAIN || 'example.com'}>`,
+      from: `${process.env.APP_NAME || 'OpenForum'} <noreply@${process.env.APP_DOMAIN || 'restoman.tech'}>`,
       to: email,
       subject: 'Reset your password',
       react: await EmailTemplate({ 
