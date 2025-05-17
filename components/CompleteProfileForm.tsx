@@ -241,14 +241,14 @@ export function CompleteProfileForm() {
             {currentStep === "bio" ? (
               <div />
             ) : (
-              <Button variant="outline" onClick={handleBack} className="flex items-center p-2 sm:p-4 h-auto" disabled={loading}>
+              <Button variant="outline" onClick={handleBack} className="flex items-center p-2 h-auto" disabled={loading}>
                 <ArrowLeft className="h-4 w-4" />
                 <span className="ml-1 sm:ml-2 text-sm">Back</span>
               </Button>
             )}
             <Button 
               onClick={handleNext} 
-              className="bg-primary text-background hover:bg-primary/60 p-2 sm:p-4 h-auto" 
+              className="bg-primary text-background hover:bg-primary/60 p-2 h-auto" 
               disabled={loading}>
               {loading ? "Saving..." : (
                 currentStep === "bio" 
