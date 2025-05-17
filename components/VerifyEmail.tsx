@@ -191,21 +191,21 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
   }
 
   return (
-    <Card className="w-full max-w-md shadow-none bg-card/0 border-border/0">
-      <CardHeader className="space-y-2 pb-4">
+    <Card className="w-full max-w-[95%] sm:max-w-md shadow-none bg-card/0 border-border/0">
+      <CardHeader className="space-y-2 pb-2 sm:pb-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Verify Your Email</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Verify Your Email</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-xs sm:text-sm">
             We need to verify your email address to continue
           </p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 px-3 sm:px-6">
         <div className="flex flex-col items-center justify-center">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <Mail className="h-8 w-8 text-primary" />
+          <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+            <Mail className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <p className="text-center text-muted-foreground">
+          <p className="text-center text-xs sm:text-sm text-muted-foreground">
             We&apos;ll send a verification code to <span className="font-medium text-foreground">{email}</span>
           </p>
         </div>
@@ -213,20 +213,20 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
         {/* OTP Input Fields - Only shown after code is sent */}
         <div 
           className={cn(
-            "transition-all duration-500 ease-in-out space-y-4",
+            "transition-all duration-500 ease-in-out space-y-3 sm:space-y-4",
             isCodeSent 
               ? "opacity-100 max-h-40 transform translate-y-0" 
               : "opacity-0 max-h-0 transform -translate-y-10 overflow-hidden"
           )}
         >
           <div className="text-center">
-            <p className="font-medium">Enter the 6-digit code</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="font-medium text-sm sm:text-base">Enter the 6-digit code</p>
+            <p className="text-xs text-muted-foreground mt-1">
               We sent a code to your email address
             </p>
           </div>
           
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-1 sm:gap-2">
             {otpInputs.map((digit, index) => (
               <Input
                 key={index}
@@ -239,7 +239,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={(e) => handlePaste(e, index)}
                 className={cn(
-                  "w-10 h-12 text-center text-lg font-medium bg-card/30 backdrop-blur-sm border border-border/10",
+                  "w-8 h-10 sm:w-10 sm:h-12 text-center text-base sm:text-lg font-medium bg-card/30 backdrop-blur-sm border border-border/10 px-0",
                   isVerified && "border-green-500/50 bg-green-50/10"
                 )}
                 disabled={isVerified}
@@ -252,16 +252,16 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
               <button 
                 type="button" 
                 onClick={handleSendCode}
-                className="text-sm text-primary hover:underline"
+                className="text-xs sm:text-sm text-primary hover:underline"
                 disabled={isSending || isVerified}
               >
-                {resendOtpDisabled ? `Resend code in ${resendOtpTimer}s` : "Didn't receive a code? Send again"}
+                {resendOtpDisabled ? `Resend in ${resendOtpTimer}s` : "Didn't receive a code?"}
               </button>
             )}
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-center pt-2">
+      <CardFooter className="flex justify-center pt-2 px-3 sm:px-6">
         {/* Send Code Button - Hidden after code is sent */}
         <div 
           className={cn(
@@ -275,7 +275,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
             onClick={handleSendCode}
             className="w-full bg-primary text-background hover:bg-primary/60"
             disabled={isSending}
-            size="lg"
+            size="default"
           >
             {isSending ? "Sending..." : "Send Verification Code"}
           </Button>
@@ -294,7 +294,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
             onClick={handleVerifyCode}
             className="w-full bg-primary text-background hover:bg-primary/60"
             disabled={isVerifying || getOtpCode().length !== 6}
-            size="lg"
+            size="default"
           >
             {isVerifying ? "Verifying..." : "Verify Email"}
             {!isVerifying && <ArrowRight className="ml-2 h-4 w-4" />}
@@ -313,7 +313,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
           <Button
             className="w-full bg-green-600 text-background hover:bg-green-600 cursor-default shadow-md shadow-green-600/20"
             disabled={true}
-            size="lg"
+            size="default"
           >
             <span className="relative">
               Email Verified

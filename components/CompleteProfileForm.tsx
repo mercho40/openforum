@@ -115,11 +115,11 @@ export function CompleteProfileForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-none bg-card/0 border-border/0">
-      <CardHeader className="space-y-6 pb-4">
+    <Card className="w-full max-w-[95%] sm:max-w-md shadow-none bg-card/0 border-border/0">
+      <CardHeader className="space-y-3 sm:space-y-6 pb-2 sm:pb-4">
         <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Complete Your Profile</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Complete Your Profile</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
             {currentStep === "bio" && "Tell us a bit about yourself"}
             {currentStep === "avatar" && "Add a profile picture"}
             {currentStep === "welcome" && "Welcome to OpenForum!"}
@@ -128,14 +128,14 @@ export function CompleteProfileForm() {
 
         {/* Progress indicator */}
         {currentStep !== "welcome" && (
-          <div className="flex justify-center gap-2 pt-4">
-            <div className={cn("h-2 w-16 rounded-full", currentStep === "bio" ? "bg-primary" : "bg-primary/30")} />
-            <div className={cn("h-2 w-16 rounded-full", currentStep === "avatar" ? "bg-primary" : "bg-primary/30")} />
+          <div className="flex justify-center gap-2 pt-2 sm:pt-4">
+            <div className={cn("h-1.5 sm:h-2 w-12 sm:w-16 rounded-full", currentStep === "bio" ? "bg-primary" : "bg-primary/30")} />
+            <div className={cn("h-1.5 sm:h-2 w-12 sm:w-16 rounded-full", currentStep === "avatar" ? "bg-primary" : "bg-primary/30")} />
           </div>
         )}
       </CardHeader>
 
-      <CardContent className="relative overflow-hidden" style={{ minHeight: "280px" }}>
+      <CardContent className="relative overflow-hidden px-3 sm:px-6" style={{ minHeight: "240px" }}>
         <div className="flex flex-nowrap w-[300%]" style={{ transform: `translateX(${getStepIndex(currentStep) * -33.333}%)` }}>
           {/* Bio Step */}
           <div 
@@ -143,18 +143,18 @@ export function CompleteProfileForm() {
             tabIndex={currentStep !== "bio" ? -1 : undefined}
             inert={currentStep !== "bio" ? true : undefined}
           >
-            <div className="flex flex-col space-y-2">
-              <label className="font-semibold text-foreground" htmlFor="bio">
+            <div className="flex flex-col space-y-1 sm:space-y-2">
+              <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="bio">
                 Biography
               </label>
               <Textarea
                 id="bio"
                 placeholder="Tell us about yourself..."
-                className="bg-card/30 backdrop-blur-sm border border-border/10 min-h-32 resize-none"
+                className="bg-card/30 backdrop-blur-sm border border-border/10 min-h-24 sm:min-h-32 resize-none text-sm sm:text-base"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">This will be displayed on your public profile. You can change this later</p>
+              <p className="text-xs text-muted-foreground">This will be displayed on your profile. You can change this later.</p>
             </div>
           </div>
 
@@ -164,10 +164,10 @@ export function CompleteProfileForm() {
             tabIndex={currentStep !== "avatar" ? -1 : undefined}
             inert={currentStep !== "avatar" ? true : undefined}
             >
-            <div className="flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center space-y-4 sm:space-y-6">
               <div className="relative">
                 {avatarPreview ? (
-                  <div className="h-32 w-32 rounded-full overflow-hidden border-2 border-primary">
+                  <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full overflow-hidden border-2 border-primary">
                     <Image
                       width={128}
                       height={128}
@@ -181,24 +181,24 @@ export function CompleteProfileForm() {
                     className="cursor-pointer"
                     htmlFor="avatar-upload"
                   >
-                    <div className="h-32 w-32 rounded-full bg-card/50 border-2 border-dashed border-border flex items-center justify-center">
-                      <User className="h-16 w-16 text-muted-foreground" />
+                    <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full bg-card/50 border-2 border-dashed border-border flex items-center justify-center">
+                      <User className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
                     </div>
                   </Label>
                 )}
                 
-                <div className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center cursor-pointer">
+                <div className="absolute bottom-0 right-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary flex items-center justify-center cursor-pointer">
                   {avatarPreview ? (
                     <button 
                       onClick={handleRemoveAvatar} 
                       className="w-full h-full flex items-center justify-center"
                       aria-label="Remove avatar"
                     >
-                      <X className="h-4 w-4 text-primary-foreground" />
+                      <X className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
                     </button>
                   ) : (
                     <Label htmlFor="avatar-upload" className="w-full h-full flex items-center justify-center cursor-pointer">
-                      <Upload className="h-4 w-4 text-primary-foreground" />
+                      <Upload className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
                     </Label>
                   )}
                 </div>
@@ -206,8 +206,8 @@ export function CompleteProfileForm() {
               </div>
 
               <div className="text-center">
-                <p className="font-medium">Upload a profile picture</p>
-                <p className="text-sm text-muted-foreground mt-1">Choose a square image for best results.<br />You can change this later</p>
+                <p className="font-medium text-sm sm:text-base">Upload a profile picture</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Choose a square image for best results</p>
               </div>
             </div>
           </div>
@@ -218,16 +218,16 @@ export function CompleteProfileForm() {
             tabIndex={currentStep !== "welcome" ? -1 : undefined}
             inert={currentStep !== "welcome" ? true : undefined}
             >
-            <div className="flex flex-col items-center space-y-6">
-              <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
-                <Check className="h-12 w-12 text-primary" />
+            <div className="flex flex-col items-center space-y-4 sm:space-y-6">
+              <div className="h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-primary/10 flex items-center justify-center">
+                <Check className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold">Welcome to OpenForum!</h2>
-                <p className="text-muted-foreground mt-2">
+                <h2 className="text-xl sm:text-2xl font-bold">Welcome to OpenForum!</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                   Your account has been successfully created and your profile is complete. You&apos;re all set to start
-                  exploring and connecting with our community.
+                  exploring our community.
                 </p>
               </div>
             </div>
@@ -235,27 +235,27 @@ export function CompleteProfileForm() {
         </div>
       </CardContent>
 
-      <CardFooter className="flex justify-between pt-6">
+      <CardFooter className="flex justify-between pt-3 sm:pt-6 px-3 sm:px-6">
         {currentStep !== "welcome" ? (
           <>
             {currentStep === "bio" ? (
               <div />
             ) : (
-              <Button variant="outline" onClick={handleBack} className="flex items-center" disabled={loading}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+              <Button variant="outline" onClick={handleBack} className="flex items-center p-2 sm:p-4 h-auto" disabled={loading}>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="ml-1 sm:ml-2 text-sm">Back</span>
               </Button>
             )}
             <Button 
               onClick={handleNext} 
-              className="bg-primary text-background hover:bg-primary/60" 
+              className="bg-primary text-background hover:bg-primary/60 p-2 sm:p-4 h-auto" 
               disabled={loading}>
               {loading ? "Saving..." : (
                 currentStep === "bio" 
                   ? (bio.trim() ? "Next" : "Skip") 
                   : (avatar ? "Finish" : "Skip")
               )}
-              {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+              {!loading && <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />}
             </Button>
           </>
         ) : (

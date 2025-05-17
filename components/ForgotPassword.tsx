@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Mail, Check, EyeIcon, EyeOffIcon, KeyRound } from "lucide-react"
+import { Mail, ArrowRight, Check, EyeIcon, EyeOffIcon, KeyRound } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { authClient } from "@/lib/auth-client"
@@ -242,18 +242,18 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
   }
 
   return (
-    <Card className="w-full max-w-md shadow-none bg-card/0 border-border/0">
-      <CardHeader className="space-y-2 pb-4">
+    <Card className="w-full max-w-[95%] sm:max-w-md shadow-none bg-card/0 border-border/0">
+      <CardHeader className="space-y-2 pb-2 sm:pb-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Reset Your Password</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Reset Your Password</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-xs sm:text-sm">
             {!isCodeSent
               ? "We'll send a verification code to reset your password"
               : "Enter the verification code and create a new password"}
           </p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 px-3 sm:px-6">
         {/* Email Input - Only shown before code is sent */}
         <div
           className={cn(
@@ -264,11 +264,11 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
           )}
         >
           <div className="flex flex-col items-center justify-center">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <Mail className="h-8 w-8 text-primary" />
+            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+              <Mail className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
-            <div className="flex flex-col space-y-2 w-full">
-              <label className="font-semibold text-foreground" htmlFor="email">
+            <div className="flex flex-col space-y-1 sm:space-y-2 w-full">
+              <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="email">
                 Email
               </label>
               <Input
@@ -287,20 +287,20 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
         {/* Combined OTP and Password Fields - Shown after code is sent */}
         <div
           className={cn(
-            "transition-all duration-500 ease-in-out space-y-6",
+            "transition-all duration-500 ease-in-out space-y-4 sm:space-y-6",
             isCodeSent
               ? "opacity-100 max-h-[800px] transform translate-y-0"
               : "opacity-0 max-h-0 transform -translate-y-10 overflow-hidden",
           )}
         >
           {/* OTP Input Fields */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="text-center">
-              <p className="font-medium">Enter the 6-digit code</p>
-              <p className="text-sm text-muted-foreground mt-1">We sent a code to {email}</p>
+              <p className="font-medium text-sm sm:text-base">Enter the 6-digit code</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">We sent a code to {email}</p>
             </div>
 
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-1 sm:gap-2">
               {otpInputs.map((digit, index) => (
                 <Input
                   key={index}
@@ -313,7 +313,7 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={(e) => handlePaste(e, index)}
                   className={cn(
-                    "w-10 h-12 text-center text-lg font-medium bg-card/30 backdrop-blur-sm border border-border/10",
+                    "w-8 h-10 sm:w-10 sm:h-12 text-center text-base sm:text-lg font-medium bg-card/30 backdrop-blur-sm border border-border/10 px-0",
                   )}
                 />
               ))}
@@ -323,10 +323,10 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
               <button
                 type="button"
                 onClick={handleSendCode}
-                className="text-sm text-primary hover:underline"
+                className="text-xs sm:text-sm text-primary hover:underline"
                 disabled={isSending || resendOtpDisabled}
               >
-                {resendOtpDisabled ? `Resend code in ${resendOtpTimer}s` : "Didn't receive a code? Send again"}
+                {resendOtpDisabled ? `Resend in ${resendOtpTimer}s` : "Didn't receive a code?"}
               </button>
             </div>
           </div>
@@ -342,16 +342,16 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
           </div>
 
           {/* Password Fields */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-col items-center justify-center">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <KeyRound className="h-8 w-8 text-primary" />
+              <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+                <KeyRound className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
             </div>
 
             {/* Password Field */}
-            <div className="flex flex-col space-y-2">
-              <label className="font-semibold text-foreground" htmlFor="password">
+            <div className="flex flex-col space-y-1 sm:space-y-2">
+              <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="password">
                 New Password
               </label>
               <div className="relative">
@@ -376,7 +376,7 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
               {/* Password requirements */}
               <div
                 className={cn(
-                  "mt-2 space-y-2 text-sm overflow-hidden transition-all duration-500 ease-in-out",
+                  "mt-1 sm:mt-2 space-y-1 sm:space-y-2 text-xs sm:text-sm overflow-hidden transition-all duration-500 ease-in-out",
                   password.length > 0
                     ? "max-h-24 opacity-100 transform translate-y-0"
                     : "max-h-0 opacity-0 transform -translate-y-4",
@@ -388,24 +388,22 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
                     .fill(0)
                     .map((_, i) => (
                       <div key={`met-${i}`} className="flex-1">
-                        <div className="h-2 rounded-md transition-colors duration-300 bg-green-500" />
+                        <div className="h-1.5 sm:h-2 rounded-md transition-colors duration-300 bg-green-500" />
                       </div>
                     ))}
                   {Array(requirements.filter((req) => !req.met).length)
                     .fill(0)
                     .map((_, i) => (
                       <div key={`unmet-${i}`} className="flex-1">
-                        <div className="h-2 rounded-md transition-colors duration-300 bg-red-500/30" />
+                        <div className="h-1.5 sm:h-2 rounded-md transition-colors duration-300 bg-red-500/30" />
                       </div>
                     ))}
                 </div>
 
                 {/* Single requirement text */}
-                <div className="font-medium text-sm">
+                <div className="font-medium text-xs sm:text-sm">
                   {(() => {
-                    // Find the first requirement that's not met
                     const firstNotMet = requirements.find((req) => !req.met)
-                    // If all requirements are met, show the last one
                     const reqToShow = firstNotMet || requirements[requirements.length - 1]
 
                     if (reqToShow.met) {
@@ -420,13 +418,13 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
             {/* Confirm Password - only shows when password meets requirements */}
             <div
               className={cn(
-                "flex flex-col space-y-2 overflow-hidden transition-all duration-500 ease-in-out",
+                "flex flex-col space-y-1 sm:space-y-2 overflow-hidden transition-all duration-500 ease-in-out",
                 passwordMeetsRequirements
                   ? "max-h-24 opacity-100 transform translate-y-0"
                   : "max-h-0 opacity-0 transform -translate-y-4",
               )}
             >
-              <label className="font-semibold text-foreground" htmlFor="confirmPassword">
+              <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="confirmPassword">
                 Confirm Password
               </label>
               <div className="relative">
@@ -450,12 +448,12 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
                   {showConfirmPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                 </button>
               </div>
-              {confirmPassword && !passwordsMatch && <p className="text-sm text-red-500">Passwords do not match</p>}
+              {confirmPassword && !passwordsMatch && <p className="text-xs sm:text-sm text-red-500">Passwords do not match</p>}
             </div>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-center pt-2">
+      <CardFooter className="flex justify-center pt-2 px-3 sm:px-6">
         {/* Send Code Button - Hidden after code is sent */}
         <div
           className={cn(
@@ -467,7 +465,7 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
             onClick={handleSendCode}
             className="w-full bg-primary text-background hover:bg-primary/60"
             disabled={isSending || !email}
-            size="lg"
+            size="default"
           >
             {isSending ? "Sending..." : "Send Reset Code"}
           </Button>
@@ -486,7 +484,7 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
             onClick={handleResetPassword}
             className="w-full bg-primary text-background flex items-center justify-center hover:bg-primary/60"
             disabled={isResetting || !passwordMeetsRequirements || !passwordsMatch || getOtpCode().length !== 6}
-            size="lg"
+            size="default"
           >
             {isResetting ? "Resetting..." : "Reset Password"}
             {!isResetting && <Check className="ml-2 h-4 w-4" />}
