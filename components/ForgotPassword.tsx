@@ -454,42 +454,43 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
         </div>
       </CardContent>
       <CardFooter className="flex justify-center pt-2 px-3 sm:px-6">
-        {/* Send Code Button - Hidden after code is sent */}
-        <div
-          className={cn(
-            "transition-all duration-500 ease-in-out w-full",
-            !isCodeSent ? "opacity-100 max-h-20" : "opacity-0 max-h-0 overflow-hidden absolute",
-          )}
+        <Button
+          onClick={!isCodeSent ? handleSendCode : handleResetPassword}
+          className="w-full bg-primary text-background hover:bg-primary/60"
+          disabled={
+            isSending || isResetting || 
+            (isCodeSent && (!passwordMeetsRequirements || !passwordsMatch || getOtpCode().length !== 6)) ||
+            (!isCodeSent && !email)
+          }
+          size="default"
         >
-          <Button
-            onClick={handleSendCode}
-            className="w-full bg-primary text-background hover:bg-primary/60"
-            disabled={isSending || !email}
-            size="default"
-          >
-            {isSending ? "Sending..." : "Send Reset Code"}
-          </Button>
-        </div>
-
-        {/* Reset Password Button - Only shown after code is sent */}
-        <div
-          className={cn(
-            "transition-all duration-500 ease-in-out w-full",
-            isCodeSent
-              ? "opacity-100 max-h-20 transform scale-100"
-              : "opacity-0 max-h-0 overflow-hidden transform scale-95 absolute",
-          )}
-        >
-          <Button
-            onClick={handleResetPassword}
-            className="w-full bg-primary text-background flex items-center justify-center hover:bg-primary/60"
-            disabled={isResetting || !passwordMeetsRequirements || !passwordsMatch || getOtpCode().length !== 6}
-            size="default"
-          >
-            {isResetting ? "Resetting..." : "Reset Password"}
-            {!isResetting && <Check className="ml-2 h-4 w-4" />}
-          </Button>
-        </div>
+          <div className="relative flex items-center justify-center h-5">
+            {/* Send Code State */}
+            <span 
+              className={cn(
+                "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                !isCodeSent 
+                  ? "transform translate-y-0 opacity-100" 
+                  : "transform -translate-y-8 opacity-0"
+              )}
+            >
+              {isSending ? "Sending..." : "Send Reset Code"}
+            </span>
+            
+            {/* Reset Password State */}
+            <span 
+              className={cn(
+                "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                isCodeSent 
+                  ? "transform translate-y-0 opacity-100" 
+                  : "transform translate-y-8 opacity-0"
+              )}
+            >
+              {isResetting ? "Resetting..." : "Reset Password"}
+              {!isResetting && <Check className="ml-2 h-4 w-4" />}
+            </span>
+          </div>
+        </Button>
       </CardFooter>
     </Card>
   )

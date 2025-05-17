@@ -262,66 +262,59 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
         </div>
       </CardContent>
       <CardFooter className="flex justify-center pt-2 px-3 sm:px-6">
-        {/* Send Code Button - Hidden after code is sent */}
-        <div 
+        <Button
+          onClick={!isCodeSent ? handleSendCode : handleVerifyCode}
           className={cn(
-            "transition-all duration-500 ease-in-out w-full",
-            !isCodeSent 
-              ? "opacity-100 max-h-20" 
-              : "opacity-0 max-h-0 overflow-hidden absolute"
+            "w-full transition-all duration-300",
+            isVerified 
+              ? "bg-green-600 text-background hover:bg-green-600 cursor-default shadow-md shadow-green-600/20" 
+              : "bg-primary text-background hover:bg-primary/60"
           )}
+          disabled={isSending || isVerifying || (isCodeSent && getOtpCode().length !== 6) || isVerified}
+          size="default"
         >
-          <Button
-            onClick={handleSendCode}
-            className="w-full bg-primary text-background hover:bg-primary/60"
-            disabled={isSending}
-            size="default"
-          >
-            {isSending ? "Sending..." : "Send Verification Code"}
-          </Button>
-        </div>
-        
-        {/* Verify Button - Only shown after code is sent and until verified */}
-        <div 
-          className={cn(
-            "transition-all duration-500 ease-in-out w-full",
-            isCodeSent && !isVerified
-              ? "opacity-100 max-h-20 transform translate-y-0" 
-              : "opacity-0 max-h-0 overflow-hidden transform translate-y-5 absolute"
-          )}
-        >
-          <Button
-            onClick={handleVerifyCode}
-            className="w-full bg-primary text-background hover:bg-primary/60"
-            disabled={isVerifying || getOtpCode().length !== 6}
-            size="default"
-          >
-            {isVerifying ? "Verifying..." : "Verify Email"}
-            {!isVerifying && <ArrowRight className="ml-2 h-4 w-4" />}
-          </Button>
-        </div>
-        
-        {/* Verified State Button - Only shown after verification success */}
-        <div 
-          className={cn(
-            "transition-all duration-700 ease-in-out w-full",
-            isVerified
-              ? "opacity-100 max-h-20 transform scale-100" 
-              : "opacity-0 max-h-0 overflow-hidden transform scale-95 absolute"
-          )}
-        >
-          <Button
-            className="w-full bg-green-600 text-background hover:bg-green-600 cursor-default shadow-md shadow-green-600/20"
-            disabled={true}
-            size="default"
-          >
-            <span className="relative">
-              Email Verified
-              <Check className="ml-2 h-4 w-4 inline-block animate-bounce-subtle" />
-              <span className="absolute inset-0 bg-white/20 rounded-full blur-2xl animate-pulse-subtle -z-10"></span>
+          <div className="relative flex items-center justify-center h-5">
+            {/* Send Code State */}
+            <span 
+              className={cn(
+                "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                !isCodeSent 
+                  ? "transform translate-y-0 opacity-100" 
+                  : "transform -translate-y-8 opacity-0"
+              )}
+            >
+              {isSending ? "Sending..." : "Send Verification Code"}
             </span>
-          </Button>
-        </div>
+            
+            {/* Verify Email State */}
+            <span 
+              className={cn(
+                "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                isCodeSent && !isVerified 
+                  ? "transform translate-y-0 opacity-100" 
+                  : !isCodeSent 
+                    ? "transform translate-y-8 opacity-0" 
+                    : "transform -translate-y-8 opacity-0"
+              )}
+            >
+              {isVerifying ? "Verifying..." : "Verify Email"}
+              {!isVerifying && <ArrowRight className="ml-2 h-4 w-4" />}
+            </span>
+            
+            {/* Verified State */}
+            <span 
+              className={cn(
+                "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                isVerified
+                  ? "transform translate-y-0 opacity-100" 
+                  : "transform translate-y-8 opacity-0"
+              )}
+            >
+              Email Verified
+              <Check className="ml-2 h-4 w-4 animate-bounce-subtle" />
+            </span>
+          </div>
+        </Button>
       </CardFooter>
     </Card>
   )
