@@ -6,47 +6,29 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, Upload, User, Check, X, Loader2 } from "lucide-react"
+import { ArrowRight, ArrowLeft, Upload, User, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "./ui/label"
 import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { authClient } from "@/lib/auth-client"
+import { useSession } from "@/lib/auth-client"
 import Image from "next/image"
-import { User as UserInterface } from "@/generated/prisma"
 
 type Step = "bio" | "avatar" | "welcome"
 
 export function CompleteProfileForm() {
-  const [session, setSession] = useState<UserInterface | null>(null)
-  const [isLoadingSession, setIsLoadingSession] = useState(true)
+  const { data: session } = useSession()
   const [currentStep, setCurrentStep] = useState<Step>("bio")
   const [bio, setBio] = useState("")
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  
-  // Load session using async/await pattern
-  useEffect(() => {
-    async function loadSession() {
-      try {
-        const sessionData = await authClient.getSession()
-        setSession(sessionData.data?.user as UserInterface | null)
-      } catch (error) {
-        console.error("Error loading session:", error)
-      } finally {
-        setIsLoadingSession(false)
-      }
-    }
-    
-    loadSession()
-  }, [])
 
   // Load user's existing avatar if available
   useEffect(() => {
-    if (session?.image) {
-      setAvatarPreview(session.image)
+    if (session?.user?.image) {
+      setAvatarPreview(session.user.image)
     }
   }, [session])
 
@@ -127,10 +109,6 @@ export function CompleteProfileForm() {
       case "welcome": return 2;
       default: return 0;
     }
-  }
-
-  if (isLoadingSession) {
-    return <Loader2 className="animate-spin text-muted-foreground" />
   }
 
   return (
