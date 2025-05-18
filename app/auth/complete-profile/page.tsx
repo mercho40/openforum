@@ -9,7 +9,7 @@ import { CompleteProfileForm } from "@/components/CompleteProfileForm"
 import { Session } from "@/lib/auth"
 import React from "react"
 
-function checkProfileCompletion(session: Session) {
+const checkProfileCompletion = (session: Session) => {
   // Safely parse metadata with optional chaining and nullish coalescing
   const metadata = session.user?.metadata
     ? JSON.parse(session.user.metadata as string)
@@ -41,7 +41,7 @@ function CompleteProfileContent() {
   useEffect(() => {
     const checkProfile = async () => {
       if (session) {
-        const result = checkProfileCompletion(session)
+        const result = await checkProfileCompletion(session)
         // If profile setup is seen, redirect to home
         if (result.success && result.hasSeenSetup) {
           router.push("/")
@@ -58,15 +58,18 @@ function CompleteProfileContent() {
     return <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
   }
 
-  // Only show the form if authenticated
-  if (session) {
-    return (
-      <>
-        <BackButton />
-        <CompleteProfileForm />
-      </>
-    )
-  }
+  return (
+    <>
+      {session === undefined || isPending ? (
+          <Loader2 className="animate-spin text-muted-foreground" />
+      ) : (
+        <>
+          <BackButton />
+          <CompleteProfileForm />
+        </>
+      )}
+    </>
+  )
 
   return null
 }
@@ -74,7 +77,7 @@ function CompleteProfileContent() {
 export default function CompleteProfilePage() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
-      <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}>
+      <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
         <CompleteProfileContent />
       </Suspense>
     </main>

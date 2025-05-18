@@ -133,7 +133,7 @@ export function CompleteProfileForm() {
       </CardHeader>
 
       <CardContent className="relative overflow-hidden px-3 sm:px-6" style={{ minHeight: "240px" }}>
-        <div className="flex flex-nowrap w-[300%]" style={{ transform: `translateX(${getStepIndex(currentStep) * -33.333}%)` }}>
+        <div className="flex flex-nowrap w-[300%] transition-all duration-500 ease-in-out" style={{ transform: `translateX(${getStepIndex(currentStep) * -33.333}%)` }}>
           {/* Bio Step */}
           <div 
             className={`w-1/3 px-0.5 transition-all duration-500 ease-in-out ${currentStep !== "bio" ? "opacity-0 pointer-events-none" : "opacity-100"}`}
