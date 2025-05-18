@@ -1,10 +1,12 @@
 "use server"
 
-import { prisma } from "@/prisma"
+import { db } from "@/db/drizzle"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { Session } from "@/lib/auth"
+import { user } from "@/db/schema" // Import the user table from your schema
+import { eq } from "drizzle-orm"
 
 interface ProfileUpdateData {
   bio?: string
@@ -30,20 +32,18 @@ export async function updateUserProfile(data: ProfileUpdateData) {
     )
     console.log("updatableData", updatableData)
 
-    // Use Prisma directly to update the user
-    await prisma.user.update({
-      where: {
-        id: session.user.id
-      },
-      data: {
+    // Use Drizzle to update the user
+    await db.update(user)
+      .set({
         bio: updatableData.bio,
         signature: updatableData.signature,
         website: updatableData.website,
         location: updatableData.location,
         displayUsername: updatableData.displayUsername,
         image: updatableData.image,
-      }
-    });
+        updatedAt: new Date().toISOString(), // Update the updatedAt timestamp
+      })
+      .where(eq(user.id, session.user.id));
 
     revalidatePath('/profile')
     revalidatePath('/')
@@ -69,15 +69,13 @@ export async function markProfileSetupSeen() {
       throw new Error("Not authenticated")
     }
 
-    // Use Prisma directly to update metadata
-    await prisma.user.update({
-      where: {
-        id: session.user.id
-      },
-      data: {
-        metadata: JSON.stringify({ profileSetupSeen: true })
-      }
-    });
+    // Use Drizzle to update metadata
+    await db.update(user)
+      .set({
+        metadata: JSON.stringify({ profileSetupSeen: true }),
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(user.id, session.user.id));
 
     return { success: true }
   } catch (error) {
@@ -97,23 +95,23 @@ export async function checkProfileCompletion() {
       throw new Error("Not authenticated")
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: session.user.id
-      },
-      select: {
-        bio: true,
-        image: true,
-        metadata: true
-      }
+    const users = await db.select({
+      bio: user.bio,
+      image: user.image,
+      metadata: user.metadata
     })
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1);
+
+    const userData = users[0];
 
     // Parse metadata if it exists
-    const metadata = user?.metadata ? JSON.parse(user.metadata as string) : {}
+    const metadata = userData?.metadata ? JSON.parse(userData.metadata as string) : {}
 
     return {
       success: true,
-      isComplete: Boolean(user?.bio && user?.image),
+      isComplete: Boolean(userData?.bio && userData?.image),
       hasSeenSetup: Boolean(metadata.profileSetupSeen)
     }
   } catch (error) {
@@ -137,23 +135,23 @@ export async function fetchUserProfile() {
       throw new Error("Not authenticated")
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: session.user.id
-      },
-      select: {
-        bio: true,
-        image: true,
-        metadata: true
-      }
+    const users = await db.select({
+      bio: user.bio,
+      image: user.image,
+      metadata: user.metadata
     })
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1);
+
+    const userData = users[0];
 
     // Parse metadata if it exists
-    const metadata = user?.metadata ? JSON.parse(user.metadata as string) : {}
+    const metadata = userData?.metadata ? JSON.parse(userData.metadata as string) : {}
 
     return {
       success: true,
-      user: { ...user, metadata }
+      user: { ...userData, metadata }
     }
   } catch (error) {
     console.error("Error fetching user profile:", error)

@@ -24,22 +24,22 @@ export async function sendVerificationEmail({ email, otp, type }: VerificationEm
       headers: await headers()
     })
     const username = session?.user?.name || email.split('@')[0]
-    
+
     await resend.emails.send({
       from: `${process.env.APP_NAME || 'OpenForum'} <noreply@${process.env.APP_DOMAIN || 'restoman.tech'}>`,
       to: email,
       subject: 'Verify your email address',
-      react: await EmailTemplate({ 
+      react: await EmailTemplate({
         username,
         otp,
-        productName: 'OpenForum' 
+        productName: 'OpenForum'
       }),
     })
-    
+
     return { success: true }
   } catch (error) {
     console.error('Error sending verification email:', error)
-    return { 
+    return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send verification email'
     }
@@ -55,18 +55,18 @@ export async function sendForgotPassEmail({ email, otp, type }: VerificationEmai
       from: `${process.env.APP_NAME || 'OpenForum'} <noreply@${process.env.APP_DOMAIN || 'restoman.tech'}>`,
       to: email,
       subject: 'Reset your password',
-      react: await EmailTemplate({ 
+      react: await EmailTemplate({
         username: email.split('@')[0],
         otp,
         productName: 'OpenForum',
         isPasswordReset: true
       }),
     })
-    
+
     return { success: true }
   } catch (error) {
     console.error('Error sending password reset email:', error)
-    return { 
+    return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send password reset email'
     }

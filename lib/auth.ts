@@ -1,17 +1,19 @@
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
+// import { prismaAdapter } from "better-auth/adapters/prisma";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor } from "better-auth/plugins"
 import { admin } from "better-auth/plugins"
 import { organization } from "better-auth/plugins"
 import { emailOTP } from "better-auth/plugins"
 import { username } from "better-auth/plugins"
-import { prisma } from "@/prisma"
+// import { prisma } from "@/prisma"
+import { db } from "@/db/drizzle"
 import { sendVerificationEmail, sendForgotPassEmail } from "@/actions/email"
 import { nextCookies } from "better-auth/next-js";
 
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, {
-    provider: "postgresql",
+  database: drizzleAdapter(db, {
+    provider: "pg",
   }),
   emailAndPassword: {
     enabled: true,
