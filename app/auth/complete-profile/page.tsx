@@ -41,7 +41,7 @@ function CompleteProfileContent() {
   useEffect(() => {
     const checkProfile = async () => {
       if (session) {
-        const result = await checkProfileCompletion(session)
+        const result = checkProfileCompletion(session)
         // If profile setup is seen, redirect to home
         if (result.success && result.hasSeenSetup) {
           router.push("/")
@@ -61,7 +61,7 @@ function CompleteProfileContent() {
   return (
     <>
       {session === undefined || isPending ? (
-          <Loader2 className="animate-spin text-muted-foreground" />
+        <Loader2 className="animate-spin text-muted-foreground" />
       ) : (
         <>
           <BackButton />
@@ -70,8 +70,6 @@ function CompleteProfileContent() {
       )}
     </>
   )
-
-  return null
 }
 
 export default function CompleteProfilePage() {
