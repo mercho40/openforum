@@ -157,14 +157,21 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
         email,
         otp: otpCode,
         password,
+        fetchOptions: {
+          onSuccess: () => {
+            toast.success("Password reset successfully!")
+          },
+          onError: (error) => {
+            console.error("Error resetting password:", error)
+            toast.error(error instanceof Error ? error.message : "Failed to reset password. Please try again.")
+          },
+        },
       })
 
       if (response.error) {
         toast.error(response.error.message || "Failed to reset password")
         throw new Error(response.error.message || "Failed to reset password")
       }
-
-      toast.success("Password reset successfully!")
 
       if (onForgotComplete) {
         onForgotComplete()

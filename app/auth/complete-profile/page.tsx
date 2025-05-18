@@ -55,7 +55,7 @@ function CompleteProfileContent() {
   }, [session, router, isPending])
 
   if (isPending) {
-    return <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    return <Loader2 className="animate-spin text-muted-foreground" />
   }
 
   return (
