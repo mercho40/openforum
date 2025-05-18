@@ -205,8 +205,10 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
           <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
             <Mail className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <p className="text-center text-xs sm:text-sm text-muted-foreground">
-            We&apos;ll send a verification code to <span className="font-medium text-foreground">{email}</span>
+          <p className={`text-center text-xs sm:text-sm text-muted-foreground transition-opacity duration-300
+            ${email ? "opacity-100" : "opacity-0"}
+            `}>
+            We&apos;ll send a verification code to <span className="font-medium text-foreground">{email ? email : "youremail@domain.com"}</span>
           </p>
         </div>
 
@@ -266,7 +268,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-center pt-2 px-3 sm:px-6">
+      <CardFooter className="flex justify-center pt-2 px-3 sm:px-6 transition-all duration-300">
         <Button
           onClick={!isCodeSent ? handleSendCode : handleVerifyCode}
           className={cn(
@@ -278,7 +280,7 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
           disabled={isSending || isVerifying || (isCodeSent && getOtpCode().length !== 6) || isVerified}
           size="default"
         >
-          <div className="relative flex items-center justify-center h-5">
+          <div className="relative flex items-center justify-center h-5 transition-all duration-300">
             {/* Send Code State */}
             <span 
               className={cn(

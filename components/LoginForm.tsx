@@ -8,12 +8,14 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { signIn } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSignIn = async () => {
     try {
@@ -40,6 +42,7 @@ export function LoginForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Authentication successful");
+            router.push("/auth/callback");
           }
         }
       )
