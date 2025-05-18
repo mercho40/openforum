@@ -28,7 +28,6 @@ export async function updateUserProfile(data: ProfileUpdateData) {
     const updatableData = Object.fromEntries(
       Object.entries(data).filter(([_, value]) => value !== undefined)
     )
-    console.log("updatableData", updatableData)
 
     // Use Prisma directly to update the user
     await prisma.user.update({
