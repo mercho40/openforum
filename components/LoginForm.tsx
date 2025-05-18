@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { signIn } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -40,6 +41,7 @@ export function LoginForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Authentication successful");
+            useRouter().push("/auth/callback");
           }
         }
       )

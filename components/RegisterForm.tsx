@@ -9,6 +9,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { signIn, signUp } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export function RegisterForm() {
   const [username, setUsername] = useState("")
@@ -77,6 +78,7 @@ export function RegisterForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Registration successful!");
+            useRouter().push("/auth/callback");
           },
         }
       );
