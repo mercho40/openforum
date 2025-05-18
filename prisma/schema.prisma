@@ -1,8 +1,8 @@
-
 generator client {
   provider        = "prisma-client-js"
   output          = "../generated/prisma"
   previewFeatures = ["driverAdapters"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -53,12 +53,12 @@ model User {
   username        String?
   displayUsername String?
 
-  metadata        String?     // JSON field to store user preferences and flags
-  profileUpdatedAt DateTime?  // When the user last updated their profile
+  metadata         String? // JSON field to store user preferences and flags
+  profileUpdatedAt DateTime? // When the user last updated their profile
 
   @@unique([email])
-  @@map("user")
   @@unique([username])
+  @@map("user")
 }
 
 enum UserRole {
