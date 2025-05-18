@@ -141,10 +141,122 @@
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .animate-bounce-subtle {
   animation: bounce-subtle 2s infinite ease-in-out;
 }
 
 .animate-pulse-subtle {
   animation: pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.6s ease-out forwards;
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 15s ease infinite;
+  background-size: 200% 200%;
+}
+
+/* Staggered animations for children */
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+
+/* Modern gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--chart-1) 100%);
+}
+
+.gradient-subtle {
+  background: linear-gradient(135deg, 
+    oklch(97.02% 0.01 285.89) 0%, 
+    oklch(97.02% 0.02 200) 100%);
+}
+
+.gradient-mesh {
+  background-image: 
+    radial-gradient(at 40% 20%, oklch(97.02% 0.02 285.89) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, oklch(97.02% 0.02 200) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, oklch(97.02% 0.01 100) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, oklch(97.02% 0.01 300) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, oklch(97.02% 0.01 200) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, oklch(97.02% 0.02 250) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, oklch(97.02% 0.01 300) 0px, transparent 50%);
+}
+
+.dark .gradient-mesh {
+  background-image: 
+    radial-gradient(at 40% 20%, oklch(26.86% 0.02 285.89) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, oklch(26.86% 0.02 200) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, oklch(26.86% 0.01 100) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, oklch(26.86% 0.01 300) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, oklch(26.86% 0.01 200) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, oklch(26.86% 0.02 250) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, oklch(26.86% 0.01 300) 0px, transparent 50%);
+}
+
+@layer utilities {
+  @media (min-width: 480px) {
+    .xs\:flex-row {
+      flex-direction: row;
+    }
+    .xs\:w-auto {
+      width: auto;
+    }
+  }
 }

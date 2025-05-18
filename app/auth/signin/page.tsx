@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 export default function Page() {
-  const { data: session, error } = useSession()
+  const { data: session, isPending, error } = useSession()
   const router = useRouter()
 
   // Move navigation to useEffect
@@ -25,7 +25,7 @@ export default function Page() {
   }
 
   // Check if the session is loading
-  if (session === undefined) {
+  if (isPending || session) {
     return (
       <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
         <Loader2 className="animate-spin text-muted-foreground" />
