@@ -4,6 +4,7 @@ import { prisma } from "@/prisma"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
+import { Session } from "@/lib/auth"
 
 interface ProfileUpdateData {
   bio?: string
@@ -16,10 +17,9 @@ interface ProfileUpdateData {
 
 export async function updateUserProfile(data: ProfileUpdateData) {
   try {
-    const session = await auth.api.getSession({
+    const session: Session | null = await auth.api.getSession({
       headers: await headers()
     })
-
     if (!session?.user?.id) {
       throw new Error("Not authenticated")
     }
@@ -28,19 +28,27 @@ export async function updateUserProfile(data: ProfileUpdateData) {
     const updatableData = Object.fromEntries(
       Object.entries(data).filter(([_, value]) => value !== undefined)
     )
+    console.log("updatableData", updatableData)
 
-    // Update the user profile
-    const updatedUser = await prisma.user.update({
+    // Use Prisma directly to update the user
+    await prisma.user.update({
       where: {
         id: session.user.id
       },
-      data: updatableData
-    })
+      data: {
+        bio: updatableData.bio,
+        signature: updatableData.signature,
+        website: updatableData.website,
+        location: updatableData.location,
+        displayUsername: updatableData.displayUsername,
+        image: updatableData.image,
+      }
+    });
 
     revalidatePath('/profile')
     revalidatePath('/')
 
-    return { success: true, user: updatedUser }
+    return { success: true }
   } catch (error) {
     console.error("Error updating user profile:", error)
     return {
@@ -53,7 +61,7 @@ export async function updateUserProfile(data: ProfileUpdateData) {
 // Track if the user has seen the profile completion form
 export async function markProfileSetupSeen() {
   try {
-    const session = await auth.api.getSession({
+    const session: Session | null = await auth.api.getSession({
       headers: await headers()
     })
 
@@ -61,16 +69,15 @@ export async function markProfileSetupSeen() {
       throw new Error("Not authenticated")
     }
 
-    // Store this information in the user's metadata
+    // Use Prisma directly to update metadata
     await prisma.user.update({
       where: {
         id: session.user.id
       },
       data: {
-        // Using the 'metadata' field from the schema to store this flag
         metadata: JSON.stringify({ profileSetupSeen: true })
       }
-    })
+    });
 
     return { success: true }
   } catch (error) {
@@ -156,4 +163,3 @@ export async function fetchUserProfile() {
     }
   }
 }
-

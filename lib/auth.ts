@@ -53,13 +53,31 @@ export const auth = betterAuth({
       metadata: {
         type: "string",
         nullable: true,
+        input: true,
       },
       bio: {
         type: "string",
         nullable: true,
+        input: true,
       },
-    },
+      signature: {
+        type: "string",
+        nullable: true,
+        input: true,
+      },
+      website: {
+        type: "string",
+        nullable: true,
+        input: true,
+      },
+      location: {
+        type: "string",
+        nullable: true,
+        input: true,
 
+      },
+
+    },
   },
   appName: process.env.APP_NAME || "OpenForum",
 });

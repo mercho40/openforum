@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { Suspense } from "react"
 import { useRouter } from "next/navigation"
-import { useSession } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
 import React from "react"
@@ -10,53 +9,24 @@ import { ForgotPassword } from "@/components/ForgotPassword"
 
 function ForgotPasswordContent() {
   const router = useRouter()
-  const { data: session, error } = useSession()
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (session === undefined) {
-        setIsLoading(true)
-      } else {
-        setIsLoading(false)
-      }
-    }, 3000)
-    
-    return () => clearTimeout(timeout)
-  }, [session])
-
-  // Handle error
-  if (error) {
-    console.error("Error fetching session:", error)
-    router.push("/auth/verify-email")
-    setIsLoading(false)
-    return null
-  }
 
   const handleForgotComplete = () => {
-    router.push("/auth/callback")
+    // Redirect to sign in page after password reset
+    router.push("/auth/signin")
   }
 
   return (
     <>
-      {session === undefined || isLoading ? (
-          <Loader2 className="animate-spin text-muted-foreground" />
-      ) : (
-        <>
-          <BackButton />
-          <ForgotPassword
-            onForgotComplete={handleForgotComplete}
-          />
-        </>
-      )}
+      <BackButton />
+      <ForgotPassword onForgotComplete={handleForgotComplete} />
     </>
   )
 }
 
-export default function VerifyEmailPage() {
+export default function ForgotPasswordPage() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4 w-full">
-      <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
+      <Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}>
         <ForgotPasswordContent />
       </Suspense>
     </main>
