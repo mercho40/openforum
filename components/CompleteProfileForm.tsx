@@ -12,13 +12,12 @@ import { Label } from "./ui/label"
 import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { useSession } from "@/lib/auth-client"
 import Image from "next/image"
+import { Session } from "@/lib/auth"
 
 type Step = "bio" | "avatar" | "welcome"
 
-export function CompleteProfileForm() {
-  const { data: session } = useSession()
+export function CompleteProfileForm({ session }: { session: Session }) {
   const [currentStep, setCurrentStep] = useState<Step>("bio")
   const [bio, setBio] = useState("")
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
