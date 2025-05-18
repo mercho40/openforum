@@ -15,6 +15,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSignIn = async () => {
     try {
@@ -41,7 +42,7 @@ export function LoginForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Authentication successful");
-            useRouter().push("/auth/callback");
+            router.push("/auth/callback");
           }
         }
       )

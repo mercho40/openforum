@@ -21,6 +21,7 @@ export function RegisterForm() {
   const [loading, setLoading] = useState(false)
   const [passwordMeetsRequirements, setPasswordMeetsRequirements] = useState(false)
   const [passwordsMatch, setPasswordsMatch] = useState(false)
+  const router = useRouter()
 
   const requirements = useMemo(() => [
     { id: "length", label: "At least 8 characters", met: password.length >= 8 },
@@ -78,7 +79,7 @@ export function RegisterForm() {
           onSuccess: async () => {
             setLoading(false);
             toast.success("Registration successful!");
-            useRouter().push("/auth/callback");
+            router.push("/auth/callback");
           },
         }
       );
