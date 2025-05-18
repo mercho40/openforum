@@ -63,7 +63,7 @@ function VerifyEmailContent() {
 
   return (
     <>
-      {session === undefined || isLoading ? (
+      {session === undefined || isLoading || session?.user.emailVerified ? (
           <Loader2 className="animate-spin text-muted-foreground" />
       ) : (
         <>

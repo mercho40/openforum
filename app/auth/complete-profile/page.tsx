@@ -60,7 +60,7 @@ function CompleteProfileContent() {
 
   return (
     <>
-      {session === undefined || isPending ? (
+      {session === undefined || isPending || (session && checkProfileCompletion(session).hasSeenSetup) ? (
         <Loader2 className="animate-spin text-muted-foreground" />
       ) : (
         <>
