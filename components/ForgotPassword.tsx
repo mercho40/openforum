@@ -327,10 +327,15 @@ export function ForgotPassword({ email: initialEmail = "", onForgotComplete }: F
             </div>
 
             <div className="text-center">
-              <button
-                type="button"
+              <button 
+                type="button" 
                 onClick={handleSendCode}
-                className="text-xs sm:text-sm text-primary hover:underline"
+                className={cn(
+                  "text-xs sm:text-sm hover:underline",
+                  resendOtpDisabled 
+                    ? "text-muted-foreground cursor-not-allowed opacity-70" 
+                    : "text-primary cursor-pointer"
+                )}
                 disabled={isSending || resendOtpDisabled}
               >
                 {resendOtpDisabled ? `Resend in ${resendOtpTimer}s` : "Didn't receive a code?"}

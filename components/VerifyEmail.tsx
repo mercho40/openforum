@@ -252,8 +252,13 @@ export function VerifyEmail({ email, onVerificationComplete }: VerifyEmailProps)
               <button 
                 type="button" 
                 onClick={handleSendCode}
-                className="text-xs sm:text-sm text-primary hover:underline"
-                disabled={isSending || isVerified}
+                className={cn(
+                  "text-xs sm:text-sm hover:underline",
+                  resendOtpDisabled 
+                    ? "text-muted-foreground cursor-not-allowed opacity-70" 
+                    : "text-primary cursor-pointer"
+                )}
+                disabled={isSending || isVerified || resendOtpDisabled}
               >
                 {resendOtpDisabled ? `Resend in ${resendOtpTimer}s` : "Didn't receive a code?"}
               </button>

@@ -46,7 +46,7 @@ export const EmailTemplate: React.FC<EmailTemplateProps> = ({
                   ? `We received a request to reset your password for your ${productName} account.` 
                   : `Thank you for registering with ${productName}. To complete your registration, please verify your email address.`}
               </Text>
-              <Text className="my-4 text-center text-2xl font-bold tracking-wide">
+              <Text className="my-4 text-center text-xl font-bold tracking-wide">
                 {otp.split('').map((char, i) => (
                   <span 
                     key={i} 
