@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, index } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text('id').primaryKey(),
@@ -22,6 +22,10 @@ export const user = pgTable("user", {
   location: text('location'),
   profileUpdatedAt: timestamp({ precision: 3, mode: 'string' }),
   reputation: integer().default(0).notNull(),
+}, (table) => {
+  return {
+    emailIdx: index('user_email_idx').on(table.email),
+  }
 });
 
 export const session = pgTable("session", {
@@ -34,6 +38,11 @@ export const session = pgTable("session", {
   userAgent: text('user_agent'),
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   impersonatedBy: text('impersonated_by')
+}, (table) => {
+  return {
+    userIdIdx: index('session_user_id_idx').on(table.userId),
+    tokenIdx: index('session_token_idx').on(table.token),
+  }
 });
 
 export const account = pgTable("account", {
@@ -50,6 +59,10 @@ export const account = pgTable("account", {
   password: text('password'),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull()
+}, (table) => {
+  return {
+    userIdIdx: index('account_user_id_idx').on(table.userId),
+  }
 });
 
 export const verification = pgTable("verification", {
@@ -59,6 +72,10 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').$defaultFn(() => new Date()),
   updatedAt: timestamp('updated_at').$defaultFn(() => new Date())
+}, (table) => {
+  return {
+    identifierIdx: index('verification_identifier_idx').on(table.identifier),
+  }
 });
 
 export const twoFactor = pgTable("two_factor", {
@@ -66,4 +83,8 @@ export const twoFactor = pgTable("two_factor", {
   secret: text('secret').notNull(),
   backupCodes: text('backup_codes').notNull(),
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' })
+}, (table) => {
+  return {
+    secretIdx: index('two_factor_secret_idx').on(table.secret),
+  }
 });
