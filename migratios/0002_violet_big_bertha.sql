@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "reputation" integer DEFAULT 0 NOT NULL;

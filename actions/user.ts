@@ -40,7 +40,7 @@ export async function updateUserProfile(data: ProfileUpdateData) {
         location: updatableData.location,
         displayUsername: updatableData.displayUsername,
         image: updatableData.image,
-        updatedAt: new Date().toISOString(), // Update the updatedAt timestamp
+        updatedAt: new Date() // Update the updatedAt timestamp
       })
       .where(eq(user.id, session.user.id));
 
@@ -72,7 +72,7 @@ export async function markProfileSetupSeen() {
     await db.update(user)
       .set({
         metadata: JSON.stringify({ profileSetupSeen: true }),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date()
       })
       .where(eq(user.id, session.user.id));
 

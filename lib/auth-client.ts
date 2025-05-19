@@ -1,7 +1,6 @@
 import { createAuthClient } from "better-auth/react"
 import { twoFactorClient } from "better-auth/client/plugins"
 import { adminClient } from "better-auth/client/plugins"
-import { organizationClient } from "better-auth/client/plugins"
 import { emailOTPClient } from "better-auth/client/plugins"
 import { usernameClient } from "better-auth/client/plugins"
 // import { inferAdditionalFields } from "better-auth/client/plugins";
@@ -12,7 +11,6 @@ export const authClient = createAuthClient({
   plugins: [
     twoFactorClient(),
     adminClient(),
-    organizationClient(),
     emailOTPClient(),
     usernameClient(),
     // inferAdditionalFields({
