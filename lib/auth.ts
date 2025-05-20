@@ -4,6 +4,7 @@ import { twoFactor } from "better-auth/plugins"
 import { admin } from "better-auth/plugins"
 import { emailOTP } from "better-auth/plugins"
 import { username } from "better-auth/plugins"
+import { organization } from "better-auth/plugins"
 import { db } from "@/db/drizzle"
 import { sendVerificationEmail, sendForgotPassEmail } from "@/actions/email"
 import { nextCookies } from "better-auth/next-js";
@@ -19,6 +20,7 @@ export const auth = betterAuth({
     twoFactor(),
     admin(),
     username(),
+    organization(),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         // Implement the sendVerificationOTP method to send the OTP to the user's email address

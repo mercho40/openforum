@@ -3,8 +3,7 @@ import { twoFactorClient } from "better-auth/client/plugins"
 import { adminClient } from "better-auth/client/plugins"
 import { emailOTPClient } from "better-auth/client/plugins"
 import { usernameClient } from "better-auth/client/plugins"
-// import { inferAdditionalFields } from "better-auth/client/plugins";
-// import type { auth } from "./auth";
+import { organizationClient } from "better-auth/client/plugins"
 
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
@@ -12,18 +11,8 @@ export const authClient = createAuthClient({
     twoFactorClient(),
     adminClient(),
     emailOTPClient(),
+    organizationClient(),
     usernameClient(),
-    // inferAdditionalFields({
-    //   user: {
-    //     metadata: {
-    //       type: "string",
-    //     },
-    //     bio: {
-    //       type: "string",
-    //     },
-    //   },
-    // }),
-    // inferAdditionalFields<typeof auth>()
   ],
   // baseURL: process.env.BETTER_AUTH_URL
 })

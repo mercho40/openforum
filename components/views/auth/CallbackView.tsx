@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { checkProfileCompletion } from "@/actions/user";
+// import { checkProfileCompletion } from "@/actions/user";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ interface CallbackViewProps {
   isLoading: boolean;
   error?: Error | null;
 }
+
 
 export function CallbackView({ session, isLoading, error: initialError }: CallbackViewProps) {
   const router = useRouter();
@@ -28,14 +29,15 @@ export function CallbackView({ session, isLoading, error: initialError }: Callba
         const emailVerified = session?.user?.emailVerified;
 
         // Verify if profile is complete
-        const hasCompletedProfile = await checkProfileCompletion();
+        const metadata = session?.user?.metadata ? JSON.parse(session?.user?.metadata as string) : {}
+        const hasSeenSetup = Boolean(metadata.profileSetupSeen)
 
         if (!emailVerified) {
           router.push("/auth/verify-email");
           return;
         }
 
-        if (!hasCompletedProfile.hasSeenSetup) {
+        if (!hasSeenSetup) {
           router.push("/auth/complete-profile");
           return;
         }
