@@ -5,27 +5,9 @@ import { BackButton } from "@/components/BackButton"
 import { ForgotPassword } from "@/components/ForgotPassword"
 import { authClient } from "@/lib/auth-client"
 import { Session } from "@/lib/auth"
-import { useEffect } from "react"
 
-interface ForgotPasswordViewProps {
-  session: Session | null;
-  isLoading: boolean;
-  error?: Error | null;
-}
-
-export function ForgotPasswordView({ session, error }: ForgotPasswordViewProps) {
+export function ForgotPasswordView() {
   const router = useRouter()
-
-  useEffect(() => {
-    if (session) {
-      router.push("/")
-    }
-  }, [session, router])
-
-  if (error) {
-    console.error("Error fetching session:", error)
-    return null
-  }
 
   const handleForgotComplete = async () => {
     await authClient.revokeSessions({
