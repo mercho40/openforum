@@ -1,8 +1,6 @@
-import { auth } from "@/lib/auth"
 import { ForgotPasswordView } from "@/components/views/auth/ForgotPasswordView"
 import { Suspense } from "react"
 import { Loader2 } from "lucide-react"
-import { headers } from "next/headers"
 
 export default async function Page() {
   return (
