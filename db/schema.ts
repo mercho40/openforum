@@ -93,6 +93,10 @@ export const organization = pgTable("organization", {
   logo: text('logo'),
   createdAt: timestamp('created_at').notNull(),
   metadata: text('metadata')
+}, (table) => {
+  return {
+    slugIdx: index('organization_slug_idx').on(table.slug),
+  }
 });
 
 export const member = pgTable("member", {
@@ -101,6 +105,11 @@ export const member = pgTable("member", {
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   role: text('role').default("member").notNull(),
   createdAt: timestamp('created_at').notNull()
+}, (table) => {
+  return {
+    userIdIdx: index('member_user_id_idx').on(table.userId),
+    organizationIdIdx: index('member_organization_id_idx').on(table.organizationId),
+  }
 });
 
 export const invitation = pgTable("invitation", {
@@ -111,6 +120,11 @@ export const invitation = pgTable("invitation", {
   status: text('status').default("pending").notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   inviterId: text('inviter_id').notNull().references(() => user.id, { onDelete: 'cascade' })
+}, (table) => {
+  return {
+    emailIdx: index('invitation_email_idx').on(table.email),
+    organizationIdIdx: index('invitation_organization_id_idx').on(table.organizationId),
+  }
 });
 
 export const category = pgTable("category", {
