@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation"
 import { BackButton } from "@/components/BackButton"
 import { ForgotPassword } from "@/components/ForgotPassword"
 import { authClient } from "@/lib/auth-client"
-import { Session } from "@/lib/auth"
 
 export function ForgotPasswordView() {
   const router = useRouter()
