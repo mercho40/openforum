@@ -188,3 +188,27 @@ export async function markProfileSetupSeen() {
 //     }
 //   }
 // }
+
+export async function UpdatePassword(newPassword: string) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+
+    if (!session?.user?.id) {
+      throw new Error("Not authenticated")
+    } else {
+      const ctx = await auth.$context;
+      const hash = await ctx.password.hash(newPassword);
+      await ctx.internalAdapter.updatePassword(session?.user?.id, hash)
+    }
+
+  }
+  catch (error) {
+    console.error("Error fetching user profile:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch profile"
+    }
+  }
+}

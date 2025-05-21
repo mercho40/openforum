@@ -34,9 +34,13 @@ export function LoginForm() {
           onResponse: () => {
             setLoading(false)
           },
-          onError: (ctx: { error: { message: string } }) => {
+          onError: (ctx: { error: { message: string, status: number } }) => {
             console.error("Sign-in error:", ctx.error.message);
-            toast.error(ctx.error.message || "Failed to sign in");
+            if (ctx.error.status === 403) {
+              toast.error("Plaease verify your email address")
+            } else {
+              toast.error(ctx.error.message || "Failed to sign in");
+            }
             setLoading(false);
           },
           onSuccess: async () => {
