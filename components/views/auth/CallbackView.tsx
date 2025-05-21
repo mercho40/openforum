@@ -42,7 +42,7 @@ export function CallbackView({ session, isLoading, error: initialError }: Callba
           return;
         }
 
-        router.push("/");
+        router.push("/forum");
       } catch (err) {
         console.error("Error checking profile:", err);
         setError("Ocurrió un error al verificar tu sesión");
