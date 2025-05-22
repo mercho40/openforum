@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import { redirect } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { desc, eq, sql, and } from "drizzle-orm"
 import { auth } from "@/lib/auth"

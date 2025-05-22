@@ -23,7 +23,6 @@ import {
   Tag,
   HelpCircle,
   Shield,
-  Eye,
   LogIn,
   UserPlus,
   FolderPlus,
@@ -39,7 +38,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Session } from "@/lib/auth"

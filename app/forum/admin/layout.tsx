@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { LayoutDashboard, FolderTree, MessageSquare, Users, Flag, Settings, Shield, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, FolderTree, MessageSquare, Users, Flag, Settings, Shield } from 'lucide-react'
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 

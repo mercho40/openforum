@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { deleteCategory } from "../../actions"
+import { deleteCategory } from "@/actions/category"
 import { ArrowLeft, AlertTriangle } from "lucide-react"
 
 interface DeleteCategoryFormProps {

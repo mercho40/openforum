@@ -12,93 +12,45 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-// import { createCategory, type CategoryFormData } from "@/actions/"
+import { createCategory } from "@/actions/category"
 import { ArrowLeft } from "lucide-react"
 
 // Form schema
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
-  slug: z
-    .string()
-    .min(1, "Slug is required")
-    .max(100, "Slug is too long")
-    .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
-  description: z.string().max(500, "Description is too long").optional().nullable(),
+  description: z.string().max(500, "Description is too long").optional(),
   displayOrder: z.coerce.number().int().min(0),
-  isHidden: z.boolean().default(false),
-  color: z.string().max(50).optional().nullable(),
-  iconClass: z.string().max(100).optional().nullable(),
-})
+  isHidden: z.boolean(),
+  color: z.string().max(50),
+});
 
 export default function NewCategoryPage() {
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Initialize form
-    // const form = useForm<CategoryFormData>({
-    //     resolver: zodResolver(formSchema),
-    //     defaultValues: {
-    //     name: "",
-    //     slug: "",
-    //     description: "",
-    //     displayOrder: 0,
-    //     isHidden: false,
-    //     color: "#3498db",
-    //     iconClass: "",
-    //     },
-    // })
-
-    // Simulate form initialization
-    const form = useForm<any>({
+    const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-        name: "",
-        slug: "",
-        description: "",
-        displayOrder: 0,
-        isHidden: false,
-        color: "#3498db",
-        iconClass: "",
+          name: "",
+          description: "",
+          displayOrder: 0,
+          isHidden: false,
+          color: "#3498db",
         },
     })
 
-    // Auto-generate slug from name
-    const watchName = form.watch("name")
-    const generateSlug = (name: string) => {
-        return name
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-    }
-
-    // Handle form submission
-    // const onSubmit = async (data: CategoryFormData) => {
-    //     setIsSubmitting(true)
-    //     try {
-    //     const result = await createCategory(data)
-    //     if (result.success) {
-    //         toast.success("Category created successfully")
-    //         router.push("/forum/admin/categories")
-    //     } else {
-    //         toast.error(result.error || "Failed to create category")
-    //     }
-    //     } catch (error) {
-    //     console.error("Error creating category:", error)
-    //     toast.error("An unexpected error occurred")
-    //     } finally {
-    //     setIsSubmitting(false)
-    //     }
-    // }
-
-    // Simulate form submission
+    // Handle form submission with real server action
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         setIsSubmitting(true)
         try {
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000))
-            toast.success("Category created successfully")
-            router.push("/forum/admin/categories")
+            const result = await createCategory(data)
+            if (result.success) {
+                toast.success("Category created successfully")
+                router.push("/forum/admin/categories")
+            } else {
+                toast.error(result.error || "Failed to create category")
+            }
         } catch (error) {
             console.error("Error creating category:", error)
             toast.error("An unexpected error occurred")
@@ -134,35 +86,9 @@ export default function NewCategoryPage() {
                             <Input
                             placeholder="Category name"
                             {...field}
-                            onChange={(e) => {
-                                field.onChange(e)
-                                // Auto-generate slug if slug is empty or matches previous auto-generated slug
-                                const currentSlug = form.getValues("slug")
-                                const previousAutoSlug = generateSlug(watchName)
-                                if (!currentSlug || currentSlug === previousAutoSlug) {
-                                form.setValue("slug", generateSlug(e.target.value))
-                                }
-                            }}
                             />
                         </FormControl>
                         <FormDescription>The display name of the category.</FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-
-                    <FormField
-                    control={form.control}
-                    name="slug"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Slug</FormLabel>
-                        <FormControl>
-                            <Input placeholder="category-slug" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                            The URL-friendly version of the name. Used in the URL: /forum/category/slug
-                        </FormDescription>
                         <FormMessage />
                         </FormItem>
                     )}
@@ -225,23 +151,6 @@ export default function NewCategoryPage() {
                         )}
                     />
                     </div>
-
-                    <FormField
-                    control={form.control}
-                    name="iconClass"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Icon Class</FormLabel>
-                        <FormControl>
-                            <Input placeholder="fa-solid fa-comments" {...field} value={field.value || ""} />
-                        </FormControl>
-                        <FormDescription>
-                            Optional CSS class for the icon (e.g., Font Awesome class). Leave empty to use the default icon.
-                        </FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
 
                     <FormField
                     control={form.control}

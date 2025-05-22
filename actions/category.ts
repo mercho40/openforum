@@ -18,6 +18,18 @@ const createCategorySchema = z.object({
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format").default("#3498db"),
 });
 
+const updateCategorySchema = z.object({
+  name: z.string().min(3).max(50),
+  slug: z.string().min(3).max(50).regex(/^[a-z0-9-]+$/),
+  description: z.string().optional().nullable(),
+  displayOrder: z.number().int().min(0).default(0),
+  isHidden: z.boolean().default(false),
+  color: z.string().optional().nullable(),
+  iconClass: z.string().optional().nullable(),
+});
+
+export type CategoryFormData = z.infer<typeof updateCategorySchema>;
+
 // Get all categories
 export async function getCategories() {
   try {
@@ -188,6 +200,7 @@ export async function unsubscribeFromCategoryAction(categoryId: string) {
     }
   }
 }
+
 export async function createCategory(input: z.infer<typeof createCategorySchema>) {
   try {
     const session = await auth.api.getSession({
@@ -224,6 +237,86 @@ export async function createCategory(input: z.infer<typeof createCategorySchema>
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create category"
+    }
+  }
+}
+
+// Update category
+export async function updateCategory(categoryId: string, input: CategoryFormData) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+    
+    if (!session?.user?.id) {
+      throw new Error("Not authenticated")
+    }
+    
+    const formData = updateCategorySchema.parse(input);
+    
+    // Update the category
+    const [updatedCategory] = await db.update(category)
+      .set({
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description,
+        displayOrder: formData.displayOrder,
+        isHidden: formData.isHidden,
+        color: formData.color,
+        iconClass: formData.iconClass,
+        updatedAt: new Date()
+      })
+      .where(eq(category.id, categoryId))
+      .returning();
+      
+    if (!updatedCategory) {
+      throw new Error("Failed to update category");
+    }
+    
+    // Revalidate the categories page
+    revalidatePath("/forum/admin/categories");
+    
+    return { success: true, data: updatedCategory };
+  } catch (error) {
+    console.error("Error updating category:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update category"
+    }
+  }
+}
+
+// Delete category
+export async function deleteCategory(categoryId: string) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+    
+    if (!session?.user?.id) {
+      throw new Error("Not authenticated")
+    }
+    
+    // Delete the category
+    // Note: In a real application, you might want to handle cascading deletes
+    // or prevent deletion if there are threads in the category
+    const [deletedCategory] = await db.delete(category)
+      .where(eq(category.id, categoryId))
+      .returning();
+      
+    if (!deletedCategory) {
+      throw new Error("Failed to delete category");
+    }
+    
+    // Revalidate the categories page
+    revalidatePath("/forum/admin/categories");
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting category:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete category"
     }
   }
 }

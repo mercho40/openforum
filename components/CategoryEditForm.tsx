@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-import { updateCategory, type CategoryFormData } from "../../actions"
+import { updateCategory, type CategoryFormData } from "@/actions/category"
 import { ArrowLeft } from "lucide-react"
 
 // Form schema
@@ -25,7 +25,7 @@ const formSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
   description: z.string().max(500, "Description is too long").optional().nullable(),
   displayOrder: z.coerce.number().int().min(0),
-  isHidden: z.boolean().default(false),
+  isHidden: z.boolean(),
   color: z.string().max(50).optional().nullable(),
   iconClass: z.string().max(100).optional().nullable(),
 })
