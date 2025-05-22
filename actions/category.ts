@@ -8,6 +8,15 @@ import { category, thread, categorySubscription } from "@/db/schema"
 import { eq, desc, asc, and } from "drizzle-orm"
 import { slugify } from "@/lib/utils" // You'll need to create this utility
 import { count } from 'drizzle-orm'
+import { z } from "zod"
+
+const createCategorySchema = z.object({
+  name: z.string().min(3).max(50),
+  description: z.string().optional(),
+  displayOrder: z.number().int().min(0).default(0),
+  isHidden: z.boolean().default(false),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format").default("#3498db"),
+});
 
 // Get all categories
 export async function getCategories() {
@@ -176,6 +185,45 @@ export async function unsubscribeFromCategoryAction(categoryId: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to unsubscribe from category"
+    }
+  }
+}
+export async function createCategory(input: z.infer<typeof createCategorySchema>) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+    if (!session?.user?.id) {
+      throw new Error("Not authenticated")
+    }
+    const formData = createCategorySchema.parse(input);
+    const slug = slugify(formData.name);
+
+    // Create the category
+    const [newCategory] = await db.insert(category).values({
+      name: formData.name,
+      description: formData.description,
+      slug,
+      displayOrder: formData.displayOrder,
+      isHidden: formData.isHidden,
+      color: formData.color,
+    }).returning();
+
+    if (!newCategory) {
+      throw new Error("Failed to create category");
+    }
+
+    // Revalidate the categories page
+    revalidatePath("/categories");
+
+    return { success: true, data: newCategory };
+
+
+  } catch (error) {
+    console.error("Error creating category:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create category"
     }
   }
 }
