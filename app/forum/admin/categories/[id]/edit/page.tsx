@@ -6,9 +6,10 @@ import { EditCategoryForm } from "@/components/CategoryEditForm"
 
 export default async function EditCategoryPage({
   params,
-  // searchParams,
-}: { params: { id: string } }) {
-  const { id } = params;
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params;
 
   // Fetch the category
   const categoryData = await db.select().from(category).where(eq(category.id, id)).limit(1)

@@ -6,8 +6,10 @@ import { DeleteCategoryForm } from "@/components/CategoryDeleteForm"
 
 export default async function DeleteCategoryPage({
   params,
-}: { params: { id: string } }) {
-  const { id } = params;
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params;
 
   // Fetch the category
   const categoryData = await db.select().from(category).where(eq(category.id, id)).limit(1)
