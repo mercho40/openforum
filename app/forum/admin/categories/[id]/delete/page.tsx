@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { db } from "@/db/drizzle"
 import { category } from "@/db/schema"
 import { eq } from "drizzle-orm"
-import { DeleteCategoryForm } from "@/components/CategoryDeleteForm"
+import { DeleteCategoryForm } from "@/components/forum/admin/CategoryDeleteForm"
 
 export default async function DeleteCategoryPage({
   params,

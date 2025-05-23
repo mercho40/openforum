@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { BackButton } from "@/components/BackButton"
-import { CompleteProfileForm } from "@/components/CompleteProfileForm"
+import { CompleteProfileForm } from "@/components/auth/CompleteProfileForm"
 import { Session } from "@/lib/auth"
 
 interface CompleteProfileViewProps {

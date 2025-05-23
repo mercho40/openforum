@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { BackButton } from "@/components/BackButton"
-import { ForgotPassword } from "@/components/ForgotPassword"
+import { ForgotPassword } from "@/components/auth/ForgotPassword"
 import { authClient } from "@/lib/auth-client"
 
 export function ForgotPasswordView() {

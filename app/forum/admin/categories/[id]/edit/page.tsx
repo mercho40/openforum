@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { db } from "@/db/drizzle"
 import { category } from "@/db/schema"
 import { eq } from "drizzle-orm"
-import { EditCategoryForm } from "@/components/CategoryEditForm"
+import { EditCategoryForm } from "@/components/forum/admin/CategoryEditForm"
 
 export default async function EditCategoryPage({
   params,

@@ -1,7 +1,7 @@
 "use client"
 
 import { BackButton } from "@/components/BackButton"
-import { LoginForm } from "@/components/LoginForm"
+import { LoginForm } from "@/components/auth/LoginForm"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"

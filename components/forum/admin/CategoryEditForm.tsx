@@ -7,8 +7,8 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { createCategory } from "@/actions/category"
-import { ArrowLeft, FolderPlus, Check } from "lucide-react"
+import { updateCategory, type CategoryFormData } from "@/actions/category"
+import { ArrowLeft, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -17,54 +17,74 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { IconPicker } from "@/components/forum/admin/IconPicker"
 import { ColorPicker } from "@/components/forum/admin/ColorPicker"
+import { CategoryIcon } from "@/components/forum/admin/CategoryIcon"
 
 // Form schema
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
-  description: z.string().max(500, "Description is too long").optional(),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(100, "Slug is too long")
+    .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
+  description: z.string().max(500, "Description is too long").optional().nullable(),
   displayOrder: z.coerce.number().int().min(0),
   isHidden: z.boolean(),
-  color: z.string().max(50),
-  iconClass: z.string().max(100).optional(),
+  color: z.string().max(50).optional().nullable(),
+  iconClass: z.string().max(100).optional().nullable(),
 })
 
-export default function NewCategoryPage() {
+interface EditCategoryFormProps {
+  category: {
+    id: string
+    name: string
+    slug: string
+    description: string | null
+    displayOrder: number
+    isHidden: boolean
+    color: string | null
+    iconClass: string | null
+  }
+}
+
+export function EditCategoryForm({ category }: EditCategoryFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
-  // Initialize form
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Initialize form with category data
+  const form = useForm<CategoryFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      displayOrder: 0,
-      isHidden: false,
-      color: "#3498db",
-      iconClass: "",
+      name: category.name,
+      slug: category.slug,
+      description: category.description || "",
+      displayOrder: category.displayOrder,
+      isHidden: category.isHidden,
+      color: category.color || "#3498db",
+      iconClass: category.iconClass || "",
     },
   })
 
   // Handle form submission
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: CategoryFormData) => {
     setIsSubmitting(true)
     try {
-      const result = await createCategory(data)
+      const result = await updateCategory(category.id, data)
       if (result.success) {
         setIsSuccess(true)
-        toast.success("Category created successfully")
+        toast.success("Category updated successfully")
 
         // Redirect after a short delay to show success state
         setTimeout(() => {
           router.push("/forum/admin/categories")
         }, 1000)
       } else {
-        toast.error(result.error || "Failed to create category")
+        toast.error(result.error || "Failed to update category")
         setIsSubmitting(false)
       }
     } catch (error) {
-      console.error("Error creating category:", error)
+      console.error("Error updating category:", error)
       toast.error("An unexpected error occurred")
       setIsSubmitting(false)
     }
@@ -80,8 +100,8 @@ export default function NewCategoryPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Category</h1>
-          <p className="text-sm text-muted-foreground mt-1">Create a new forum category</p>
+          <h1 className="text-2xl font-bold tracking-tight">Edit Category</h1>
+          <p className="text-sm text-muted-foreground mt-1">Update category details</p>
         </div>
       </div>
 
@@ -89,12 +109,15 @@ export default function NewCategoryPage() {
       <div className="bg-card/30 backdrop-blur-sm border border-border/10 rounded-lg overflow-hidden">
         {/* Form Header */}
         <div className="p-4 sm:p-6 flex items-center gap-3 border-b border-border/10">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <FolderPlus className="h-5 w-5 text-primary" />
+          <div
+            className="h-10 w-10 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: category.color ? `${category.color}20` : "var(--primary-10)" }}
+          >
+            <CategoryIcon iconName={category.iconClass} color={category.color} size="md" />
           </div>
           <div>
-            <h2 className="text-lg font-medium">Category Details</h2>
-            <p className="text-sm text-muted-foreground">Fill in the details for your new category</p>
+            <h2 className="text-lg font-medium">{category.name}</h2>
+            <p className="text-sm text-muted-foreground">Edit category details</p>
           </div>
         </div>
 
@@ -112,6 +135,27 @@ export default function NewCategoryPage() {
                       <Input placeholder="Category name" className="bg-background/50 border-border/10" {...field} />
                     </FormControl>
                     <FormDescription>The display name of the category.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Slug</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="category-slug"
+                        className="bg-background/50 border-border/10 font-mono text-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      The URL-friendly version of the name. Used in the URL: /forum/category/slug
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -234,7 +278,7 @@ export default function NewCategoryPage() {
                           : "opacity-0 transform -translate-y-8"
                       }`}
                     >
-                      Create Category
+                      Save Changes
                     </span>
 
                     {/* Loading State */}
@@ -245,7 +289,7 @@ export default function NewCategoryPage() {
                           : "opacity-0 transform translate-y-8"
                       }`}
                     >
-                      Creating...
+                      Saving...
                     </span>
 
                     {/* Success State */}
@@ -255,7 +299,7 @@ export default function NewCategoryPage() {
                       }`}
                     >
                       <Check className="mr-2 h-4 w-4" />
-                      Created!
+                      Saved!
                     </span>
                   </div>
                 </Button>
