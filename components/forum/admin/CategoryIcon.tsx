@@ -1,6 +1,6 @@
 "use client"
 
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, type LucideIcon } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -18,8 +18,10 @@ const sizeClasses = {
 }
 
 export function CategoryIcon({ iconName, color, className, size = "md" }: CategoryIconProps) {
-  // Get the icon component from Lucide
-  const IconComponent = iconName && iconName in LucideIcons ? (LucideIcons as any)[iconName] : MessageSquare
+  // Get the icon component from Lucide with proper typing
+  const IconComponent = (iconName && iconName in LucideIcons
+    ? LucideIcons[iconName as keyof typeof LucideIcons]
+    : MessageSquare) as LucideIcon
 
   return <IconComponent className={cn(sizeClasses[size], className)} style={{ color: color || "var(--primary)" }} />
 }

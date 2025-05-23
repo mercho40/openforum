@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Search, ChevronDown } from 'lucide-react'
+import { Search, ChevronDown, type LucideIcon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -31,12 +31,19 @@ const AVAILABLE_ICONS = [
   "Tag", "Tags", "Label", "Folder", "FolderOpen", "File", "FileText", "FilePlus",
   "FileX", "Download", "Upload", "Share", "Link", "ExternalLink", "Copy", "Cut",
   "Paste", "Clipboard", "ClipboardList", "ClipboardCheck", "ClipboardX", "Archive", "Trash", "Trash2"
-]
+] as const
 
 interface IconPickerProps {
   value?: string
   onValueChange: (value: string) => void
   placeholder?: string
+}
+
+// Helper function to get icon component safely
+function getIconComponent(iconName: string): LucideIcon | null {
+  return iconName in LucideIcons
+    ? (LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon)
+    : null
 }
 
 export function IconPicker({ value, onValueChange, placeholder = "Select an icon" }: IconPickerProps) {
@@ -62,9 +69,7 @@ export function IconPicker({ value, onValueChange, placeholder = "Select an icon
   }, [debouncedSearch])
 
   // Get the selected icon component
-  const SelectedIcon = value && value in LucideIcons 
-    ? (LucideIcons as any)[value] 
-    : null
+  const SelectedIcon = value ? getIconComponent(value) : null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -103,7 +108,7 @@ export function IconPicker({ value, onValueChange, placeholder = "Select an icon
         <ScrollArea className="h-64">
           <div className="grid grid-cols-6 gap-1 p-2">
             {filteredIcons.map((iconName) => {
-              const IconComponent = (LucideIcons as any)[iconName]
+              const IconComponent = getIconComponent(iconName)
               if (!IconComponent) return null
 
               return (
@@ -132,7 +137,7 @@ export function IconPicker({ value, onValueChange, placeholder = "Select an icon
             </div>
           )}
         </ScrollArea>
-        {value && (
+        {value && SelectedIcon && (
           <div className="p-3 border-t border-border/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
