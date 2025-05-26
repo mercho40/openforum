@@ -208,6 +208,7 @@ export async function deleteThread(threadId: string) {
 
 // Get thread details with posts
 export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
+  "use cache"
   try {
     // Get thread by slug
     const threadData = await db.query.thread.findFirst({

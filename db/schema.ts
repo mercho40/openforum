@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, boolean, integer, index, primaryKey, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const user = pgTable("user", {
   id: text('id').primaryKey(),
@@ -262,3 +263,74 @@ export const categorySubscription = pgTable("category_subscription", {
     userIdIdx: index('category_subscription_user_id_idx').on(table.userId),
   }
 });
+
+export const userRelations = relations(user, ({ many }) => ({
+  threads: many(thread),
+  posts: many(post),
+  votes: many(vote),
+}));
+
+// Thread relations
+export const threadRelations = relations(thread, ({ one, many }) => ({
+  author: one(user, {
+    fields: [thread.authorId],
+    references: [user.id],
+  }),
+  category: one(category, {
+    fields: [thread.categoryId],
+    references: [category.id],
+  }),
+  posts: many(post),
+  lastPost: one(post, {
+    fields: [thread.lastPostId],
+    references: [post.id],
+  }),
+  tags: many(threadTag),
+}));
+
+// Post relations
+export const postRelations = relations(post, ({ one, many }) => ({
+  thread: one(thread, {
+    fields: [post.threadId],
+    references: [thread.id],
+  }),
+  author: one(user, {
+    fields: [post.authorId],
+    references: [user.id],
+  }),
+  votes: many(vote),
+}));
+
+// Thread tag relations
+export const threadTagRelations = relations(threadTag, ({ one }) => ({
+  thread: one(thread, {
+    fields: [threadTag.threadId],
+    references: [thread.id],
+  }),
+  tag: one(tag, {
+    fields: [threadTag.tagId],
+    references: [tag.id],
+  }),
+}));
+
+// Vote relations
+export const voteRelations = relations(vote, ({ one }) => ({
+  user: one(user, {
+    fields: [vote.userId],
+    references: [user.id],
+  }),
+  post: one(post, {
+    fields: [vote.postId],
+    references: [post.id],
+  }),
+}));
+
+// Category relations
+export const categoryRelations = relations(category, ({ many }) => ({
+  threads: many(thread),
+}));
+
+// Tag relations
+export const tagRelations = relations(tag, ({ many }) => ({
+  threadTags: many(threadTag),
+}));
