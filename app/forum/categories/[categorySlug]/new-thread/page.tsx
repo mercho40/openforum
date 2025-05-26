@@ -8,19 +8,18 @@ import { category } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { NewThreadForm } from "@/components/forum/forms/NewThreadForm"
 
-interface NewThreadPageProps {
-  params: {
-    categorySlug: string
-  }
-}
 
-export default async function NewThreadPage({ params }: NewThreadPageProps) {
+export default async function NewThreadPage({
+  params,
+}: {
+  params: Promise<{ categorySlug: string }>
+}) {
   // Get the categorySlug parameter
   const { categorySlug } = await params
-  
+
   // Get the current user session
   let session = null
-  
+
   try {
     session = await auth.api.getSession({
       headers: await headers(),

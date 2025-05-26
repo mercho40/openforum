@@ -8,14 +8,12 @@ import { thread } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { EditThreadForm } from "@/components/forum/forms/EditThreadForm"
 
-interface ThreadEditPageProps {
-  params: {
-    categorySlug: string
-    threadSlug: string
-  }
-}
 
-export default async function ThreadEditPage({ params }: ThreadEditPageProps) {
+export default async function ThreadEditPage({
+  params,
+}: {
+  params: Promise<{ categorySlug: string, threadSlug: string }>
+}) {
   // Get the current user session
   let session = null
   try {
@@ -29,10 +27,11 @@ export default async function ThreadEditPage({ params }: ThreadEditPageProps) {
   if (!session?.user?.id) {
     notFound()
   }
+  const { categorySlug, threadSlug } = await params
 
   // Fetch thread
   const threadData = await db.query.thread.findFirst({
-    where: eq(thread.slug, params.threadSlug),
+    where: eq(thread.slug, threadSlug),
     with: {
       author: true,
       category: true,
@@ -62,7 +61,7 @@ export default async function ThreadEditPage({ params }: ThreadEditPageProps) {
         </main>
       }
     >
-      <EditThreadForm thread={threadData} categorySlug={params.categorySlug} session={session} />
+      <EditThreadForm thread={threadData} categorySlug={categorySlug} session={session} />
     </Suspense>
   )
 }

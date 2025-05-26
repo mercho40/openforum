@@ -8,6 +8,7 @@ import { eq, and } from "drizzle-orm"
 export async function POST(request: NextRequest, { params }: { params: { categorySlug: string; threadSlug: string } }) {
   try {
     // Get the current user session
+    const par = await params;
     const session = await auth.api.getSession({
       headers: await headers(),
     })
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest, { params }: { params: { categor
 
     // Find thread by slug
     const threadData = await db.query.thread.findFirst({
-      where: eq(thread.slug, params.threadSlug),
+      where: eq(thread.slug, par.threadSlug),
       columns: {
         id: true,
       },

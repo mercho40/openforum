@@ -6,18 +6,15 @@ import { headers } from "next/headers"
 import { getThreadWithPosts } from "@/actions/thread"
 import { ThreadView } from "@/components/views/forum/ThreadView"
 
-interface ThreadPageProps {
-  params: {
-    categorySlug: string
-    threadSlug: string
-  }
-  searchParams: {
-    page?: string
-  }
-}
 
-export default async function ThreadPage({ params, searchParams }: ThreadPageProps) {
-  const page = Number.parseInt(searchParams.page || "1", 10)
+export default async function ThreadPage({
+  params, searchParams,
+}: {
+  params: Promise<{ categorySlug: string, threadSlug: string }>, searchParams: Promise<{ page?: string }>
+}) {
+  const searchPar = await searchParams
+  const par = await params
+  const page = Number.parseInt(searchPar.page || "1", 10)
 
   // Get the current user session
   let session = null
@@ -30,7 +27,7 @@ export default async function ThreadPage({ params, searchParams }: ThreadPagePro
   }
 
   // Fetch thread with posts
-  const result = await getThreadWithPosts(params.threadSlug, page, 20)
+  const result = await getThreadWithPosts(par.threadSlug, page, 20)
 
   if (!result.success || !result.thread) {
     notFound()
@@ -49,7 +46,7 @@ export default async function ThreadPage({ params, searchParams }: ThreadPagePro
         thread={result.thread}
         posts={result.posts || []}
         pagination={result.pagination}
-        categorySlug={params.categorySlug}
+        categorySlug={par.categorySlug}
       />
     </Suspense>
   )
