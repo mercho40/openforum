@@ -10,7 +10,6 @@ import { ForumHomeView } from "@/components/views/forum/ForumHomeView"
 
 export default async function ForumPage() {
 
-  "use cache"
   // Get the current user session
   let session = null;
   let error = null;
