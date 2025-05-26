@@ -37,7 +37,7 @@ export default function ThreadCard({ thread }: { thread: Thread }) {
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Link href={`/forum/categories/${thread.categorySlug}/thread/${thread.slug}`} className="font-medium hover:text-primary line-clamp-1">
+                <Link href={`/forum/categories/${thread.categorySlug}/threads/${thread.slug}`} className="font-medium hover:text-primary line-clamp-1">
                   {thread.title}
                 </Link>
                 {thread.isPinned && (
