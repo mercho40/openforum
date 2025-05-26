@@ -115,7 +115,7 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen w-full bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b bg-card/50 backdrop-blur-md">
         <div className="flex h-16 items-center justify-between px-4">
