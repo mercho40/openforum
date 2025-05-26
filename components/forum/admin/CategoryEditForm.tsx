@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { IconPicker } from "@/components/forum/admin/IconPicker"
 import { ColorPicker } from "@/components/forum/admin/ColorPicker"
-import { CategoryIcon } from "@/components/forum/admin/CategoryIcon"
+import { CategoryIcon } from "@/components/forum/CategoryIcon"
 
 // Form schema
 const formSchema = z.object({

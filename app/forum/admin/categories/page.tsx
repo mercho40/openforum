@@ -6,7 +6,7 @@ import { FolderPlus, Pencil, Trash2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { CategoryIcon } from "@/components/forum/admin/CategoryIcon"
+import { CategoryIcon } from "@/components/forum/CategoryIcon"
 
 export default async function CategoriesPage() {
   // Fetch categories with thread counts

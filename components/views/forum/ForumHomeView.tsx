@@ -44,6 +44,7 @@ import type { Session } from "@/lib/auth"
 import { formatDistanceToNow } from "date-fns"
 import { authClient } from "@/lib/auth-client"
 import ThreadCard from "@/components/ThreadCard"
+import { CategoryIcon } from "@/components/forum/CategoryIcon"
 
 interface Category {
   id: string
@@ -429,17 +430,19 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
               </div>
               <div className="grid gap-4">
                 {categories.map((category) => (
-                  <Link key={category.id} href={`/forum/category/${category.slug}`} className="group">
+                  <Link key={category.id} href={`/forum/categories/${category.slug}`} className="group">
                     <div className="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
                       <div
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
                         style={{ backgroundColor: category.color ? `${category.color}20` : "var(--primary-10)" }}
                       >
                         {category.iconClass ? (
-                          <span
-                            className={`text-lg ${category.iconClass}`}
-                            style={{ color: category.color || "var(--primary)" }}
-                          ></span>
+                          <CategoryIcon
+                            iconName={category.iconClass}
+                            color={category.color || "var(--primary)"}
+                            size="md"
+                            className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors"
+                          />
                         ) : (
                           <MessageSquare className="h-5 w-5" style={{ color: category.color || "var(--primary)" }} />
                         )}
@@ -460,7 +463,7 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
                           <div className="mt-2 flex items-center gap-2 text-xs">
                             <span className="text-muted-foreground">Latest:</span>
                             <Link
-                              href={`/forum/thread/${category.lastThread.slug}`}
+                              href={`/forum/categories/${category.slug}/threads/${category.lastThread.slug}`}
                               className="font-medium hover:text-primary truncate max-w-[200px]"
                             >
                               {category.lastThread.title}
