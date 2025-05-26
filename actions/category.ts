@@ -33,6 +33,7 @@ export type CategoryFormData = z.infer<typeof updateCategorySchema>;
 
 // Get all categories
 export async function getCategories() {
+  "use cache"
   try {
     const categories = await db.query.category.findMany({
       orderBy: [asc(category.displayOrder), asc(category.name)],
@@ -121,6 +122,7 @@ export async function getCategories() {
 // Get category with threads
 export async function getCategoryWithThreads(slug: string, page = 1, perPage = 20) {
   try {
+    "use cache"
     // Get category using basic query
     const categoryData = await db.select().from(category)
       .where(eq(category.slug, slug))
@@ -142,7 +144,7 @@ export async function getCategoryWithThreads(slug: string, page = 1, perPage = 2
       .orderBy(desc(thread.isPinned), desc(thread.lastPostAt))
       .offset(offset)
       .limit(perPage)
-    
+
     // Extract threads from result
     const threads = threadsData.map(t => t.thread)
 
@@ -168,7 +170,7 @@ export async function getCategoryWithThreads(slug: string, page = 1, perPage = 2
         name: "Unknown User",
         image: null
       }
-      
+
       return {
         ...thread,
         author,
@@ -331,13 +333,13 @@ export async function updateCategory(categoryId: string, input: CategoryFormData
     const session = await auth.api.getSession({
       headers: await headers()
     })
-    
+
     if (!session?.user?.id) {
       throw new Error("Not authenticated")
     }
-    
+
     const formData = updateCategorySchema.parse(input);
-    
+
     // Update the category
     const [updatedCategory] = await db.update(category)
       .set({
@@ -352,14 +354,14 @@ export async function updateCategory(categoryId: string, input: CategoryFormData
       })
       .where(eq(category.id, categoryId))
       .returning();
-      
+
     if (!updatedCategory) {
       throw new Error("Failed to update category");
     }
-    
+
     // Revalidate the categories page
     revalidatePath("/forum/admin/categories");
-    
+
     return { success: true, data: updatedCategory };
   } catch (error) {
     console.error("Error updating category:", error)
@@ -376,25 +378,25 @@ export async function deleteCategory(categoryId: string) {
     const session = await auth.api.getSession({
       headers: await headers()
     })
-    
+
     if (!session?.user?.id) {
       throw new Error("Not authenticated")
     }
-    
+
     // Delete the category
     // Note: In a real application, you might want to handle cascading deletes
     // or prevent deletion if there are threads in the category
     const [deletedCategory] = await db.delete(category)
       .where(eq(category.id, categoryId))
       .returning();
-      
+
     if (!deletedCategory) {
       throw new Error("Failed to delete category");
     }
-    
+
     // Revalidate the categories page
     revalidatePath("/forum/admin/categories");
-    
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting category:", error)

@@ -10,6 +10,7 @@ import { CategoryIcon } from "@/components/forum/CategoryIcon"
 
 export default async function CategoriesPage() {
   // Fetch categories with thread counts
+  "use cache"
   const categories = await db
     .select({
       id: category.id,
