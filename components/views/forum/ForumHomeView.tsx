@@ -376,7 +376,7 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Button asChild>
-                        <Link href="/forum/new">
+                        <Link href="/forum/threads/new">
                           <PlusCircle className="mr-2 h-4 w-4" />
                           New Thread
                         </Link>
