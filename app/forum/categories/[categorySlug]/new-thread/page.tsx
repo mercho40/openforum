@@ -45,7 +45,7 @@ export default async function NewThreadPage({ params }: NewThreadPageProps) {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-[100dvh] flex-col items-center justify-center p-4">
+        <main className="flex min-h-[100dvh] w-full flex-col items-center justify-center p-4">
           <Loader2 className="animate-spin text-muted-foreground" />
         </main>
       }
