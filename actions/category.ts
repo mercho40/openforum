@@ -4,7 +4,7 @@ import { db } from "@/db/drizzle"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
-import { category, thread, categorySubscription } from "@/db/schema"
+import { category, thread, categorySubscription, post, user } from "@/db/schema"
 import { eq, desc, asc, and, inArray } from "drizzle-orm"
 import { slugify } from "@/lib/utils" // You'll need to create this utility
 import { count } from 'drizzle-orm'
@@ -39,9 +39,75 @@ export async function getCategories() {
       where: eq(category.isHidden, false)
     })
 
+    // Get stats for each category
+    const categoriesWithStats = await Promise.all(
+      categories.map(async (cat) => {
+        // Get thread count
+        const threadCountResult = await db.select({
+          count: count(),
+        })
+          .from(thread)
+          .where(and(
+            eq(thread.categoryId, cat.id),
+            eq(thread.isHidden, false)
+          ))
+
+        const threadCount = threadCountResult[0]?.count || 0
+
+        // Get post count (sum of all posts in threads of this category)
+        const postCountResult = await db.select({
+          count: count(),
+        })
+          .from(post)
+          .innerJoin(thread, eq(post.threadId, thread.id))
+          .where(and(
+            eq(thread.categoryId, cat.id),
+            eq(thread.isHidden, false),
+            eq(post.isDeleted, false),
+            eq(post.isHidden, false)
+          ))
+
+        const postCount = postCountResult[0]?.count || 0
+
+        // Get last thread with author
+        const lastThreadResult = await db.select({
+          thread: thread,
+          author: {
+            id: user.id,
+            name: user.name,
+            image: user.image,
+          }
+        })
+          .from(thread)
+          .leftJoin(user, eq(thread.authorId, user.id))
+          .where(and(
+            eq(thread.categoryId, cat.id),
+            eq(thread.isHidden, false)
+          ))
+          .orderBy(desc(thread.lastPostAt))
+          .limit(1)
+
+        const lastThread = lastThreadResult[0] ? {
+          ...lastThreadResult[0].thread,
+          author: lastThreadResult[0].author || {
+            id: lastThreadResult[0].thread.authorId,
+            name: "Unknown User",
+            image: null
+          }
+        } : null
+
+        return {
+          ...cat,
+          threadCount,
+          postCount,
+          lastThread
+        }
+      })
+    )
+
     return {
       success: true,
-      categories
+      categories: categoriesWithStats
     }
   } catch (error) {
     console.error("Error fetching categories:", error)
