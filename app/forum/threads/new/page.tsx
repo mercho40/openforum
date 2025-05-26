@@ -4,18 +4,9 @@ import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { db } from "@/db/drizzle"
-import { category } from "@/db/schema"
-import { eq } from "drizzle-orm"
 import { NewThreadForm } from "@/components/forum/forms/NewThreadForm"
 
-export default async function NewThreadPage({
-  params,
-}: {
-  params: Promise<{ categorySlug: string }>
-}) {
-  // Get the categorySlug parameter
-  const { categorySlug } = await params
-
+export default async function NewThreadPage() {
   // Get the current user session
   let session = null
 
@@ -31,12 +22,12 @@ export default async function NewThreadPage({
     notFound()
   }
 
-  // Fetch category
-  const categoryData = await db.query.category.findFirst({
-    where: eq(category.slug, categorySlug),
+  // Fetch all categories
+  const categories = await db.query.category.findMany({
+    orderBy: (category, { asc }) => [asc(category.name)],
   })
 
-  if (!categoryData) {
+  if (!categories || categories.length === 0) {
     notFound()
   }
 
@@ -48,7 +39,7 @@ export default async function NewThreadPage({
         </main>
       }
     >
-      <NewThreadForm categories={[categoryData]} session={session} category={categoryData} />
+      <NewThreadForm categories={categories} session={session} />
     </Suspense>
   )
 }

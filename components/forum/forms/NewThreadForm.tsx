@@ -16,13 +16,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Session } from "@/lib/auth"
 import { CategoryIcon } from "@/components/forum/CategoryIcon"
 
-// Form schema
+// Form schema - updated to include categoryId
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(200, "Title is too long"),
   content: z.string().min(10, "Content must be at least 10 characters").max(10000, "Content is too long"),
+  categoryId: z.string().min(1, "Please select a category"),
   tags: z.array(z.string()).max(5, "Maximum 5 tags allowed").optional(),
 })
 
@@ -38,8 +40,9 @@ interface Category {
 }
 
 interface NewThreadFormProps {
-  category: Category
+  categories: Category[]
   session: Session
+  category?: Category // Make category optional for the new route
 }
 
 // Mock tags - in a real app, you'd fetch these from your database
@@ -54,11 +57,16 @@ const availableTags = [
   { id: "8", name: "Feature Request", slug: "feature-request", color: "#34495e" },
 ]
 
-export function NewThreadForm({ category, session }: NewThreadFormProps) {
+export function NewThreadForm({ categories, session, category }: NewThreadFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(category || null)
+
+  // Check if we have categories array or single category
+  const categoriesArray = categories || (category ? [category] : [])
+  const isCategorySelectable = !category && categories && categories.length > 1
 
   // Initialize form
   const form = useForm<FormData>({
@@ -66,6 +74,7 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
     defaultValues: {
       title: "",
       content: "",
+      categoryId: category?.id || "",
       tags: [],
     },
   })
@@ -79,31 +88,35 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
     })
   }
 
+  // Handle category selection
+  const handleCategoryChange = (categoryId: string) => {
+    const selected = categoriesArray.find(c => c.id === categoryId)
+    setSelectedCategory(selected || null)
+    form.setValue("categoryId", categoryId)
+  }
+
   // Handle form submission
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
-      // Make sure we're passing the selected tag IDs correctly
       const result = await createThread({
         title: data.title,
         content: data.content,
-        categoryId: category.id,
-        tags: selectedTags, // Use selectedTags instead of data.tags to ensure we send the right data
+        categoryId: data.categoryId,
+        tags: selectedTags,
       })
 
-      // Check if slug exists on the result object
       const slug = result.success && 'slug' in result ? result.slug : null
+      const targetCategory = categoriesArray.find(c => c.id === data.categoryId)
 
-      if (result.success && slug) {
+      if (result.success && slug && targetCategory) {
         setIsSuccess(true)
         toast.success("Thread created successfully")
 
-        // Redirect after a short delay to show success state
         setTimeout(() => {
-          router.push(`/forum/categories/${category.slug}/threads/${slug}`)
+          router.push(`/forum/categories/${targetCategory.slug}/threads/${slug}`)
         }, 1000)
       } else {
-        // Reset submitting state and show error
         setIsSubmitting(false)
         toast.error('error' in result ? result.error : "Failed to create thread")
       }
@@ -114,6 +127,8 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
     }
   }
 
+  const backUrl = category ? `/forum/categories/${category.slug}` : "/forum"
+
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Header */}
@@ -121,13 +136,15 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-              <Link href={`/forum/categories/${category.slug}`}>
+              <Link href={backUrl}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
             <div>
               <h1 className="text-lg font-semibold">Create New Thread</h1>
-              <p className="text-sm text-muted-foreground">in {category.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {category ? `in ${category.name}` : "Choose a category and start a discussion"}
+              </p>
             </div>
           </div>
         </div>
@@ -141,14 +158,18 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
             <Link href="/forum" className="hover:text-foreground">
               Forum
             </Link>
-            <span>/</span>
-            <Link href="/forum/categories" className="hover:text-foreground">
-              Categories
-            </Link>
-            <span>/</span>
-            <Link href={`/forum/categories/${category.slug}`} className="hover:text-foreground">
-              {category.name}
-            </Link>
+            {category && (
+              <>
+                <span>/</span>
+                <Link href="/forum/categories" className="hover:text-foreground">
+                  Categories
+                </Link>
+                <span>/</span>
+                <Link href={`/forum/categories/${category.slug}`} className="hover:text-foreground">
+                  {category.name}
+                </Link>
+              </>
+            )}
             <span>/</span>
             <span className="text-foreground">New Thread</span>
           </nav>
@@ -156,21 +177,88 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
           <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
             {/* Main Form */}
             <div className="space-y-6">
-              {/* Category Info */}
+              {/* Category Selection/Info */}
               <Card>
                 <CardHeader className="pb-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: category.color ? `${category.color}20` : "var(--primary-10)" }}
-                    >
-                      <CategoryIcon iconName={category.iconClass} color={category.color} size="md" />
-                    </div>
+                  {isCategorySelectable ? (
                     <div>
-                      <CardTitle className="text-lg">{category.name}</CardTitle>
-                      <CardDescription>{category.description || "Share your thoughts and ideas"}</CardDescription>
+                      <CardTitle className="text-lg mb-4">Select Category</CardTitle>
+                      <Select onValueChange={handleCategoryChange} value={selectedCategory?.id || ""}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a category for your thread">
+                            {selectedCategory && (
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="h-6 w-6 rounded-full flex items-center justify-center"
+                                  style={{ 
+                                    backgroundColor: selectedCategory.color ? `${selectedCategory.color}20` : "var(--primary-10)" 
+                                  }}
+                                >
+                                  <CategoryIcon iconName={selectedCategory.iconClass} color={selectedCategory.color} size="sm" />
+                                </div>
+                                <span>{selectedCategory.name}</span>
+                              </div>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoriesArray.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="h-6 w-6 rounded-full flex items-center justify-center"
+                                  style={{ 
+                                    backgroundColor: cat.color ? `${cat.color}20` : "var(--primary-10)" 
+                                  }}
+                                >
+                                  <CategoryIcon iconName={cat.iconClass} color={cat.color} size="sm" />
+                                </div>
+                                <div>
+                                  <div className="font-medium">{cat.name}</div>
+                                  {cat.description && (
+                                    <div className="text-sm text-muted-foreground">{cat.description}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedCategory && (
+                        <div className="mt-4 p-4 bg-muted/30 rounded-md border border-border/10">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="h-10 w-10 rounded-full flex items-center justify-center"
+                              style={{ 
+                                backgroundColor: selectedCategory.color ? `${selectedCategory.color}20` : "var(--primary-10)" 
+                              }}
+                            >
+                              <CategoryIcon iconName={selectedCategory.iconClass} color={selectedCategory.color} size="md" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">{selectedCategory.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {selectedCategory.description || "Share your thoughts and ideas"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  ) : category ? (
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-10 w-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: category.color ? `${category.color}20` : "var(--primary-10)" }}
+                      >
+                        <CategoryIcon iconName={category.iconClass} color={category.color} size="md" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{category.name}</CardTitle>
+                        <CardDescription>{category.description || "Share your thoughts and ideas"}</CardDescription>
+                      </div>
+                    </div>
+                  ) : null}
                 </CardHeader>
               </Card>
 
@@ -183,6 +271,20 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
                 <CardContent>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      {/* Hidden category field for form validation */}
+                      <FormField
+                        control={form.control}
+                        name="categoryId"
+                        render={({ field }) => (
+                          <FormItem className="hidden">
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={form.control}
                         name="title"
@@ -301,12 +403,12 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
                           asChild
                           disabled={isSubmitting || isSuccess}
                         >
-                          <Link href={`/forum/categories/${category.slug}`}>Cancel</Link>
+                          <Link href={backUrl}>Cancel</Link>
                         </Button>
                         <Button
                           type="submit"
                           className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px]"
-                          disabled={isSubmitting || isSuccess}
+                          disabled={isSubmitting || isSuccess || (!category && !selectedCategory)}
                         >
                           <div className="relative flex items-center justify-center h-5">
                             {/* Default State */}
@@ -399,25 +501,27 @@ export function NewThreadForm({ category, session }: NewThreadFormProps) {
               </Card>
 
               {/* Category Stats */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Category Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Threads:</span>
-                    <span className="font-medium">0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Posts:</span>
-                    <span className="font-medium">0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Active Members:</span>
-                    <span className="font-medium">0</span>
-                  </div>
-                </CardContent>
-              </Card>
+              {(selectedCategory || category) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Category Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Threads:</span>
+                      <span className="font-medium">0</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Posts:</span>
+                      <span className="font-medium">0</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Active Members:</span>
+                      <span className="font-medium">0</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
