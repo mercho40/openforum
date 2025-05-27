@@ -9,6 +9,7 @@ import { eq, and, desc, sql, asc, inArray } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { slugify } from "@/lib/utils" // You'll need to create this utility
 import { unstable_cacheTag as cacheTag } from 'next/cache'
+import { unstable_cacheLife as cacheLife } from 'next/cache'
 import { revalidateTag } from 'next/cache'
 
 interface ThreadCreateData {
@@ -215,6 +216,7 @@ export async function deleteThread(threadId: string) {
 export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
   "use cache"
   cacheTag('get-threads')
+  cacheLife("hours")
   try {
     // Get thread by slug
     const threadData = await db.query.thread.findFirst({
@@ -308,6 +310,7 @@ export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
 export async function getHomePageThreads() {
   "use cache"
   cacheTag('get-threads')
+  cacheLife("hours")
   try {
     // Fetch recent threads
     const recentThreads = await db
@@ -381,6 +384,7 @@ export async function getHomePageThreads() {
 export async function getThreadData(threadSlug: string) {
   "use cache"
   cacheTag('get-threads')
+  cacheLife("hours")
   try {
 
     const threadData = await db.query.thread.findFirst({
@@ -419,6 +423,7 @@ export async function getAllThreads(options?: {
 }) {
   "use cache"
   cacheTag('get-threads')
+  cacheLife("hours")
   try {
     const {
       page = 1,
@@ -433,7 +438,7 @@ export async function getAllThreads(options?: {
 
     // Build where conditions
     const whereConditions = [eq(thread.isHidden, false)]
-    
+
     if (categoryId) {
       whereConditions.push(eq(thread.categoryId, categoryId))
     }

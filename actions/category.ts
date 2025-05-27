@@ -10,6 +10,7 @@ import { slugify } from "@/lib/utils" // You'll need to create this utility
 import { count } from 'drizzle-orm'
 import { z } from "zod"
 import { unstable_cacheTag as cacheTag } from 'next/cache'
+import { unstable_cacheLife as cacheLife } from 'next/cache'
 import { revalidateTag } from 'next/cache'
 
 const createCategorySchema = z.object({
@@ -37,6 +38,7 @@ export type CategoryFormData = z.infer<typeof updateCategorySchema>;
 export async function getCategories() {
   "use cache"
   cacheTag('get-categories')
+  cacheLife("hours")
   try {
     const categories = await db.query.category.findMany({
       orderBy: [asc(category.displayOrder), asc(category.name)],
@@ -126,6 +128,7 @@ export async function getCategories() {
 export async function getCategoryWithThreads(slug: string, page = 1, perPage = 20) {
   "use cache"
   cacheTag('get-categories')
+  cacheLife("hours")
   try {
     // Get category using basic query
     const categoryData = await db.select().from(category)
@@ -417,6 +420,7 @@ export async function deleteCategory(categoryId: string) {
 export async function getOnlyCategories() {
   "use cache"
   cacheTag('get-categories')
+  cacheLife("hours")
   try {
     const categories = await db.query.category.findMany({
       orderBy: (category, { asc }) => [asc(category.name)],
@@ -434,6 +438,7 @@ export async function getOnlyCategories() {
 export async function getCategoryData(categorySlug: string) {
   "use cache"
   cacheTag('get-categories')
+  cacheLife("hours")
   try {
     const categoryData = await db.query.category.findFirst({
       where: eq(category.slug, categorySlug),
@@ -453,6 +458,7 @@ export async function getCategoryData(categorySlug: string) {
 export async function getCategoryById(id: string) {
   "use cache"
   cacheTag('get-categories')
+  cacheLife("hours")
   try {
     const categoryData = await db.select().from(category).where(eq(category.id, id)).limit(1)
     return { success: true, categoryData: categoryData || null };
