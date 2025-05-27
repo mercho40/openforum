@@ -448,3 +448,20 @@ export async function getCategoryData(categorySlug: string) {
 
   }
 }
+
+
+export async function getCategoryById(id: string) {
+  "use cache"
+  cacheTag('get-categories')
+  try {
+    const categoryData = await db.select().from(category).where(eq(category.id, id)).limit(1)
+    return { success: true, categoryData: categoryData || null };
+  } catch (error) {
+    console.error("Error getting categories", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get categories"
+    }
+
+  }
+}
