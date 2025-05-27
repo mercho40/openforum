@@ -292,6 +292,14 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                     Categories
                   </Link>
                   <Link
+                    href="/forum/threads"
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-muted text-foreground"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                    Threads
+                  </Link>
+                  <Link
                     href="/forum/members"
                     className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
                     onClick={() => setIsMobileMenuOpen(false)}

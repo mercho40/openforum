@@ -409,3 +409,152 @@ export async function getThreadData(threadSlug: string) {
 
 }
 
+export async function getAllThreads(options?: {
+  page?: number
+  perPage?: number
+  categoryId?: string
+  sortBy?: 'recent' | 'popular' | 'views' | 'replies'
+  searchQuery?: string
+  filter?: 'pinned' | 'locked' // Add filter support
+}) {
+  "use cache"
+  cacheTag('get-threads')
+  try {
+    const {
+      page = 1,
+      perPage = 20,
+      categoryId,
+      sortBy = 'recent',
+      searchQuery,
+      filter
+    } = options || {}
+
+    const offset = (page - 1) * perPage
+
+    // Build where conditions
+    const whereConditions = [eq(thread.isHidden, false)]
+    
+    if (categoryId) {
+      whereConditions.push(eq(thread.categoryId, categoryId))
+    }
+
+    if (searchQuery) {
+      whereConditions.push(sql`${thread.title} ILIKE ${'%' + searchQuery + '%'}`)
+    }
+
+    // Add filter conditions
+    if (filter === 'pinned') {
+      whereConditions.push(eq(thread.isPinned, true))
+    } else if (filter === 'locked') {
+      whereConditions.push(eq(thread.isLocked, true))
+    }
+
+    // Determine sort order
+    let orderBy
+    switch (sortBy) {
+      case 'popular':
+        orderBy = [desc(thread.viewCount), desc(thread.replyCount)]
+        break
+      case 'views':
+        orderBy = [desc(thread.viewCount)]
+        break
+      case 'replies':
+        orderBy = [desc(thread.replyCount)]
+        break
+      case 'recent':
+      default:
+        orderBy = [desc(thread.isPinned), desc(thread.lastPostAt)]
+        break
+    }
+
+    // Fetch threads with pagination
+    const threads = await db
+      .select({
+        id: thread.id,
+        title: thread.title,
+        slug: thread.slug,
+        createdAt: thread.createdAt,
+        updatedAt: thread.updatedAt,
+        lastPostAt: thread.lastPostAt,
+        viewCount: thread.viewCount,
+        replyCount: thread.replyCount,
+        isPinned: thread.isPinned,
+        isLocked: thread.isLocked,
+        categoryId: thread.categoryId,
+        categoryName: category.name,
+        categorySlug: category.slug,
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          displayUsername: user.displayUsername,
+          image: user.image,
+        },
+        category: {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          color: category.color,
+          iconClass: category.iconClass,
+        }
+      })
+      .from(thread)
+      .innerJoin(category, eq(thread.categoryId, category.id))
+      .innerJoin(user, eq(thread.authorId, user.id))
+      .where(and(...whereConditions))
+      .orderBy(...orderBy)
+      .offset(offset)
+      .limit(perPage)
+
+    // Get total count for pagination
+    const [{ count }] = await db
+      .select({
+        count: sql<number>`count(*)`,
+      })
+      .from(thread)
+      .innerJoin(category, eq(thread.categoryId, category.id))
+      .where(and(...whereConditions))
+
+    // Fetch all categories for the sidebar
+    const categories = await db.query.category.findMany({
+      columns: {
+        id: true,
+        name: true,
+        slug: true,
+        color: true,
+        iconClass: true,
+      },
+      orderBy: [asc(category.name)]
+    })
+
+    return {
+      success: true,
+      threads,
+      categories,
+      pagination: {
+        total: count,
+        page,
+        perPage,
+        totalPages: Math.ceil(count / perPage),
+        hasNext: page * perPage < count,
+        hasPrev: page > 1
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching all threads:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch threads",
+      threads: [],
+      categories: [],
+      pagination: {
+        total: 0,
+        page: 1,
+        perPage: 20,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false
+      }
+    }
+  }
+}

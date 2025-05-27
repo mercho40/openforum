@@ -10,7 +10,8 @@ import {
   ChevronRight, Filter, SortAsc, Calendar,
   MoreVertical, Edit, Trash2, 
   LogIn,
-  UserPlus
+  UserPlus,
+  Grid3X3
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -189,6 +190,14 @@ export function CategoryView({ session, category, threads, pagination }: Categor
                 className="text-sm font-medium text-foreground transition-colors hover:text-primary"
               >
                 Categories
+              </Link>
+              <Link
+                href="/forum/threads"
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-muted text-foreground"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Grid3X3 className="h-4 w-4" />
+                Threads
               </Link>
               <Link
                 href="/forum/members"
