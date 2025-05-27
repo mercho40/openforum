@@ -6,6 +6,7 @@ import { headers } from "next/headers"
 import { db } from "@/db/drizzle"
 import { category } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { getCategoryData } from "@/actions/category"
 import { NewThreadForm } from "@/components/forum/forms/NewThreadForm"
 
 export default async function NewThreadPage({
@@ -32,10 +33,14 @@ export default async function NewThreadPage({
   }
 
   // Fetch category
-  const categoryData = await db.query.category.findFirst({
-    where: eq(category.slug, categorySlug),
-  })
+  // const categoryData = await db.query.category.findFirst({
+  //   where: eq(category.slug, categorySlug),
+  // })
 
+  const { categoryData, success, error } = await getCategoryData(categorySlug)
+  if (!success) {
+    throw new Error(error || "Failed to fetch categories")
+  }
   if (!categoryData) {
     notFound()
   }
