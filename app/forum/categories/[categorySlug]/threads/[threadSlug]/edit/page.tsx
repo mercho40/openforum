@@ -45,11 +45,11 @@ export default async function ThreadEditPage({
   // })
   //
   const { threadData, success, error } = await getThreadData(threadSlug)
-  if (!threadData) {
-    notFound()
-  }
   if (!success) {
     throw new Error(error || "Failed to fetch categories")
+  }
+  if (!threadData) {
+    notFound()
   }
 
 

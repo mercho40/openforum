@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { db } from "@/db/drizzle"
+import { getCategories } from "@/actions/category"
 import { NewThreadForm } from "@/components/forum/forms/NewThreadForm"
 
 export default async function NewThreadPage() {
@@ -23,10 +24,15 @@ export default async function NewThreadPage() {
   }
 
   // Fetch all categories
-  const categories = await db.query.category.findMany({
-    orderBy: (category, { asc }) => [asc(category.name)],
-  })
+  // const categories = await db.query.category.findMany({
+  //   orderBy: (category, { asc }) => [asc(category.name)],
+  // })
 
+  const { categories, success, error } = await getCategories()
+
+  if (!success) {
+    throw new Error(error || "Failed to fetch categories")
+  }
   if (!categories || categories.length === 0) {
     notFound()
   }

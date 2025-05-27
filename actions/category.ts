@@ -413,3 +413,21 @@ export async function deleteCategory(categoryId: string) {
     }
   }
 }
+
+export async function getOnlyCategories() {
+  "use cache"
+  cacheTag('get-categories')
+  try {
+    const categories = await db.query.category.findMany({
+      orderBy: (category, { asc }) => [asc(category.name)],
+    })
+    return { success: true, categories: categories || null };
+  } catch (error) {
+    console.error("Error getting categories", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get categories"
+    }
+
+  }
+}
