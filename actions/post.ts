@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { post, thread, vote, user, notification } from "@/db/schema"
 import { eq, and, sql } from "drizzle-orm"
+import { revalidateTag } from 'next/cache'
 
 interface PostCreateData {
   content: string
@@ -89,6 +90,7 @@ export async function createPost(data: PostCreateData) {
         })
       }
 
+      revalidateTag('get-threads')
       return {
         success: true,
         postId: postResult.id
@@ -148,8 +150,9 @@ export async function updatePost(postId: string, data: PostUpdateData) {
       })
       .where(eq(post.id, postId))
 
-    // revalidatePath(`/threads/${postData.thread?.slug}`)
+    revalidatePath(`/threads/${postData.thread?.slug}`)
 
+    revalidateTag('get-threads')
     return { success: true }
   } catch (error) {
     console.error("Error updating post:", error)
@@ -213,8 +216,9 @@ export async function deletePost(postId: string) {
       })
       .where(eq(thread.id, postData.threadId))
 
-    // revalidatePath(`/threads/${postData.thread.slug}`)
+    revalidatePath(`/threads/${postData.thread.slug}`)
 
+    revalidateTag('get-threads')
     return { success: true }
   } catch (error) {
     console.error("Error deleting post:", error)
@@ -346,8 +350,9 @@ export async function votePost(postId: string, value: 1 | 0 | -1) {
         })
       }
 
-      // revalidatePath(`/threads/${postData.thread.slug}`)
+      revalidatePath(`/threads/${postData.thread.slug}`)
 
+      revalidateTag('get-threads')
       return { success: true }
     })
   } catch (error) {

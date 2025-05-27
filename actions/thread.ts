@@ -8,6 +8,8 @@ import { thread, post, threadTag, tag, category } from "@/db/schema"
 import { eq, and, desc, sql, asc, inArray } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { slugify } from "@/lib/utils" // You'll need to create this utility
+import { unstable_cacheTag as cacheTag } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 
 interface ThreadCreateData {
   title: string
@@ -83,6 +85,7 @@ export async function createThread(data: ThreadCreateData) {
         await tx.insert(threadTag).values(tagValues)
       }
 
+      revalidateTag('get-threads')
       return {
         success: true,
         threadId,
@@ -148,6 +151,7 @@ export async function updateThread(threadId: string, data: ThreadUpdateData) {
 
     revalidatePath('/threads/[slug]')
     revalidatePath('/categories/[slug]')
+    revalidateTag('get-threads')
 
     return {
       success: true,
@@ -196,6 +200,7 @@ export async function deleteThread(threadId: string) {
 
     revalidatePath('/categories/[slug]')
 
+    revalidateTag('get-threads')
     return { success: true }
   } catch (error) {
     console.error("Error deleting thread:", error)
@@ -209,6 +214,7 @@ export async function deleteThread(threadId: string) {
 // Get thread details with posts
 export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
   "use cache"
+  cacheTag('get-threads')
   try {
     // Get thread by slug
     const threadData = await db.query.thread.findFirst({

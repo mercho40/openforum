@@ -9,6 +9,8 @@ import { eq, desc, asc, and, inArray } from "drizzle-orm"
 import { slugify } from "@/lib/utils" // You'll need to create this utility
 import { count } from 'drizzle-orm'
 import { z } from "zod"
+import { unstable_cacheTag as cacheTag } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 
 const createCategorySchema = z.object({
   name: z.string().min(3).max(50),
@@ -34,6 +36,7 @@ export type CategoryFormData = z.infer<typeof updateCategorySchema>;
 // Get all categories
 export async function getCategories() {
   "use cache"
+  cacheTag('get-categories')
   try {
     const categories = await db.query.category.findMany({
       orderBy: [asc(category.displayOrder), asc(category.name)],
@@ -121,8 +124,9 @@ export async function getCategories() {
 
 // Get category with threads
 export async function getCategoryWithThreads(slug: string, page = 1, perPage = 20) {
+  "use cache"
+  cacheTag('get-categories')
   try {
-    "use cache"
     // Get category using basic query
     const categoryData = await db.select().from(category)
       .where(eq(category.slug, slug))
@@ -314,6 +318,7 @@ export async function createCategory(input: z.infer<typeof createCategorySchema>
 
     // Revalidate the categories page
     revalidatePath("/categories");
+    revalidateTag('get-threads')
 
     return { success: true, data: newCategory };
 
@@ -361,6 +366,7 @@ export async function updateCategory(categoryId: string, input: CategoryFormData
 
     // Revalidate the categories page
     revalidatePath("/forum/admin/categories");
+    revalidateTag('get-threads')
 
     return { success: true, data: updatedCategory };
   } catch (error) {
@@ -396,6 +402,7 @@ export async function deleteCategory(categoryId: string) {
 
     // Revalidate the categories page
     revalidatePath("/forum/admin/categories");
+    revalidateTag('get-threads')
 
     return { success: true };
   } catch (error) {
