@@ -3,9 +3,10 @@ import { notFound } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { db } from "@/db/drizzle"
-import { thread } from "@/db/schema"
-import { eq } from "drizzle-orm"
+// import { db } from "@/db/drizzle"
+// import { thread } from "@/db/schema"
+// import { eq } from "drizzle-orm"
+import { getThreadData } from "@/actions/thread"
 import { EditThreadForm } from "@/components/forum/forms/EditThreadForm"
 
 
@@ -30,19 +31,20 @@ export default async function ThreadEditPage({
   const { categorySlug, threadSlug } = await params
 
   // Fetch thread
-  const threadData = await db.query.thread.findFirst({
-    where: eq(thread.slug, threadSlug),
-    with: {
-      author: true,
-      category: true,
-      tags: {
-        with: {
-          tag: true,
-        },
-      },
-    },
-  })
-
+  // const threadData = await db.query.thread.findFirst({
+  //   where: eq(thread.slug, threadSlug),
+  //   with: {
+  //     author: true,
+  //     category: true,
+  //     tags: {
+  //       with: {
+  //         tag: true,
+  //       },
+  //     },
+  //   },
+  // })
+  //
+  const { threadData } = await getThreadData(threadSlug)
   if (!threadData) {
     notFound()
   }
