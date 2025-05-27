@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { z } from "zod"
@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { createThread } from "@/actions/thread"
+import { getAllTags } from "@/actions/tag"
 import { ArrowLeft, Check, PlusCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -39,23 +40,18 @@ interface Category {
   color: string | null
 }
 
+interface Tag {
+  id: string
+  name: string
+  slug: string
+  color: string
+}
+
 interface NewThreadFormProps {
   categories: Category[]
   session: Session
   category?: Category // Make category optional for the new route
 }
-
-// Mock tags - in a real app, you'd fetch these from your database
-const availableTags = [
-  { id: "1", name: "Question", slug: "question", color: "#3498db" },
-  { id: "2", name: "Discussion", slug: "discussion", color: "#2ecc71" },
-  { id: "3", name: "Help", slug: "help", color: "#e74c3c" },
-  { id: "4", name: "Tutorial", slug: "tutorial", color: "#9b59b6" },
-  { id: "5", name: "News", slug: "news", color: "#f39c12" },
-  { id: "6", name: "Feedback", slug: "feedback", color: "#1abc9c" },
-  { id: "7", name: "Bug Report", slug: "bug-report", color: "#e67e22" },
-  { id: "8", name: "Feature Request", slug: "feature-request", color: "#34495e" },
-]
 
 export function NewThreadForm({ categories, session, category }: NewThreadFormProps) {
   const router = useRouter()
@@ -63,6 +59,23 @@ export function NewThreadForm({ categories, session, category }: NewThreadFormPr
   const [isSuccess, setIsSuccess] = useState(false)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(category || null)
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [loadingTags, setLoadingTags] = useState(true)
+
+  // Fetch tags from the server
+  useEffect(() => {
+    let mounted = true
+    setLoadingTags(true)
+    getAllTags()
+      .then(res => {
+        if (mounted && res.success) {
+          setAvailableTags(res.tags)
+        }
+      })
+      .catch(() => setAvailableTags([]))
+      .finally(() => setLoadingTags(false))
+    return () => { mounted = false }
+  }, [])
 
   // Check if we have categories array or single category
   const categoriesArray = categories || (category ? [category] : [])
@@ -190,8 +203,8 @@ export function NewThreadForm({ categories, session, category }: NewThreadFormPr
                               <div className="flex items-center gap-3">
                                 <div
                                   className="h-6 w-6 rounded-full flex items-center justify-center"
-                                  style={{ 
-                                    backgroundColor: selectedCategory.color ? `${selectedCategory.color}20` : "var(--primary-10)" 
+                                  style={{
+                                    backgroundColor: selectedCategory.color ? `${selectedCategory.color}20` : "var(--primary-10)"
                                   }}
                                 >
                                   <CategoryIcon iconName={selectedCategory.iconClass} color={selectedCategory.color} size="sm" />
@@ -207,8 +220,8 @@ export function NewThreadForm({ categories, session, category }: NewThreadFormPr
                               <div className="flex items-center gap-3">
                                 <div
                                   className="h-6 w-6 rounded-full flex items-center justify-center"
-                                  style={{ 
-                                    backgroundColor: cat.color ? `${cat.color}20` : "var(--primary-10)" 
+                                  style={{
+                                    backgroundColor: cat.color ? `${cat.color}20` : "var(--primary-10)"
                                   }}
                                 >
                                   <CategoryIcon iconName={cat.iconClass} color={cat.color} size="sm" />
@@ -229,8 +242,8 @@ export function NewThreadForm({ categories, session, category }: NewThreadFormPr
                           <div className="flex items-center gap-3">
                             <div
                               className="h-10 w-10 rounded-full flex items-center justify-center"
-                              style={{ 
-                                backgroundColor: selectedCategory.color ? `${selectedCategory.color}20` : "var(--primary-10)" 
+                              style={{
+                                backgroundColor: selectedCategory.color ? `${selectedCategory.color}20` : "var(--primary-10)"
                               }}
                             >
                               <CategoryIcon iconName={selectedCategory.iconClass} color={selectedCategory.color} size="md" />
@@ -369,22 +382,26 @@ export function NewThreadForm({ categories, session, category }: NewThreadFormPr
 
                                 {/* Available Tags */}
                                 <div className="flex flex-wrap gap-2">
-                                  {availableTags
-                                    .filter((tag) => !selectedTags.includes(tag.id))
-                                    .map((tag) => (
-                                      <Button
-                                        key={tag.id}
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 text-xs"
-                                        onClick={() => toggleTag(tag.id)}
-                                        disabled={selectedTags.length >= 5}
-                                      >
-                                        <PlusCircle className="mr-1 h-3 w-3" />
-                                        {tag.name}
-                                      </Button>
-                                    ))}
+                                  {loadingTags ? (
+                                    <span className="text-xs text-muted-foreground">Loading tags...</span>
+                                  ) : (
+                                    availableTags
+                                      .filter((tag) => !selectedTags.includes(tag.id))
+                                      .map((tag) => (
+                                        <Button
+                                          key={tag.id}
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-8 text-xs"
+                                          onClick={() => toggleTag(tag.id)}
+                                          disabled={selectedTags.length >= 5}
+                                        >
+                                          <PlusCircle className="mr-1 h-3 w-3" />
+                                          {tag.name}
+                                        </Button>
+                                      ))
+                                  )}
                                 </div>
                               </div>
                             </FormControl>
@@ -413,11 +430,10 @@ export function NewThreadForm({ categories, session, category }: NewThreadFormPr
                           <div className="relative flex items-center justify-center h-5">
                             {/* Default State */}
                             <span
-                              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                                !isSubmitting && !isSuccess
+                              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${!isSubmitting && !isSuccess
                                   ? "opacity-100 transform translate-y-0"
                                   : "opacity-0 transform -translate-y-8"
-                              }`}
+                                }`}
                             >
                               <PlusCircle className="mr-2 h-4 w-4" />
                               Create Thread
@@ -425,20 +441,18 @@ export function NewThreadForm({ categories, session, category }: NewThreadFormPr
 
                             {/* Loading State */}
                             <span
-                              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                                isSubmitting && !isSuccess
+                              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isSubmitting && !isSuccess
                                   ? "opacity-100 transform translate-y-0"
                                   : "opacity-0 transform translate-y-8"
-                              }`}
+                                }`}
                             >
                               Creating...
                             </span>
 
                             {/* Success State */}
                             <span
-                              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                                isSuccess ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
-                              }`}
+                              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isSuccess ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
+                                }`}
                             >
                               <Check className="mr-2 h-4 w-4" />
                               Created!

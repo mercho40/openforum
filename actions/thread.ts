@@ -39,7 +39,7 @@ export async function createThread(data: ThreadCreateData) {
     }
 
     const authorId = session.user.id
-    const slug = slugify(data.title) // Changed from createSlug to slugify
+    const slug = slugify(data.title)
 
     return await db.transaction(async (tx) => {
       // Create thread
@@ -78,12 +78,22 @@ export async function createThread(data: ThreadCreateData) {
 
       // Add tags if provided
       if (data.tags && data.tags.length > 0) {
-        const tagValues = data.tags.map(tagId => ({
-          threadId,
-          tagId
-        }))
+        // Only add tags that exist in the tag table
+        const existingTags = await tx
+          .select({ id: tag.id })
+          .from(tag)
+          .where(inArray(tag.id, data.tags))
 
-        await tx.insert(threadTag).values(tagValues)
+        const existingTagIds = existingTags.map(t => t.id)
+
+        if (existingTagIds.length > 0) {
+          const tagValues = existingTagIds.map(tagId => ({
+            threadId,
+            tagId
+          }))
+
+          await tx.insert(threadTag).values(tagValues)
+        }
       }
 
       revalidateTag('get-threads')
