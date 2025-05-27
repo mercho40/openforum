@@ -4,7 +4,7 @@ import { db } from "@/db/drizzle"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
-import { thread, post, threadTag, tag, category } from "@/db/schema"
+import { thread, post, threadTag, tag, category, user } from "@/db/schema"
 import { eq, and, desc, sql, asc, inArray } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { slugify } from "@/lib/utils" // You'll need to create this utility
@@ -300,6 +300,81 @@ export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch thread"
+    }
+  }
+}
+
+// Get recent and trending threads for the home page
+export async function getHomePageThreads() {
+  "use cache"
+  cacheTag('get-threads')
+  try {
+    // Fetch recent threads
+    const recentThreads = await db
+      .select({
+        id: thread.id,
+        title: thread.title,
+        slug: thread.slug,
+        createdAt: thread.createdAt,
+        viewCount: thread.viewCount,
+        replyCount: thread.replyCount,
+        isPinned: thread.isPinned,
+        isLocked: thread.isLocked,
+        categoryId: thread.categoryId,
+        categoryName: category.name,
+        categorySlug: category.slug,
+        author: {
+          id: user.id,
+          name: user.name,
+          image: user.image,
+        },
+      })
+      .from(thread)
+      .innerJoin(category, eq(thread.categoryId, category.id))
+      .innerJoin(user, eq(thread.authorId, user.id))
+      .where(eq(thread.isHidden, false))
+      .orderBy(desc(thread.lastPostAt))
+      .limit(10)
+
+    // Fetch trending threads (most viewed in last week)
+    const trendingThreads = await db
+      .select({
+        id: thread.id,
+        title: thread.title,
+        slug: thread.slug,
+        viewCount: thread.viewCount,
+        replyCount: thread.replyCount,
+        categoryId: thread.categoryId,
+        categoryName: category.name,
+        categorySlug: category.slug,
+        author: {
+          id: user.id,
+          name: user.name,
+          image: user.image,
+        },
+      })
+      .from(thread)
+      .innerJoin(category, eq(thread.categoryId, category.id))
+      .innerJoin(user, eq(thread.authorId, user.id))
+      .where(and(
+        sql`${thread.createdAt} > NOW() - INTERVAL '7 days'`,
+        eq(thread.isHidden, false)
+      ))
+      .orderBy(desc(thread.viewCount))
+      .limit(5)
+
+    return {
+      success: true,
+      recentThreads,
+      trendingThreads
+    }
+  } catch (error) {
+    console.error("Error fetching homepage threads:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch homepage threads",
+      recentThreads: [],
+      trendingThreads: []
     }
   }
 }
