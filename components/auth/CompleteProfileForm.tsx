@@ -51,6 +51,13 @@ export function CompleteProfileForm({ session }: { session: Session }) {
       setCurrentStep("avatar")
     } else if (currentStep === "avatar") {
       setLoading(true)
+
+      // Skip sending data if both bio and avatar are empty
+      if (!bio.trim() && !avatarPreview) {
+        setCurrentStep("welcome")
+        setLoading(false)
+        return
+      }
       
       try {
         // Update the user profile with bio and avatar
