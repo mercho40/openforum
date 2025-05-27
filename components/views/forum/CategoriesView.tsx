@@ -414,7 +414,7 @@ export function CategoriesView({ session, categories }: CategoriesViewProps) {
             )}
 
             {/* Categories */}
-            <div className={viewMode === "grid" ? "grid gap-4 sm:grid-cols-2" : "space-y-4"}>
+            <div className={viewMode === "grid" ? "grid gap-4 sm:grid-cols-2" : "flex flex-col gap-4"}>
               {filteredCategories.length > 0 ? (
                 filteredCategories.map((category) => (
                   <Link key={category.id} href={`/forum/categories/${category.slug}`} className="group">
