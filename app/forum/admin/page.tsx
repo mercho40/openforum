@@ -1,40 +1,16 @@
 import Link from "next/link"
-import { db } from "@/db/drizzle"
-import { category, thread } from "@/db/schema"
-import { count, eq, asc } from "drizzle-orm"
 import { FolderPlus, Pencil, Trash2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { CategoryIcon } from "@/components/forum/CategoryIcon"
+import { getCategories } from "@/actions/category"
 
 export default async function CategoriesPage() {
-  // Fetch categories with thread counts
-  const categories = await db
-    .select({
-      id: category.id,
-      name: category.name,
-      slug: category.slug,
-      description: category.description,
-      displayOrder: category.displayOrder,
-      isHidden: category.isHidden,
-      color: category.color,
-      iconClass: category.iconClass,
-    })
-    .from(category)
-    .orderBy(asc(category.displayOrder))
-
-  // Get thread counts for each category
-  const categoriesWithCounts = await Promise.all(
-    categories.map(async (cat) => {
-      const threadCountResult = await db.select({ count: count() }).from(thread).where(eq(thread.categoryId, cat.id))
-
-      return {
-        ...cat,
-        threadCount: threadCountResult[0]?.count || 0,
-      }
-    }),
-  )
+  const { success, categories = [], error } = await getCategories()
+  if (!success) {
+    throw new Error(error || "Failed to fetch categories")
+  }
 
   return (
     <div className="w-full max-w-[1200px] mx-auto">
@@ -54,7 +30,7 @@ export default async function CategoriesPage() {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categoriesWithCounts.map((category, index) => (
+        {categories.map((category, index) => (
           <div
             key={category.id}
             className="group relative bg-card/30 backdrop-blur-sm border border-border/10 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md hover:border-border/30"
@@ -133,7 +109,7 @@ export default async function CategoriesPage() {
         ))}
 
         {/* Empty State */}
-        {categoriesWithCounts.length === 0 && (
+        {categories.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center p-8 text-center bg-card/30 backdrop-blur-sm border border-border/10 rounded-lg">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
               <FolderPlus className="h-6 w-6 text-primary" />
