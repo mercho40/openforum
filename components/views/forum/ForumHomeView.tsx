@@ -145,7 +145,7 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
                 <nav className="grid gap-1 p-4">
                   <Link
                     href="/forum"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-muted text-foreground"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Home className="h-4 w-4" />
@@ -158,6 +158,14 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
                   >
                     <Tag className="h-4 w-4" />
                     Categories
+                  </Link>
+                  <Link
+                    href="/forum/threads"
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                    Threads
                   </Link>
                   <Link
                     href="/forum/members"
@@ -243,10 +251,8 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
               </Link>
               <Link
                 href="/forum/threads"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-muted text-foreground"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Grid3X3 className="h-4 w-4" />
                 Threads
               </Link>
               <Link

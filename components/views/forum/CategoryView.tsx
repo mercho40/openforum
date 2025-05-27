@@ -158,11 +158,19 @@ export function CategoryView({ session, category, threads, pagination }: Categor
                   </Link>
                   <Link
                     href="/forum/categories"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-muted text-foreground"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Tag className="h-4 w-4" />
                     Categories
+                  </Link>
+                  <Link
+                    href="/forum/threads"
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                    Threads
                   </Link>
                   <Link
                     href="/forum/members"
@@ -193,10 +201,8 @@ export function CategoryView({ session, category, threads, pagination }: Categor
               </Link>
               <Link
                 href="/forum/threads"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-muted text-foreground"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Grid3X3 className="h-4 w-4" />
                 Threads
               </Link>
               <Link

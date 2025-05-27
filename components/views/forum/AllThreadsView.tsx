@@ -273,7 +273,7 @@ export function AllThreadsView({
                 href="/forum/threads"
                 className="text-sm font-medium text-foreground transition-colors hover:text-primary"
               >
-                All Threads
+                Threads
               </Link>
               <Link
                 href="/forum/members"
