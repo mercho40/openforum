@@ -378,3 +378,34 @@ export async function getHomePageThreads() {
     }
   }
 }
+export async function getThreadData(threadSlug: string) {
+  "use cache"
+  cacheTag('get-threads')
+  try {
+
+    const threadData = await db.query.thread.findFirst({
+      where: eq(thread.slug, threadSlug),
+      with: {
+        author: true,
+        category: true,
+        tags: {
+          with: {
+            tag: true,
+          },
+        },
+      },
+    })
+    return {
+      // success: true,
+      threadData: threadData || null
+    }
+  } catch (error) {
+    console.error("Error fetching thread:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch thread"
+    }
+  }
+
+}
+
