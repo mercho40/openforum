@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { db } from "@/db/drizzle"
+// import { db } from "@/db/drizzle"
 import { getCategories } from "@/actions/category"
 import { NewThreadForm } from "@/components/forum/forms/NewThreadForm"
 
