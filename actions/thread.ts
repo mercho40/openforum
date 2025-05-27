@@ -396,7 +396,7 @@ export async function getThreadData(threadSlug: string) {
       },
     })
     return {
-      // success: true,
+      success: true,
       threadData: threadData || null
     }
   } catch (error) {

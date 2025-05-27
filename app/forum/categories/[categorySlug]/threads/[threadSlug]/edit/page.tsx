@@ -44,10 +44,14 @@ export default async function ThreadEditPage({
   //   },
   // })
   //
-  const { threadData } = await getThreadData(threadSlug)
+  const { threadData, success, error } = await getThreadData(threadSlug)
   if (!threadData) {
     notFound()
   }
+  if (!success) {
+    throw new Error(error || "Failed to fetch categories")
+  }
+
 
   // Check if user can edit (author or admin)
   const canEdit = threadData.authorId === session.user.id || session.user.role === "admin"
