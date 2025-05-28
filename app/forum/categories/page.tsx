@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Suspense } from "react"
 import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"

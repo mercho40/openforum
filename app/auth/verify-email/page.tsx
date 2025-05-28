@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth"
 import { VerifyEmailView } from "@/components/views/auth/VerifyEmailView"
 import { Suspense } from "react"
@@ -8,10 +9,10 @@ export default async function Page() {
   // Get session data on the server
   let session = null;
   let error = null;
-  
+
   try {
     session = await auth.api.getSession({
-          headers: await headers()
+      headers: await headers()
     })
   } catch (err) {
     error = err as Error;

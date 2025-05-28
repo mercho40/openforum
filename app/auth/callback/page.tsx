@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth"
 import { CallbackView } from "@/components/views/auth/CallbackView"
 import { headers } from "next/headers"

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -115,7 +115,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
   const isAdmin = isAuthenticated && session.user.role === "admin"
   const isThreadAuthor = isAuthenticated && thread.author.id === session.user.id
 
-  const checkSubscriptionStatus = async () => {
+  const checkSubscriptionStatus = useCallback(async () => {
     setIsCheckingSubscription(true)
     try {
       const result = await checkThreadSubscription(thread.id)
@@ -127,14 +127,13 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
     } finally {
       setIsCheckingSubscription(false)
     }
-  }
-  // Check subscription status on component mount
+  }, [thread.id])
+
   React.useEffect(() => {
     if (isAuthenticated) {
       checkSubscriptionStatus()
     }
-  }, [isAuthenticated, thread.id])
-
+  }, [isAuthenticated, checkSubscriptionStatus])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
