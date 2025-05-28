@@ -160,8 +160,8 @@ export async function updateThread(threadId: string, data: ThreadUpdateData) {
       .set(updateValues)
       .where(eq(thread.id, threadId))
 
-    revalidatePath('/threads/[slug]')
-    revalidatePath('/categories/[slug]')
+    // revalidatePath('/threads/[slug]')
+    // revalidatePath('/categories/[slug]')
     revalidateTag('get-threads')
 
     return {
@@ -209,7 +209,7 @@ export async function deleteThread(threadId: string) {
     // Delete thread (will cascade to posts and threadTags)
     await db.delete(thread).where(eq(thread.id, threadId))
 
-    revalidatePath('/categories/[slug]')
+    // revalidatePath('/categories/[slug]')
 
     revalidateTag('get-threads')
     return { success: true }

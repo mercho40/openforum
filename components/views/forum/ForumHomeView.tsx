@@ -445,8 +445,11 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
               </div>
               <div className="grid gap-4">
                 {categories.map((category) => (
-                  <Link key={category.id} href={`/forum/categories/${category.slug}`} className="group">
-                    <div className="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                  <div key={category.id} className="group">
+                    <Link
+                      href={`/forum/categories/${category.slug}`}
+                      className="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                    >
                       <div
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
                         style={{ backgroundColor: category.color ? `${category.color}20` : "var(--primary-10)" }}
@@ -477,20 +480,30 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
                         {category.lastThread && (
                           <div className="mt-2 flex items-center gap-2 text-xs">
                             <span className="text-muted-foreground">Latest:</span>
-                            <Link
-                              href={`/forum/categories/${category.slug}/threads/${category.lastThread.slug}`}
-                              className="font-medium hover:text-primary truncate max-w-[200px]"
-                            >
+                            <span className="font-medium truncate max-w-[200px]">
                               {category.lastThread.title}
-                            </Link>
+                            </span>
                             <span className="text-muted-foreground">
                               {formatDistanceToNow(new Date(category.lastThread.createdAt), { addSuffix: true })}
                             </span>
                           </div>
                         )}
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                    {/* Optional: Separate thread link */}
+                    {category.lastThread && (
+                      <div className="flex justify-end mt-1">
+                        <Link
+                          href={`/forum/categories/${category.slug}/threads/${category.lastThread.slug}`}
+                          className="text-xs text-primary hover:underline"
+                          tabIndex={0}
+                          aria-label={`Go to thread: ${category.lastThread.title}`}
+                        >
+                          View Thread →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>

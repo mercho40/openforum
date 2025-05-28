@@ -24,6 +24,8 @@ export function DeleteCategoryForm({ category }: DeleteCategoryFormProps) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  if (!category) return null;
+
   const handleDelete = async () => {
     if (!confirmDelete) {
       setConfirmDelete(true)
@@ -141,11 +143,10 @@ export function DeleteCategoryForm({ category }: DeleteCategoryFormProps) {
             <div className="relative flex items-center justify-center h-5">
               {/* Default State */}
               <span
-                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                  !confirmDelete && !isDeleting && !isSuccess
-                    ? "opacity-100 transform translate-y-0"
-                    : "opacity-0 transform -translate-y-8"
-                }`}
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${!confirmDelete && !isDeleting && !isSuccess
+                  ? "opacity-100 transform translate-y-0"
+                  : "opacity-0 transform -translate-y-8"
+                  }`}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Category
@@ -153,11 +154,10 @@ export function DeleteCategoryForm({ category }: DeleteCategoryFormProps) {
 
               {/* Confirm State */}
               <span
-                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                  confirmDelete && !isDeleting && !isSuccess
-                    ? "opacity-100 transform translate-y-0"
-                    : "opacity-0 transform translate-y-8"
-                }`}
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${confirmDelete && !isDeleting && !isSuccess
+                  ? "opacity-100 transform translate-y-0"
+                  : "opacity-0 transform translate-y-8"
+                  }`}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Confirm Delete
@@ -165,18 +165,16 @@ export function DeleteCategoryForm({ category }: DeleteCategoryFormProps) {
 
               {/* Loading State */}
               <span
-                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                  isDeleting && !isSuccess ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
-                }`}
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isDeleting && !isSuccess ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
+                  }`}
               >
                 Deleting...
               </span>
 
               {/* Success State */}
               <span
-                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-                  isSuccess ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
-                }`}
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isSuccess ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
+                  }`}
               >
                 <Check className="mr-2 h-4 w-4" />
                 Deleted!

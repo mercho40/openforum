@@ -320,8 +320,12 @@ export async function createCategory(input: z.infer<typeof createCategorySchema>
     }
 
     // Revalidate the categories page
-    revalidatePath("/categories");
+    revalidatePath("/forum/categories");
+    revalidatePath("/forum");
+    revalidatePath("/forum/admin/categories");
+    revalidatePath("/forum/admin");
     revalidateTag('get-threads')
+    revalidateTag('get-categories')
 
     return { success: true, data: newCategory };
 
@@ -368,8 +372,12 @@ export async function updateCategory(categoryId: string, input: CategoryFormData
     }
 
     // Revalidate the categories page
+    revalidatePath("/forum/categories");
+    revalidatePath("/forum");
     revalidatePath("/forum/admin/categories");
+    revalidatePath("/forum/admin");
     revalidateTag('get-threads')
+    revalidateTag('get-categories')
 
     return { success: true, data: updatedCategory };
   } catch (error) {
@@ -404,8 +412,12 @@ export async function deleteCategory(categoryId: string) {
     }
 
     // Revalidate the categories page
+    revalidatePath("/forum/categories");
+    revalidatePath("/forum");
     revalidatePath("/forum/admin/categories");
+    revalidatePath("/forum/admin");
     revalidateTag('get-threads')
+    revalidateTag('get-categories')
 
     return { success: true };
   } catch (error) {

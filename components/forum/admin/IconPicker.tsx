@@ -10,6 +10,28 @@ import { cn } from "@/lib/utils"
 import * as LucideIcons from "lucide-react"
 
 // Define available icons (easily configurable)
+// const AVAILABLE_ICONS = [
+//   "MessageSquare", "FolderTree", "Users", "Settings", "Shield", "Star", "Heart", "Home",
+//   "User", "Mail", "Phone", "Calendar", "Clock", "MapPin", "Camera", "Image",
+//   "Video", "Music", "Headphones", "Mic", "Volume2", "Play", "Pause", "Square",
+//   "Circle", "Triangle", "Diamond", "Hexagon", "Zap", "Flame", "Snowflake", "Sun",
+//   "Moon", "Cloud", "CloudRain", "Umbrella", "Wind", "Thermometer", "Eye", "EyeOff",
+//   "Lock", "Unlock", "Key", "CreditCard", "Wallet", "ShoppingCart", "ShoppingBag", "Gift",
+//   "Package", "Truck", "Car", "Bike", "Plane", "Train", "Bus", "Ship",
+//   "Rocket", "Satellite", "Globe", "Map", "Navigation", "Compass", "Target", "Flag",
+//   "Trophy", "Award", "Medal", "Crown", "Gem", "Coins", "DollarSign", "Euro",
+//   "PoundSterling", "Yen", "Bitcoin", "TrendingUp", "TrendingDown", "BarChart", "PieChart", "Activity",
+//   "Monitor", "Smartphone", "Tablet", "Laptop", "Desktop", "Server", "Database", "HardDrive",
+//   "Cpu", "MemoryStick", "Wifi", "WifiOff", "Bluetooth", "Usb", "Power", "Battery",
+//   "BatteryLow", "Plug", "Cable", "Router", "Printer", "Scanner", "Keyboard", "Mouse",
+//   "Gamepad2", "Joystick", "Dice1", "Dice2", "Dice3", "Dice4", "Dice5", "Dice6",
+//   "Spade", "Club", "Heart", "Diamond", "Puzzle", "Gamepad", "Dices", "Casino",
+//   "Book", "BookOpen", "Library", "GraduationCap", "School", "Pencil", "Pen", "PenTool",
+//   "Eraser", "Ruler", "Calculator", "Scissors", "Paperclip", "Pin", "Pushpin", "Bookmark",
+//   "Tag", "Tags", "Label", "Folder", "FolderOpen", "File", "FileText", "FilePlus",
+//   "FileX", "Download", "Upload", "Share", "Link", "ExternalLink", "Copy", "Cut",
+//   "Paste", "Clipboard", "ClipboardList", "ClipboardCheck", "ClipboardX", "Archive", "Trash", "Trash2"
+// ] as const
 const AVAILABLE_ICONS = [
   "MessageSquare", "FolderTree", "Users", "Settings", "Shield", "Star", "Heart", "Home",
   "User", "Mail", "Phone", "Calendar", "Clock", "MapPin", "Camera", "Image",
@@ -25,14 +47,13 @@ const AVAILABLE_ICONS = [
   "Cpu", "MemoryStick", "Wifi", "WifiOff", "Bluetooth", "Usb", "Power", "Battery",
   "BatteryLow", "Plug", "Cable", "Router", "Printer", "Scanner", "Keyboard", "Mouse",
   "Gamepad2", "Joystick", "Dice1", "Dice2", "Dice3", "Dice4", "Dice5", "Dice6",
-  "Spade", "Club", "Heart", "Diamond", "Puzzle", "Gamepad", "Dices", "Casino",
+  "Spade", "Club", "Puzzle", "Gamepad", "Dices", "Casino",
   "Book", "BookOpen", "Library", "GraduationCap", "School", "Pencil", "Pen", "PenTool",
   "Eraser", "Ruler", "Calculator", "Scissors", "Paperclip", "Pin", "Pushpin", "Bookmark",
   "Tag", "Tags", "Label", "Folder", "FolderOpen", "File", "FileText", "FilePlus",
   "FileX", "Download", "Upload", "Share", "Link", "ExternalLink", "Copy", "Cut",
   "Paste", "Clipboard", "ClipboardList", "ClipboardCheck", "ClipboardX", "Archive", "Trash", "Trash2"
 ] as const
-
 interface IconPickerProps {
   value?: string
   onValueChange: (value: string) => void

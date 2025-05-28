@@ -16,12 +16,12 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import {
   MessageSquare, Menu, Home, Tag, Grid3X3, Users, Search, Bell, User, Settings, LogOut,
-  LogIn, UserPlus, X, ChevronUp, ChevronDown, Minus, MoreHorizontal, Edit3, Trash2,
-  Flag, Share2, Lock, Pin, Eye, Calendar, Clock, Hash, Star, BookmarkPlus, BookmarkCheck,
+  LogIn, UserPlus, X, ChevronUp, ChevronDown, MoreHorizontal, Edit3, Trash2,
+  Flag, Share2, Lock, Pin, Calendar, Clock, Hash, Star, BookmarkPlus, BookmarkCheck,
   ChevronLeft, ChevronRight
 } from "lucide-react"
 import { Session } from "@/lib/auth"
@@ -115,13 +115,6 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
   const isAdmin = isAuthenticated && session.user.role === "admin"
   const isThreadAuthor = isAuthenticated && thread.author.id === session.user.id
 
-  // Check subscription status on component mount
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      checkSubscriptionStatus()
-    }
-  }, [isAuthenticated, thread.id])
-
   const checkSubscriptionStatus = async () => {
     setIsCheckingSubscription(true)
     try {
@@ -135,6 +128,13 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
       setIsCheckingSubscription(false)
     }
   }
+  // Check subscription status on component mount
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      checkSubscriptionStatus()
+    }
+  }, [isAuthenticated, thread.id])
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -241,7 +241,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
     }
 
     try {
-      const result = isSubscribed 
+      const result = isSubscribed
         ? await unsubscribeFromThreadAction(thread.id)
         : await subscribeToThreadAction(thread.id)
 
@@ -265,7 +265,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
 
   const handleShareThread = async () => {
     const url = `${window.location.origin}/forum/categories/${categorySlug}/threads/${thread.slug}`
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -274,6 +274,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
         })
       } catch (error) {
         // User cancelled or error occurred
+        console.error("Error sharing thread:", error)
       }
     } else {
       try {
@@ -281,6 +282,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
         toast.success("Thread URL copied to clipboard")
       } catch (error) {
         toast.error("Failed to copy URL")
+        console.error("Error copying URL:", error)
       }
     }
   }
@@ -613,9 +615,9 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                           autoFocus
                         />
                         <Button size="sm" onClick={handleEditTitle}>Save</Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => {
                             setIsEditingTitle(false)
                             setThreadTitle(thread.title)
@@ -625,7 +627,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                         </Button>
                       </div>
                     ) : (
-                      <h1 
+                      <h1
                         className="text-2xl font-bold cursor-pointer hover:text-primary"
                         onClick={() => {
                           if (isThreadAuthor || isAdmin) {
@@ -660,8 +662,8 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                     {thread.tags && thread.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {thread.tags.map(({ tag }) => (
-                          <Badge 
-                            key={tag.id} 
+                          <Badge
+                            key={tag.id}
                             variant="secondary"
                             style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
                           >
@@ -842,7 +844,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction 
+                                      <AlertDialogAction
                                         onClick={() => handleDeletePost(post.id)}
                                         className="bg-red-600 hover:bg-red-700"
                                       >
@@ -895,9 +897,9 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
             {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="flex items-center justify-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   disabled={pagination.page <= 1}
                   asChild={pagination.page > 1}
                 >
@@ -969,15 +971,15 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                     className="min-h-[120px]"
                   />
                   <div className="flex justify-end gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setReplyContent("")}
                       disabled={!replyContent.trim()}
                     >
                       Clear
                     </Button>
-                    <Button 
-                      onClick={handleReply} 
+                    <Button
+                      onClick={handleReply}
                       disabled={isSubmittingReply || !replyContent.trim()}
                     >
                       {isSubmittingReply ? "Posting..." : "Post Reply"}
@@ -1012,9 +1014,9 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                   <h3 className="text-base font-semibold">Thread Actions</h3>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full justify-start"
                     onClick={handleSubscriptionToggle}
                     disabled={isCheckingSubscription}
@@ -1022,9 +1024,9 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                     <Bell className="mr-2 h-4 w-4" />
                     {isSubscribed ? "Unsubscribe" : "Subscribe"}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full justify-start"
                     onClick={handleBookmarkToggle}
                   >
@@ -1040,9 +1042,9 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                       </>
                     )}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full justify-start"
                     onClick={handleShareThread}
                   >
@@ -1063,7 +1065,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                   href={`/forum/categories/${categorySlug}`}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium"
                     style={{ backgroundColor: thread.category.color || "#6b7280" }}
                   >

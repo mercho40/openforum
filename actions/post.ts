@@ -35,8 +35,16 @@ export async function createPost(data: PostCreateData) {
       where: eq(thread.id, data.threadId),
       columns: {
         isLocked: true,
-        slug: true
-      }
+        slug: true,
+        authorId: true,
+      },
+      with: {
+        category: {
+          columns: {
+            name: true,
+          },
+        },
+      },
     })
 
     if (!threadData) {
@@ -69,16 +77,16 @@ export async function createPost(data: PostCreateData) {
         .where(eq(thread.id, data.threadId))
 
       // Create notification for thread author (if not the same as post author)
-      const threadInfo = await tx.query.thread.findFirst({
-        where: eq(thread.id, data.threadId),
-        columns: {
-          authorId: true
-        }
-      })
-
-      if (threadInfo && threadInfo.authorId !== authorId) {
+      // const threadInfo = await tx.query.thread.findFirst({
+      //   where: eq(thread.id, data.threadId),
+      //   columns: {
+      //     authorId: true
+      //   }
+      // })
+      //
+      if (threadData && threadData.authorId !== authorId) {
         await tx.insert(notification).values({
-          userId: threadInfo.authorId,
+          userId: threadData.authorId,
           type: 'new_reply',
           data: JSON.stringify({
             postId: postResult.id,
@@ -90,6 +98,9 @@ export async function createPost(data: PostCreateData) {
         })
       }
 
+      revalidatePath(`/forum/categories/${threadData.category.name}/threads/`)
+      revalidatePath("/forum")
+      revalidatePath("/forum/threads/")
       revalidateTag('get-threads')
       return {
         success: true,
@@ -150,7 +161,7 @@ export async function updatePost(postId: string, data: PostUpdateData) {
       })
       .where(eq(post.id, postId))
 
-    revalidatePath(`/threads/${postData.thread?.slug}`)
+    // revalidatePath(`/forum/categories/${postData.thread?.slug}/`)
 
     revalidateTag('get-threads')
     return { success: true }
@@ -216,7 +227,7 @@ export async function deletePost(postId: string) {
       })
       .where(eq(thread.id, postData.threadId))
 
-    revalidatePath(`/threads/${postData.thread.slug}`)
+    // revalidatePath(`/threads/${postData.thread.slug}`)
 
     revalidateTag('get-threads')
     return { success: true }
@@ -350,7 +361,7 @@ export async function votePost(postId: string, value: 1 | 0 | -1) {
         })
       }
 
-      revalidatePath(`/threads/${postData.thread.slug}`)
+      // revalidatePath(`/threads/${postData.thread.slug}`)
 
       revalidateTag('get-threads')
       return { success: true }

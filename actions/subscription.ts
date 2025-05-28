@@ -50,7 +50,7 @@ export async function subscribeToThreadAction(threadId: string) {
         })
     }
 
-    revalidatePath(`/threads/${threadData.slug}`)
+    // revalidatePath(`/threads/${threadData.slug}`)
 
     return { success: true }
   } catch (error) {
@@ -96,7 +96,7 @@ export async function unsubscribeFromThreadAction(threadId: string) {
         )
       )
 
-    revalidatePath(`/threads/${threadData.slug}`)
+    // revalidatePath(`/threads/${threadData.slug}`)
 
     return { success: true }
   } catch (error) {
