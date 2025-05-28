@@ -1,32 +1,10 @@
-"use client"
-
-import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, MessageSquare, Users, Globe, Shield, Code } from "lucide-react"
 
+
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false)
-  const featuresRef = useRef<HTMLDivElement>(null)
-  const [featuresVisible, setFeaturesVisible] = useState(false)
-
-  // Handle scroll effects
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-
-      // Check if features section is visible
-      if (featuresRef.current) {
-        const rect = featuresRef.current.getBoundingClientRect()
-        setFeaturesVisible(rect.top < window.innerHeight * 0.75)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    handleScroll() // Check initial state
-
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  const year = new Date().getFullYear()
 
   return (
     <main className="w-full h-full">
@@ -37,28 +15,26 @@ export default function LandingPage() {
 
       {/* Header */}
       <header
-        className={`w-full py-4 px-4 sm:px-6 border-b transition-all duration-300 sticky top-0 z-10 ${
-          scrolled ? "border-border/20 bg-card/50 backdrop-blur-md border" : "border-transparent bg-transparent"
-        }`}
+        className={`w-full py-4 px-4 sm:px-6 border-b transition-all duration-300 sticky top-0 z-10 border-transparent bg-transparent`}
       >
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-bounce-subtle" aria-hidden="true" />
             <h1 className="text-xl sm:text-2xl font-bold">OpenForum</h1>
           </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-4">
-                <Button 
-                  asChild 
-                  size="sm"
-                  className="rounded-full"
-                >
-                  <Link href="/forum">
-                    Get Started
-                  </Link>
-                </Button>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <Button
+                asChild
+                size="sm"
+                className="rounded-full"
+              >
+                <Link href="/forum">
+                  Get Started
+                </Link>
+              </Button>
             </div>
+          </div>
         </div>
       </header>
 
@@ -124,7 +100,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section ref={featuresRef} className="w-full py-12 sm:py-16 md:py-24 bg-muted/30 relative overflow-hidden">
+      <section className="w-full py-12 sm:py-16 md:py-24 bg-muted/30 relative overflow-hidden">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Why Choose OpenForum?</h2>
@@ -134,9 +110,7 @@ export default function LandingPage() {
           </div>
 
           <div
-            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 stagger-children ${
-              featuresVisible ? "opacity-100" : "opacity-0"
-            }`}
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 stagger-children opacity-100`}
           >
             {/* Feature 1 */}
             <div className="bg-card/30 backdrop-blur-sm border border-border/10 rounded-lg p-4 sm:p-6 flex flex-col items-center text-center h-full animate-fade-in-up">
@@ -329,7 +303,7 @@ export default function LandingPage() {
               <span className="font-bold text-sm sm:text-base">OpenForum</span>
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground text-center md:text-left">
-              &copy; {new Date().getFullYear()} OpenForum. Open source under MIT license.
+              &copy; {year} OpenForum. Open source under MIT license.
             </div>
             <nav aria-label="Footer navigation" className="flex flex-wrap items-center justify-center gap-4">
               <Link
