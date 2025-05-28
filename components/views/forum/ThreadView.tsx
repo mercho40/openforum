@@ -1,64 +1,31 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
-import {
-  MessageSquare,
-  Search,
-  Bell,
-  User,
-  LogOut,
-  Settings,
-  Menu,
-  X,
-  Home,
-  Users,
-  Tag,
-  LogIn,
-  UserPlus,
-  Pin,
-  Lock,
-  Eye,
-  MessageCircle,
-  ChevronLeft,
-  ChevronRight,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Reply,
-  Share,
-  Bookmark,
-  Flag,
-  ChevronUp,
-  ChevronDown,
-  Calendar,
-  Clock,
-  Grid3X3,
-} from "lucide-react"
+import Link from "next/link"
+import { toast } from "sonner"
+import { authClient } from "@/lib/auth-client"
+import { createPost, updatePost, deletePost, votePost } from "@/actions/post"
+import { subscribeToThreadAction, unsubscribeFromThreadAction, checkThreadSubscription } from "@/actions/subscription"
+import { updateThread, deleteThread } from "@/actions/thread"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import type { Session } from "@/lib/auth"
-import { formatDistanceToNow } from "date-fns"
-import { authClient } from "@/lib/auth-client"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import {
+  MessageSquare, Menu, Home, Tag, Grid3X3, Users, Search, Bell, User, Settings, LogOut,
+  LogIn, UserPlus, X, ChevronUp, ChevronDown, Minus, MoreHorizontal, Edit3, Trash2,
+  Flag, Share2, Lock, Pin, Eye, Calendar, Clock, Hash, Star, BookmarkPlus, BookmarkCheck,
+  ChevronLeft, ChevronRight
+} from "lucide-react"
+import { Session } from "@/lib/auth"
 import { CategoryIcon } from "@/components/forum/CategoryIcon"
-import { createPost, votePost, updatePost, deletePost } from "@/actions/post"
-import { toast } from "sonner"
 
 interface Thread {
   id: string
@@ -138,10 +105,36 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
   const [editingPostId, setEditingPostId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState("")
   const [votingPostId, setVotingPostId] = useState<string | null>(null)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [isCheckingSubscription, setIsCheckingSubscription] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [threadTitle, setThreadTitle] = useState(thread.title)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
 
   const isAuthenticated = !!session
   const isAdmin = isAuthenticated && session.user.role === "admin"
   const isThreadAuthor = isAuthenticated && thread.author.id === session.user.id
+
+  // Check subscription status on component mount
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      checkSubscriptionStatus()
+    }
+  }, [isAuthenticated, thread.id])
+
+  const checkSubscriptionStatus = async () => {
+    setIsCheckingSubscription(true)
+    try {
+      const result = await checkThreadSubscription(thread.id)
+      if (result.success) {
+        setIsSubscribed(result.isSubscribed)
+      }
+    } catch (error) {
+      console.error("Error checking subscription:", error)
+    } finally {
+      setIsCheckingSubscription(false)
+    }
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -227,8 +220,6 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
   }
 
   const handleDeletePost = async (postId: string) => {
-    if (!confirm("Are you sure you want to delete this post?")) return
-
     try {
       const result = await deletePost(postId)
       if (result.success) {
@@ -243,6 +234,132 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
     }
   }
 
+  const handleSubscriptionToggle = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to subscribe")
+      return
+    }
+
+    try {
+      const result = isSubscribed 
+        ? await unsubscribeFromThreadAction(thread.id)
+        : await subscribeToThreadAction(thread.id)
+
+      if (result.success) {
+        setIsSubscribed(!isSubscribed)
+        toast.success(isSubscribed ? "Unsubscribed from thread" : "Subscribed to thread")
+      } else {
+        toast.error(result.error || "Failed to update subscription")
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("An unexpected error occurred")
+    }
+  }
+
+  const handleBookmarkToggle = () => {
+    // For now, just toggle the state. In a real app, you'd save to localStorage or database
+    setIsBookmarked(!isBookmarked)
+    toast.success(isBookmarked ? "Removed from bookmarks" : "Added to bookmarks")
+  }
+
+  const handleShareThread = async () => {
+    const url = `${window.location.origin}/forum/categories/${categorySlug}/threads/${thread.slug}`
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: thread.title,
+          url: url
+        })
+      } catch (error) {
+        // User cancelled or error occurred
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url)
+        toast.success("Thread URL copied to clipboard")
+      } catch (error) {
+        toast.error("Failed to copy URL")
+      }
+    }
+  }
+
+  const handlePinThread = async () => {
+    if (!isAdmin) return
+
+    try {
+      const result = await updateThread(thread.id, { isPinned: !thread.isPinned })
+      if (result.success) {
+        toast.success(thread.isPinned ? "Thread unpinned" : "Thread pinned")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Failed to update thread")
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("An unexpected error occurred")
+    }
+  }
+
+  const handleLockThread = async () => {
+    if (!isAdmin) return
+
+    try {
+      const result = await updateThread(thread.id, { isLocked: !thread.isLocked })
+      if (result.success) {
+        toast.success(thread.isLocked ? "Thread unlocked" : "Thread locked")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Failed to update thread")
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("An unexpected error occurred")
+    }
+  }
+
+  const handleDeleteThread = async () => {
+    try {
+      const result = await deleteThread(thread.id)
+      if (result.success) {
+        toast.success("Thread deleted successfully")
+        router.push(`/forum/categories/${categorySlug}`)
+      } else {
+        toast.error(result.error || "Failed to delete thread")
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("An unexpected error occurred")
+    }
+  }
+
+  const handleEditTitle = async () => {
+    if (!threadTitle.trim() || threadTitle === thread.title) {
+      setIsEditingTitle(false)
+      setThreadTitle(thread.title)
+      return
+    }
+
+    try {
+      const result = await updateThread(thread.id, { title: threadTitle })
+      if (result.success) {
+        setIsEditingTitle(false)
+        toast.success("Thread title updated")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Failed to update title")
+        setThreadTitle(thread.title)
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("An unexpected error occurred")
+      setThreadTitle(thread.title)
+    } finally {
+      setIsEditingTitle(false)
+    }
+  }
+
   const getPostScore = (post: Post) => {
     return post.votes.reduce((sum, vote) => sum + vote.value, 0)
   }
@@ -251,6 +368,16 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
     if (!isAuthenticated) return 0
     const userVote = post.votes.find((vote) => vote.userId === session.user.id)
     return userVote?.value || 0
+  }
+
+  const startEditingPost = (post: Post) => {
+    setEditingPostId(post.id)
+    setEditContent(post.content)
+  }
+
+  const cancelEditingPost = () => {
+    setEditingPostId(null)
+    setEditContent("")
   }
 
   return (
@@ -269,7 +396,6 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                 <div className="flex h-16 items-center border-b px-4">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                     <MessageSquare className="h-5 w-5 text-primary" />
-                    <span className="font-bold">OpenForum</span>
                   </Link>
                   <SheetClose className="ml-auto">
                     <X className="h-5 w-5" />
@@ -379,41 +505,32 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <Button variant="ghost" size="icon" className="relative">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={session.user.image || ""} alt={session.user.name || "User"} />
-                        <AvatarFallback>{session.user.name?.charAt(0) || "U"}</AvatarFallback>
+                        <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
+                        <AvatarFallback>
+                          {session.user.name?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                        </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <div className="flex items-center gap-2 p-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={session.user.image || ""} alt={session.user.name || "User"} />
-                        <AvatarFallback>{session.user.name?.charAt(0) || "U"}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{session.user.name}</span>
-                        <span className="text-xs text-muted-foreground">{session.user.email}</span>
-                      </div>
-                    </div>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href={`/forum/profile/${session.user.id}`} className="cursor-pointer">
+                      <Link href="/forum/profile" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/forum/settings" className="cursor-pointer">
+                      <Link href="/forum/settings" className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />
                         Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                       <LogOut className="mr-2 h-4 w-4" />
-                      Log out
+                      Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -466,86 +583,171 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      {thread.isPinned && <Pin className="h-4 w-4 text-primary" />}
-                      {thread.isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
-                      <h1 className="text-2xl font-bold tracking-tight line-clamp-2">{thread.title}</h1>
+                      {thread.isPinned && (
+                        <Badge variant="secondary" className="text-amber-600">
+                          <Pin className="h-3 w-3 mr-1" />
+                          Pinned
+                        </Badge>
+                      )}
+                      {thread.isLocked && (
+                        <Badge variant="outline" className="text-red-600">
+                          <Lock className="h-3 w-3 mr-1" />
+                          Locked
+                        </Badge>
+                      )}
                     </div>
 
-                    {/* Thread Tags */}
+                    {isEditingTitle ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={threadTitle}
+                          onChange={(e) => setThreadTitle(e.target.value)}
+                          className="text-xl font-bold"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleEditTitle()
+                            if (e.key === 'Escape') {
+                              setIsEditingTitle(false)
+                              setThreadTitle(thread.title)
+                            }
+                          }}
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={handleEditTitle}>Save</Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsEditingTitle(false)
+                            setThreadTitle(thread.title)
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <h1 
+                        className="text-2xl font-bold cursor-pointer hover:text-primary"
+                        onClick={() => {
+                          if (isThreadAuthor || isAdmin) {
+                            setIsEditingTitle(true)
+                          }
+                        }}
+                      >
+                        {thread.title}
+                        {(isThreadAuthor || isAdmin) && (
+                          <Edit3 className="h-4 w-4 ml-2 inline opacity-50" />
+                        )}
+                      </h1>
+                    )}
+
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={thread.author.image || ""} alt={thread.author.name || ""} />
+                          <AvatarFallback className="text-xs">
+                            {thread.author.name?.charAt(0).toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{thread.author.name}</span>
+                      </div>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(thread.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+
                     {thread.tags && thread.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {thread.tags.map(({ tag }) => (
-                          <Badge
-                            key={tag.id}
+                          <Badge 
+                            key={tag.id} 
                             variant="secondary"
-                            className="text-xs"
                             style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
                           >
+                            <Hash className="h-3 w-3 mr-1" />
                             {tag.name}
                           </Badge>
                         ))}
                       </div>
                     )}
-
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={thread.author.image || ""} alt={thread.author.name || "User"} />
-                          <AvatarFallback className="text-xs">{thread.author.name?.charAt(0) || "U"}</AvatarFallback>
-                        </Avatar>
-                        <span>by {thread.author.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDistanceToNow(new Date(thread.createdAt), { addSuffix: true })}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        <span>{thread.viewCount} views</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{thread.replyCount} replies</span>
-                      </div>
-                    </div>
                   </div>
 
-                  {/* Thread Actions */}
-                  {isAuthenticated && (isThreadAuthor || isAdmin) && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/forum/categories/${categorySlug}/threads/${thread.slug}/edit`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Thread
-                          </Link>
-                        </DropdownMenuItem>
-                        {isAdmin && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <Pin className="mr-2 h-4 w-4" />
-                              {thread.isPinned ? "Unpin" : "Pin"} Thread
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Lock className="mr-2 h-4 w-4" />
-                              {thread.isLocked ? "Unlock" : "Lock"} Thread
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete Thread
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                  {/* Thread Actions Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleShareThread}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share Thread
+                      </DropdownMenuItem>
+                      {isAuthenticated && (
+                        <>
+                          <DropdownMenuItem onClick={handleBookmarkToggle}>
+                            {isBookmarked ? (
+                              <>
+                                <BookmarkCheck className="mr-2 h-4 w-4" />
+                                Remove Bookmark
+                              </>
+                            ) : (
+                              <>
+                                <BookmarkPlus className="mr-2 h-4 w-4" />
+                                Add Bookmark
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Flag className="mr-2 h-4 w-4" />
+                            Report Thread
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {isAdmin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={handlePinThread}>
+                            <Pin className="mr-2 h-4 w-4" />
+                            {thread.isPinned ? "Unpin" : "Pin"} Thread
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleLockThread}>
+                            <Lock className="mr-2 h-4 w-4" />
+                            {thread.isLocked ? "Unlock" : "Lock"} Thread
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {(isThreadAuthor || isAdmin) && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Thread
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Thread</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this thread? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteThread} className="bg-red-600 hover:bg-red-700">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardHeader>
             </Card>
@@ -556,146 +758,132 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                 <Card key={post.id} className={`${index === 0 ? "border-primary/20" : ""}`}>
                   <CardContent className="p-6">
                     <div className="flex gap-4">
-                      {/* Vote Column */}
-                      <div className="flex flex-col items-center gap-1 min-w-[40px]">
+                      {/* Vote Controls */}
+                      <div className="flex flex-col items-center gap-1 pt-2">
                         <Button
-                          variant="ghost"
+                          variant={getUserVote(post) === 1 ? "default" : "ghost"}
                           size="icon"
-                          className={`h-8 w-8 ${getUserVote(post) === 1 ? "text-primary" : ""}`}
+                          className="h-8 w-8"
                           onClick={() => handleVote(post.id, getUserVote(post) === 1 ? 0 : 1)}
-                          disabled={!isAuthenticated || votingPostId === post.id}
+                          disabled={votingPostId === post.id || !isAuthenticated}
                         >
                           <ChevronUp className="h-4 w-4" />
                         </Button>
-                        <span className="text-sm font-medium">{getPostScore(post)}</span>
+                        <span className="text-sm font-medium px-2 py-1 bg-muted rounded">
+                          {getPostScore(post)}
+                        </span>
                         <Button
-                          variant="ghost"
+                          variant={getUserVote(post) === -1 ? "destructive" : "ghost"}
                           size="icon"
-                          className={`h-8 w-8 ${getUserVote(post) === -1 ? "text-destructive" : ""}`}
+                          className="h-8 w-8"
                           onClick={() => handleVote(post.id, getUserVote(post) === -1 ? 0 : -1)}
-                          disabled={!isAuthenticated || votingPostId === post.id}
+                          disabled={votingPostId === post.id || !isAuthenticated}
                         >
                           <ChevronDown className="h-4 w-4" />
                         </Button>
                       </div>
 
-                      {/* Author Info */}
-                      <div className="flex flex-col items-center gap-2 min-w-[120px] text-center">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={post.author.image || ""} alt={post.author.name || "User"} />
-                          <AvatarFallback>{post.author.name?.charAt(0) || "U"}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">{post.author.name}</p>
-                          {post.author.reputation !== undefined && (
-                            <p className="text-xs text-muted-foreground">{post.author.reputation} rep</p>
-                          )}
-                        </div>
-                      </div>
-
                       {/* Post Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
-                            {post.isEdited && post.editedAt && (
-                              <>
-                                <span>•</span>
-                                <span>edited {formatDistanceToNow(new Date(post.editedAt), { addSuffix: true })}</span>
-                              </>
-                            )}
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={post.author.image || ""} alt={post.author.name || ""} />
+                              <AvatarFallback className="text-xs">
+                                {post.author.name?.charAt(0).toUpperCase() || "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{post.author.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {post.author.reputation && (
+                                  <span className="mr-2">
+                                    <Star className="h-3 w-3 inline mr-1" />
+                                    {post.author.reputation}
+                                  </span>
+                                )}
+                                <Clock className="h-3 w-3 inline mr-1" />
+                                {new Date(post.createdAt).toLocaleString()}
+                                {post.isEdited && post.editedAt && (
+                                  <span className="ml-2 text-muted-foreground">
+                                    (edited {new Date(post.editedAt).toLocaleDateString()})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
 
                           {/* Post Actions */}
-                          {isAuthenticated && (
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Reply className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Share className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Bookmark className="h-4 w-4" />
-                              </Button>
-                              {(post.author.id === session.user.id || isAdmin) && (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setEditingPostId(post.id)
-                                        setEditContent(post.content)
-                                      }}
-                                    >
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      onClick={() => handleDeletePost(post.id)}
-                                      className="text-destructive"
-                                    >
+                          {isAuthenticated && (post.author.id === session.user.id || isAdmin) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => startEditingPost(post)}>
+                                  <Edit3 className="mr-2 h-4 w-4" />
+                                  Edit Post
+                                </DropdownMenuItem>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
                                       <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
+                                      Delete Post
                                     </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              )}
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Flag className="h-4 w-4" />
-                              </Button>
-                            </div>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Post</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this post? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeletePost(post.id)}
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
                         </div>
 
-                        {/* Post Content */}
+                        {/* Post Content or Edit Form */}
                         {editingPostId === post.id ? (
                           <div className="space-y-3">
                             <Textarea
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
-                              className="min-h-[100px]"
+                              className="min-h-[120px]"
                             />
                             <div className="flex gap-2">
                               <Button size="sm" onClick={() => handleEditPost(post.id)}>
-                                Save
+                                Save Changes
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingPostId(null)
-                                  setEditContent("")
-                                }}
-                              >
+                              <Button size="sm" variant="outline" onClick={cancelEditingPost}>
                                 Cancel
                               </Button>
                             </div>
                           </div>
                         ) : (
                           <div className="prose prose-sm max-w-none">
-                            {post.isDeleted ? (
-                              <p className="text-muted-foreground italic">[This post has been deleted]</p>
-                            ) : (
-                              <p className="whitespace-pre-wrap">{post.content}</p>
-                            )}
+                            <p className="whitespace-pre-wrap">{post.content}</p>
                           </div>
                         )}
 
                         {/* Author Signature */}
                         {post.author.signature && !post.isDeleted && (
-                          <>
-                            <Separator className="my-4" />
-                            <div className="text-xs text-muted-foreground italic">
-                              <p>{post.author.signature}</p>
-                            </div>
-                          </>
+                          <div className="mt-4 pt-3 border-t text-xs text-muted-foreground">
+                            <div className="italic">{post.author.signature}</div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -707,17 +895,22 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
             {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="flex items-center justify-center gap-2">
-                <Button variant="outline" size="sm" disabled={pagination.page <= 1} asChild={pagination.page > 1}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={pagination.page <= 1}
+                  asChild={pagination.page > 1}
+                >
                   {pagination.page > 1 ? (
-                    <Link href={`/forum/categories/${categorySlug}/threads/${thread.slug}?page=${pagination.page - 1}`}>
+                    <Link href={`?page=${pagination.page - 1}`}>
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       Previous
                     </Link>
                   ) : (
-                    <>
+                    <span>
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       Previous
-                    </>
+                    </span>
                   )}
                 </Button>
 
@@ -732,9 +925,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                         asChild={pagination.page !== pageNum}
                       >
                         {pagination.page !== pageNum ? (
-                          <Link href={`/forum/categories/${categorySlug}/threads/${thread.slug}?page=${pageNum}`}>
-                            {pageNum}
-                          </Link>
+                          <Link href={`?page=${pageNum}`}>{pageNum}</Link>
                         ) : (
                           <span>{pageNum}</span>
                         )}
@@ -750,15 +941,15 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                   asChild={pagination.page < pagination.totalPages}
                 >
                   {pagination.page < pagination.totalPages ? (
-                    <Link href={`/forum/categories/${categorySlug}/threads/${thread.slug}?page=${pagination.page + 1}`}>
+                    <Link href={`?page=${pagination.page + 1}`}>
                       Next
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Link>
                   ) : (
-                    <>
+                    <span>
                       Next
                       <ChevronRight className="h-4 w-4 ml-1" />
-                    </>
+                    </span>
                   )}
                 </Button>
               </div>
@@ -778,14 +969,17 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                     className="min-h-[120px]"
                   />
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
+                    <Button 
+                      variant="outline" 
                       onClick={() => setReplyContent("")}
-                      disabled={isSubmittingReply || !replyContent.trim()}
+                      disabled={!replyContent.trim()}
                     >
                       Clear
                     </Button>
-                    <Button onClick={handleReply} disabled={isSubmittingReply || !replyContent.trim()}>
+                    <Button 
+                      onClick={handleReply} 
+                      disabled={isSubmittingReply || !replyContent.trim()}
+                    >
                       {isSubmittingReply ? "Posting..." : "Post Reply"}
                     </Button>
                   </div>
@@ -799,7 +993,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 text-amber-800 dark:text-amber-500">
                     <Lock className="h-5 w-5" />
-                    <p className="font-medium">This thread is locked</p>
+                    <span className="font-medium">This thread is locked</span>
                   </div>
                   <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
                     No new replies can be posted to this thread.
@@ -818,21 +1012,42 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                   <h3 className="text-base font-semibold">Thread Actions</h3>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={handleSubscriptionToggle}
+                    disabled={isCheckingSubscription}
+                  >
                     <Bell className="mr-2 h-4 w-4" />
-                    Subscribe
+                    {isSubscribed ? "Unsubscribe" : "Subscribe"}
                   </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Bookmark className="mr-2 h-4 w-4" />
-                    Bookmark
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={handleBookmarkToggle}
+                  >
+                    {isBookmarked ? (
+                      <>
+                        <BookmarkCheck className="mr-2 h-4 w-4" />
+                        Bookmarked
+                      </>
+                    ) : (
+                      <>
+                        <BookmarkPlus className="mr-2 h-4 w-4" />
+                        Bookmark
+                      </>
+                    )}
                   </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Share className="mr-2 h-4 w-4" />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={handleShareThread}
+                  >
+                    <Share2 className="mr-2 h-4 w-4" />
                     Share
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Flag className="mr-2 h-4 w-4" />
-                    Report
                   </Button>
                 </CardContent>
               </Card>
@@ -848,22 +1063,19 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
                   href={`/forum/categories/${categorySlug}`}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div
-                    className="h-10 w-10 rounded-full flex items-center justify-center"
-                    style={{
-                      backgroundColor: thread.category.color ? `${thread.category.color}20` : "var(--primary-10)",
-                    }}
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium"
+                    style={{ backgroundColor: thread.category.color || "#6b7280" }}
                   >
                     <CategoryIcon
                       iconName={thread.category.iconClass}
-                      color={thread.category.color}
+                      color="white"
                       size="md"
-                      className="h-5 w-5"
                     />
                   </div>
                   <div>
-                    <p className="font-medium">{thread.category.name}</p>
-                    <p className="text-sm text-muted-foreground">View all threads</p>
+                    <div className="font-medium">{thread.category.name}</div>
+                    <div className="text-sm text-muted-foreground">View category</div>
                   </div>
                 </Link>
               </CardContent>
@@ -876,20 +1088,20 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Created:</span>
-                  <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
+                  <span className="text-muted-foreground">Views</span>
+                  <span className="font-medium">{thread.viewCount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Replies:</span>
-                  <span>{thread.replyCount}</span>
+                  <span className="text-muted-foreground">Replies</span>
+                  <span className="font-medium">{thread.replyCount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Views:</span>
-                  <span>{thread.viewCount}</span>
+                  <span className="text-muted-foreground">Created</span>
+                  <span className="font-medium">{new Date(thread.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Participants:</span>
-                  <span>{new Set([thread.author.id, ...posts.map((p) => p.author.id)]).size}</span>
+                  <span className="text-muted-foreground">Author</span>
+                  <span className="font-medium">{thread.author.name}</span>
                 </div>
               </CardContent>
             </Card>
@@ -901,10 +1113,9 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="text-center py-4 text-sm text-muted-foreground">
-                    <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    No similar threads found
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    No similar threads found.
+                  </p>
                 </div>
               </CardContent>
             </Card>
