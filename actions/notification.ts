@@ -7,6 +7,7 @@ import { headers } from "next/headers"
 import { notification } from "@/db/schema"
 import { eq, and, desc } from "drizzle-orm"
 import { count } from 'drizzle-orm'
+import { CACHE_TAGS, invalidateCache } from "@/lib/cache"
 
 // Get notifications for current user
 export async function getNotifications(page = 1, perPage = 20) {
@@ -94,6 +95,9 @@ export async function markNotificationAsRead(notificationId: string) {
 
     revalidatePath('/notifications')
 
+    // Invalidate cache
+    invalidateCache([CACHE_TAGS.NOTIFICATIONS])
+
     return { success: true }
   } catch (error) {
     console.error("Error marking notification as read:", error)
@@ -128,6 +132,9 @@ export async function markAllNotificationsAsRead() {
       )
 
     revalidatePath('/notifications')
+
+    // Invalidate cache
+    invalidateCache([CACHE_TAGS.NOTIFICATIONS])
 
     return { success: true }
   } catch (error) {

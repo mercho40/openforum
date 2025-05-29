@@ -7,6 +7,7 @@ import { revalidateTag } from "next/cache"
 import { slugify } from "@/lib/utils"
 import { unstable_cacheTag as cacheTag } from 'next/cache'
 import { unstable_cacheLife as cacheLife } from 'next/cache'
+import { CACHE_TAGS, CACHE_DURATIONS, invalidateCache } from "@/lib/cache"
 
 interface TagCreateData {
   name: string
@@ -43,7 +44,10 @@ export async function createTag(data: TagCreateData) {
       })
       .returning({ id: tag.id, name: tag.name, slug: tag.slug, description: tag.description, color: tag.color })
 
-    revalidateTag("get-tags")
+    // Invalidate cache
+    revalidateTag(CACHE_TAGS.TAGS)
+    invalidateCache([CACHE_TAGS.TAGS])
+    
     return { success: true, tag: result }
   } catch (error) {
     console.error("Error creating tag:", error)
@@ -57,16 +61,19 @@ export async function createTag(data: TagCreateData) {
 // Update an existing tag by ID
 export async function updateTag(tagId: string, data: TagUpdateData) {
   try {
-    let updateValues: any = { ...data }
-    if (data.name) {
-      updateValues.slug = slugify(data.name)
+    const updateValues: Partial<TagUpdateData & { slug: string }> = {
+      ...data,
+      ...(data.name && { slug: slugify(data.name) })
     }
 
     await db.update(tag)
       .set(updateValues)
       .where(eq(tag.id, tagId))
 
-    revalidateTag("get-tags")
+    // Invalidate cache
+    revalidateTag(CACHE_TAGS.TAGS)
+    invalidateCache([CACHE_TAGS.TAGS])
+    
     return { success: true }
   } catch (error) {
     console.error("Error updating tag:", error)
@@ -85,7 +92,10 @@ export async function deleteTag(tagId: string) {
     // Delete the tag itself
     await db.delete(tag).where(eq(tag.id, tagId))
 
-    revalidateTag("get-tags")
+    // Invalidate cache
+    revalidateTag(CACHE_TAGS.TAGS)
+    invalidateCache([CACHE_TAGS.TAGS, CACHE_TAGS.THREADS])
+    
     return { success: true }
   } catch (error) {
     console.error("Error deleting tag:", error)
@@ -99,8 +109,8 @@ export async function deleteTag(tagId: string) {
 // Get all tags (optionally with search)
 export async function getAllTags(options?: { search?: string, limit?: number }) {
   "use cache"
-  cacheTag('get-tags')
-  cacheLife("hours")
+  cacheTag(CACHE_TAGS.TAGS)
+  cacheLife({ revalidate: CACHE_DURATIONS.LONG })
   try {
     const { search, limit = 100 } = options || {}
     let tags
@@ -132,8 +142,8 @@ export async function getAllTags(options?: { search?: string, limit?: number }) 
 // Get a single tag by ID or slug
 export async function getTagByIdOrSlug(idOrSlug: string) {
   "use cache"
-  cacheTag('get-tags')
-  cacheLife("hours")
+  cacheTag(CACHE_TAGS.TAGS)
+  cacheLife({ revalidate: CACHE_DURATIONS.LONG })
   try {
     const tagResult = await db.query.tag.findFirst({
       where: sql`${tag.id} = ${idOrSlug} OR ${tag.slug} = ${idOrSlug}`

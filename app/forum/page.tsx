@@ -1,4 +1,7 @@
-export const dynamic = "force-dynamic";
+// Cache this page for 5 minutes and revalidate with tags
+export const revalidate = 300; // 5 minutes
+export const dynamic = "force-static";
+
 import { Suspense } from "react"
 import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"
@@ -6,6 +9,8 @@ import { headers } from "next/headers"
 import { ForumHomeView } from "@/components/views/forum/ForumHomeView"
 import { getCategories } from "@/actions/category"
 import { getHomePageThreads } from "@/actions/thread"
+import PerformanceMonitor from "@/components/PerformanceMonitor"
+import { CACHE_TAGS } from "@/lib/cache"
 
 // Define a type that matches what ForumHomeView expects
 type CategoryWithStats = {
@@ -66,6 +71,13 @@ export default async function ForumPage() {
         categories={categories}
         recentThreads={recentThreads}
         trendingThreads={trendingThreads}
+      />
+      <PerformanceMonitor 
+        pageName="Forum Home"
+        cacheInfo={{
+          hitRate: 0.85, // This would come from actual cache metrics
+          tags: [CACHE_TAGS.CATEGORIES, CACHE_TAGS.THREADS]
+        }}
       />
     </Suspense>
   )

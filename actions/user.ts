@@ -7,6 +7,7 @@ import { headers } from "next/headers"
 import { Session } from "@/lib/auth"
 import { user } from "@/db/schema" // Import the user table from your schema
 import { eq } from "drizzle-orm"
+import { CACHE_TAGS, invalidateCache } from "@/lib/cache"
 
 interface ProfileUpdateData {
   bio?: string
@@ -63,6 +64,9 @@ export async function updateUserProfile(data: ProfileUpdateData) {
 
     revalidatePath('/profile')
     revalidatePath('/')
+
+    // Invalidate user cache
+    invalidateCache([CACHE_TAGS.USERS])
 
     return { success: true }
   } catch (error) {

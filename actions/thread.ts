@@ -7,10 +7,11 @@ import { headers } from "next/headers"
 import { thread, post, threadTag, tag, category, user } from "@/db/schema"
 import { eq, and, desc, sql, asc, inArray } from "drizzle-orm"
 import { nanoid } from "nanoid"
-import { slugify } from "@/lib/utils" // You'll need to create this utility
+import { slugify } from "@/lib/utils"
 import { unstable_cacheTag as cacheTag } from 'next/cache'
 import { unstable_cacheLife as cacheLife } from 'next/cache'
 import { revalidateTag } from 'next/cache'
+import { CACHE_TAGS, CACHE_DURATIONS, invalidateCache, cachedQueries } from '@/lib/cache'
 
 interface ThreadCreateData {
   title: string
@@ -97,6 +98,7 @@ export async function createThread(data: ThreadCreateData) {
       }
 
       revalidateTag('get-threads')
+      invalidateCache([CACHE_TAGS.THREADS, CACHE_TAGS.CATEGORIES])
       return {
         success: true,
         threadId,
@@ -163,6 +165,7 @@ export async function updateThread(threadId: string, data: ThreadUpdateData) {
     // revalidatePath('/threads/[slug]')
     // revalidatePath('/categories/[slug]')
     revalidateTag('get-threads')
+    invalidateCache([CACHE_TAGS.THREADS, CACHE_TAGS.THREAD(threadId), CACHE_TAGS.CATEGORIES])
 
     return {
       success: true,
@@ -319,8 +322,8 @@ export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
 // Get recent and trending threads for the home page
 export async function getHomePageThreads() {
   "use cache"
-  cacheTag('get-threads')
-  cacheLife("hours")
+  cacheTag(CACHE_TAGS.THREADS)
+  cacheLife({ revalidate: CACHE_DURATIONS.SHORT })
   try {
     // Fetch recent threads
     const recentThreads = await db
@@ -393,8 +396,8 @@ export async function getHomePageThreads() {
 }
 export async function getThreadData(threadSlug: string) {
   "use cache"
-  cacheTag('get-threads')
-  cacheLife("hours")
+  cacheTag(CACHE_TAGS.THREADS)
+  cacheLife({ revalidate: CACHE_DURATIONS.MEDIUM })
   try {
 
     const threadData = await db.query.thread.findFirst({

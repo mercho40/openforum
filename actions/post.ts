@@ -7,6 +7,7 @@ import { headers } from "next/headers"
 import { post, thread, vote, user, notification } from "@/db/schema"
 import { eq, and, sql } from "drizzle-orm"
 import { revalidateTag } from 'next/cache'
+import { CACHE_TAGS, invalidateCache } from "@/lib/cache"
 
 interface PostCreateData {
   content: string
@@ -101,7 +102,16 @@ export async function createPost(data: PostCreateData) {
       revalidatePath(`/forum/categories/${threadData.category.name}/threads/`)
       revalidatePath("/forum")
       revalidatePath("/forum/threads/")
-      revalidateTag('get-threads')
+      
+      // Invalidate cache
+      revalidateTag(CACHE_TAGS.THREADS)
+      revalidateTag(CACHE_TAGS.POSTS)
+      invalidateCache([
+        CACHE_TAGS.THREADS,
+        CACHE_TAGS.POSTS,
+        CACHE_TAGS.THREAD(data.threadId)
+      ])
+      
       return {
         success: true,
         postId: postResult.id
@@ -163,7 +173,15 @@ export async function updatePost(postId: string, data: PostUpdateData) {
 
     // revalidatePath(`/forum/categories/${postData.thread?.slug}/`)
 
-    revalidateTag('get-threads')
+    // Invalidate cache
+    revalidateTag(CACHE_TAGS.THREADS)
+    revalidateTag(CACHE_TAGS.POSTS)
+    invalidateCache([
+      CACHE_TAGS.THREADS,
+      CACHE_TAGS.POSTS,
+      CACHE_TAGS.POST(postId)
+    ])
+    
     return { success: true }
   } catch (error) {
     console.error("Error updating post:", error)
@@ -229,7 +247,15 @@ export async function deletePost(postId: string) {
 
     // revalidatePath(`/threads/${postData.thread.slug}`)
 
-    revalidateTag('get-threads')
+    // Invalidate cache
+    revalidateTag(CACHE_TAGS.THREADS)
+    revalidateTag(CACHE_TAGS.POSTS)
+    invalidateCache([
+      CACHE_TAGS.THREADS,
+      CACHE_TAGS.POSTS,
+      CACHE_TAGS.POST(postId)
+    ])
+    
     return { success: true }
   } catch (error) {
     console.error("Error deleting post:", error)
@@ -363,7 +389,18 @@ export async function votePost(postId: string, value: 1 | 0 | -1) {
 
       // revalidatePath(`/threads/${postData.thread.slug}`)
 
-      revalidateTag('get-threads')
+      // Invalidate cache
+      revalidateTag(CACHE_TAGS.THREADS)
+      revalidateTag(CACHE_TAGS.POSTS)
+      revalidateTag(CACHE_TAGS.USERS)
+      invalidateCache([
+        CACHE_TAGS.THREADS,
+        CACHE_TAGS.POSTS,
+        CACHE_TAGS.USERS,
+        CACHE_TAGS.POST(postId),
+        CACHE_TAGS.USER(postData.authorId)
+      ])
+      
       return { success: true }
     })
   } catch (error) {

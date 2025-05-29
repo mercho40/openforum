@@ -6,12 +6,13 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { category, thread, categorySubscription, post, user } from "@/db/schema"
 import { eq, desc, asc, and, inArray } from "drizzle-orm"
-import { slugify } from "@/lib/utils" // You'll need to create this utility
+import { slugify } from "@/lib/utils"
 import { count } from 'drizzle-orm'
 import { z } from "zod"
 import { unstable_cacheTag as cacheTag } from 'next/cache'
 import { unstable_cacheLife as cacheLife } from 'next/cache'
 import { revalidateTag } from 'next/cache'
+import { CACHE_TAGS, CACHE_DURATIONS, invalidateCache } from '@/lib/cache'
 
 const createCategorySchema = z.object({
   name: z.string().min(3).max(50),
@@ -37,8 +38,8 @@ export type CategoryFormData = z.infer<typeof updateCategorySchema>;
 // Get all categories
 export async function getCategories() {
   "use cache"
-  cacheTag('get-categories')
-  cacheLife("hours")
+  cacheTag(CACHE_TAGS.CATEGORIES)
+  cacheLife({ revalidate: CACHE_DURATIONS.LONG })
   try {
     const categories = await db.query.category.findMany({
       orderBy: [asc(category.displayOrder), asc(category.name)],
@@ -127,8 +128,8 @@ export async function getCategories() {
 // Get category with threads
 export async function getCategoryWithThreads(slug: string, page = 1, perPage = 20) {
   "use cache"
-  cacheTag('get-categories')
-  cacheLife("hours")
+  cacheTag(CACHE_TAGS.CATEGORIES)
+  cacheLife({ revalidate: CACHE_DURATIONS.MEDIUM })
   try {
     // Get category using basic query
     const categoryData = await db.select().from(category)

@@ -1,4 +1,7 @@
-export const dynamic = "force-dynamic";
+// Cache this page for 10 minutes and revalidate with tags
+export const revalidate = 600; // 10 minutes
+export const dynamic = "force-static";
+
 import { Suspense } from "react"
 import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"

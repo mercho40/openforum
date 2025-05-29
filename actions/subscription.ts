@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { threadSubscription, thread } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
+import { CACHE_TAGS, invalidateCache } from "@/lib/cache"
 
 // Subscribe to thread
 export async function subscribeToThreadAction(threadId: string) {
@@ -52,6 +53,9 @@ export async function subscribeToThreadAction(threadId: string) {
 
     // revalidatePath(`/threads/${threadData.slug}`)
 
+    // Invalidate cache
+    invalidateCache([CACHE_TAGS.THREADS, CACHE_TAGS.THREAD(threadId)])
+
     return { success: true }
   } catch (error) {
     console.error("Error subscribing to thread:", error)
@@ -97,6 +101,9 @@ export async function unsubscribeFromThreadAction(threadId: string) {
       )
 
     // revalidatePath(`/threads/${threadData.slug}`)
+
+    // Invalidate cache
+    invalidateCache([CACHE_TAGS.THREADS, CACHE_TAGS.THREAD(threadId)])
 
     return { success: true }
   } catch (error) {
