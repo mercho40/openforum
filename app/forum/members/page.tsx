@@ -7,19 +7,21 @@ import { getForumMembers } from "@/actions/user";
 import { MembersView } from "@/components/views/forum/MembersView";
 
 export interface MembersPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     search?: string;
     sort?: string;
-  };
+  }>;
 }
 
 export default async function MembersPage({
   searchParams,
 }: MembersPageProps) {
-  const page = Number.parseInt(searchParams.page || "1", 10);
-  const search = searchParams.search || "";
-  const sort = searchParams.sort || "newest";
+  const params = await searchParams; // Await the searchParams Promise
+
+  const page = Number.parseInt(params.page || "1", 10);
+  const search = params.search || "";
+  const sort = params.sort || "newest";
 
   // Get the current user session
   let session = null;
@@ -51,7 +53,7 @@ export default async function MembersPage({
         </main>
       }
     >
-      <MembersView 
+      <MembersView
         session={session}
         members={members}
         pagination={pagination}

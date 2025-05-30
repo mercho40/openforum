@@ -5,6 +5,7 @@ import { headers } from "next/headers"
 import { getAllThreads } from "@/actions/thread"
 import { AllThreadsView } from "@/components/views/forum/AllThreadsView"
 import { getCategories } from "@/actions/category"
+import { getUserProfile } from "@/actions/user"
 
 interface ThreadsPageProps {
   searchParams: Promise<{
@@ -13,6 +14,7 @@ interface ThreadsPageProps {
     category?: string
     search?: string
     filter?: string
+    author?: string
   }>
 }
 
@@ -24,6 +26,7 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
     const categoryFilter = params.category
     const searchQuery = params.search
     const filter = params.filter
+    const authorFilter = params.author
 
     // Get the current user session
     let session = null
@@ -71,6 +74,27 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
         throw new Error("Invalid filter parameter")
     }
 
+    // Fetch author data if filtering by author
+    let authorData: {
+        id: string
+        name: string
+        image?: string | null
+        username?: string | null
+        displayUsername?: string | null
+    } | undefined = undefined
+    if (authorFilter) {
+        const authorResult = await getUserProfile(authorFilter)
+        if (authorResult.success && authorResult.userData) {
+            authorData = {
+                id: authorResult.userData.id,
+                name: authorResult.userData.name,
+                image: authorResult.userData.image,
+                username: authorResult.userData.username,
+                displayUsername: authorResult.userData.displayUsername,
+            }
+        }
+    }
+
     const threadsResult = await getAllThreads({
         page,
         perPage: 20,
@@ -78,6 +102,7 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
         categoryId: categoryFilter,
         searchQuery,
         filter: filter as 'pinned' | 'locked' | undefined,
+        authorId: authorFilter,
     })
 
     const categoriesResult = await getCategories()
@@ -107,6 +132,8 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
                 currentCategory={categoryFilter}
                 currentSearch={searchQuery}
                 currentFilter={filter}
+                currentAuthor={authorFilter}
+                authorData={authorData}
             />
         </Suspense>
     )

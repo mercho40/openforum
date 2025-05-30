@@ -429,7 +429,8 @@ export async function getAllThreads(options?: {
   categoryId?: string
   sortBy?: 'recent' | 'popular' | 'views' | 'replies'
   searchQuery?: string
-  filter?: 'pinned' | 'locked' // Add filter support
+  filter?: 'pinned' | 'locked'
+  authorId?: string // Add author filter
 }) {
   "use cache"
   cacheTag('get-threads')
@@ -441,7 +442,8 @@ export async function getAllThreads(options?: {
       categoryId,
       sortBy = 'recent',
       searchQuery,
-      filter
+      filter,
+      authorId
     } = options || {}
 
     const offset = (page - 1) * perPage
@@ -451,6 +453,10 @@ export async function getAllThreads(options?: {
 
     if (categoryId) {
       whereConditions.push(eq(thread.categoryId, categoryId))
+    }
+
+    if (authorId) {
+      whereConditions.push(eq(thread.authorId, authorId))
     }
 
     if (searchQuery) {

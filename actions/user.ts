@@ -5,8 +5,8 @@ import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { Session } from "@/lib/auth"
-import { user } from "@/db/schema" // Import the user table from your schema
-import { eq } from "drizzle-orm"
+import { post, thread, user } from "@/db/schema" // Import the user table from your schema
+import { asc, count, desc, eq, ilike, or } from "drizzle-orm"
 
 interface ProfileUpdateData {
   bio?: string
@@ -255,11 +255,122 @@ export async function getUserProfile(userId: string) {
       .from(post)
       .where(eq(post.authorId, userId));
 
+    // Get recent threads (limit to 5 for profile view)
+    const threads = await db.query.thread.findMany({
+      where: eq(thread.authorId, userId),
+      with: {
+        category: {
+          columns: {
+            id: true,
+            name: true,
+            slug: true,
+          }
+        }
+      },
+      columns: {
+        id: true,
+        title: true,
+        slug: true,
+        createdAt: true,
+        updatedAt: true,
+        isPinned: true,
+        isLocked: true,
+        viewCount: true,
+        replyCount: true,
+      },
+      orderBy: [desc(thread.createdAt)],
+      limit: 5,
+    });
+
+    // Get recent posts (limit to 5 for profile view)
+    const posts = await db.query.post.findMany({
+      where: eq(post.authorId, userId),
+      with: {
+        thread: {
+          columns: {
+            id: true,
+            title: true,
+            slug: true,
+          },
+          with: {
+            category: {
+              columns: {
+                id: true,
+                name: true,
+                slug: true,
+              }
+            }
+          }
+        }
+      },
+      columns: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: [desc(post.createdAt)],
+      limit: 5,
+    });
+
+    // Get like counts for threads and posts
+    const threadsWithCounts = await Promise.all(
+      threads.map(async (threadItem) => {
+        // Get post count for this thread (replies)
+        const postCountResult = await db
+          .select({ count: count() })
+          .from(post)
+          .where(eq(post.threadId, threadItem.id));
+
+        // Get like count for the initial post of this thread
+        const initialPost = await db.query.post.findFirst({
+          where: eq(post.threadId, threadItem.id),
+          orderBy: [asc(post.createdAt)],
+          with: {
+            votes: true
+          }
+        });
+
+        const likeCount = initialPost?.votes.filter(vote => vote.value === 1).length || 0;
+
+        return {
+          ...threadItem,
+          _count: {
+            posts: postCountResult[0]?.count || 0,
+            likes: likeCount
+          }
+        };
+      })
+    );
+
+    const postsWithCounts = await Promise.all(
+      posts.map(async (postItem) => {
+        // Get like count for this post
+        const postWithVotes = await db.query.post.findFirst({
+          where: eq(post.id, postItem.id),
+          with: {
+            votes: true
+          }
+        });
+
+        const likeCount = postWithVotes?.votes.filter(vote => vote.value === 1).length || 0;
+
+        return {
+          ...postItem,
+          _count: {
+            likes: likeCount
+          }
+        };
+      })
+    );
+
     // Combine user data with activity counts
     const userData = {
       ...users[0],
       threadCount: threadCount[0]?.count || 0,
       postCount: postCount[0]?.count || 0,
+      threads: threadsWithCounts,
+      posts: postsWithCounts,
     };
 
     return {
@@ -286,7 +397,7 @@ export async function getForumMembers({
     const offset = (page - 1) * limit;
     
     // Base query
-    let query = db
+    let baseQuery = db
       .select({
         id: user.id,
         name: user.name,
@@ -299,32 +410,33 @@ export async function getForumMembers({
         role: user.role,
       })
       .from(user);
-    
+
     // Add search filter if provided
-    if (search) {
-      query = query.where(
-        or(
-          ilike(user.name, `%${search}%`),
-          ilike(user.username, `%${search}%`),
-          ilike(user.displayUsername, `%${search}%`)
+    const query = search
+      ? baseQuery.where(
+          or(
+            ilike(user.name, `%${search}%`),
+            ilike(user.username, `%${search}%`),
+            ilike(user.displayUsername, `%${search}%`)
+          )
         )
-      );
-    }
+      : baseQuery;
     
-    // Apply sorting
+    // Determine orderBy clause
+    let orderByClause;
     switch (sort) {
       case "oldest":
-        query = query.orderBy(asc(user.createdAt));
+        orderByClause = asc(user.createdAt);
         break;
       case "reputation":
-        query = query.orderBy(desc(user.reputation));
+        orderByClause = desc(user.reputation);
         break;
       case "name":
-        query = query.orderBy(asc(user.name));
+        orderByClause = asc(user.name);
         break;
       case "newest":
       default:
-        query = query.orderBy(desc(user.createdAt));
+        orderByClause = desc(user.createdAt);
         break;
     }
     
@@ -341,8 +453,12 @@ export async function getForumMembers({
         undefined
       );
     
-    // Execute the paginated query
-    const members = await query
+    // Execute the paginated query with orderBy
+    const members = await (search
+      ? query
+      : query // no-op, but keeps the chain consistent
+    )
+      .orderBy(orderByClause)
       .limit(limit)
       .offset(offset);
     

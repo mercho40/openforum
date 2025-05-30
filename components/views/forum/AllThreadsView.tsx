@@ -76,6 +76,8 @@ interface Thread {
     id: string
     name: string | null
     image: string | null
+    username?: string | null
+    displayUsername?: string | null
   }
   category: {
     id: string
@@ -110,6 +112,14 @@ interface AllThreadsViewProps {
   currentCategory?: string
   currentSearch?: string
   currentFilter?: string
+  currentAuthor?: string
+  authorData?: {
+    id: string
+    name: string
+    image?: string | null
+    username?: string | null
+    displayUsername?: string | null
+  }
 }
 
 export function AllThreadsView({
@@ -121,6 +131,8 @@ export function AllThreadsView({
   currentCategory,
   currentSearch,
   currentFilter,
+  currentAuthor,
+  authorData,
 }: AllThreadsViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -129,6 +141,7 @@ export function AllThreadsView({
 
   const isAuthenticated = !!session
   const isAdmin = isAuthenticated && session.user.role === "admin"
+  const isFilteringByAuthor = !!currentAuthor && !!authorData
 
   const updateSearchParams = (updates: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -190,6 +203,15 @@ export function AllThreadsView({
       default:
         return "All"
     }
+  }
+
+  const getAuthorDisplayName = (author: {
+    displayUsername?: string | null
+    username?: string | null
+    name: string | null
+  } | null | undefined) => {
+    if (!author) return "Unknown User"
+    return author.displayUsername || author.username || author.name || "Unknown User"
   }
 
   return (
@@ -379,15 +401,32 @@ export function AllThreadsView({
 
       {/* Main Content */}
       <main className="flex-1 container py-6 px-4">
-        <div className="grid gap-6 md:grid-cols-[1fr_300px]">
+        <div className={`grid gap-6 ${isFilteringByAuthor ? 'grid-cols-1' : 'md:grid-cols-[1fr_300px]'}`}>
           {/* Main Column */}
           <div className="space-y-6">
             {/* Page Header */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight">All Threads</h1>
-                  <p className="text-muted-foreground">Browse all discussions across the forum</p>
+                  {isFilteringByAuthor ? (
+                    <>
+                      <div className="flex items-center gap-3 mb-2">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={authorData.image || ""} alt={getAuthorDisplayName(authorData)} />
+                          <AvatarFallback>{getAuthorDisplayName(authorData).charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h1 className="text-2xl font-bold tracking-tight">All Threads From {getAuthorDisplayName(authorData)}</h1>
+                          <p className="text-muted-foreground">Browse all discussions created by this author</p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h1 className="text-2xl font-bold tracking-tight">All Threads</h1>
+                      <p className="text-muted-foreground">Browse all discussions across the forum</p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -397,7 +436,17 @@ export function AllThreadsView({
                   Forum
                 </Link>
                 <span>/</span>
-                <span className="text-foreground">All Threads</span>
+                {isFilteringByAuthor ? (
+                  <>
+                    <Link href="/forum/threads" className="hover:text-foreground">
+                      Threads
+                    </Link>
+                    <span>/</span>
+                    <span className="text-foreground">{getAuthorDisplayName(authorData)}</span>
+                  </>
+                ) : (
+                  <span className="text-foreground">All Threads</span>
+                )}
               </nav>
             </div>
 
@@ -437,37 +486,39 @@ export function AllThreadsView({
                 </DropdownMenu>
 
                 {/* Category Filter */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Filter className="mr-2 h-4 w-4" />
-                      Category:{" "}
-                      {currentCategory ? categories.find((c) => c.slug === currentCategory)?.name || "Unknown" : "All"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="max-h-[300px] overflow-y-auto">
-                    <DropdownMenuItem onClick={() => updateSearchParams({ category: undefined })}>
-                      All Categories
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {categories.map((category) => (
-                      <DropdownMenuItem
-                        key={category.id}
-                        onClick={() => updateSearchParams({ category: category.slug })}
-                      >
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon
-                            iconName={category.iconClass}
-                            color={category.color}
-                            size="sm"
-                            className="h-4 w-4"
-                          />
-                          {category.name}
-                        </div>
+                {!isFilteringByAuthor && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="mr-2 h-4 w-4" />
+                        Category:{" "}
+                        {currentCategory ? categories.find((c) => c.slug === currentCategory)?.name || "Unknown" : "All"}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="max-h-[300px] overflow-y-auto">
+                      <DropdownMenuItem onClick={() => updateSearchParams({ category: undefined })}>
+                        All Categories
                       </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuSeparator />
+                      {categories.map((category) => (
+                        <DropdownMenuItem
+                          key={category.id}
+                          onClick={() => updateSearchParams({ category: category.slug })}
+                        >
+                          <div className="flex items-center gap-2">
+                            <CategoryIcon
+                              iconName={category.iconClass}
+                              color={category.color}
+                              size="sm"
+                              className="h-4 w-4"
+                            />
+                            {category.name}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 {/* Thread Type Filter */}
                 <DropdownMenu>
@@ -493,7 +544,7 @@ export function AllThreadsView({
                 </DropdownMenu>
 
                 {/* Clear Filters */}
-                {(currentCategory || currentSearch || currentFilter || currentSort !== "lastPost") && (
+                {(currentCategory || currentSearch || currentFilter || currentSort !== "lastPost" || currentAuthor) && (
                   <Button variant="ghost" size="sm" onClick={() => router.push("/forum/threads")}>
                     Clear Filters
                   </Button>
@@ -569,7 +620,7 @@ export function AllThreadsView({
                               </div>
 
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span>by {thread.author.name}</span>
+                                <span>by {getAuthorDisplayName(thread.author)}</span>
                                 <span>•</span>
                                 <span>{formatDistanceToNow(new Date(thread.createdAt), { addSuffix: true })}</span>
                               </div>
@@ -645,11 +696,11 @@ export function AllThreadsView({
                     <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-medium mb-2">No threads found</h3>
                     <p className="text-muted-foreground mb-4">
-                      {currentSearch || currentCategory || currentFilter
+                      {currentSearch || currentCategory || currentFilter || currentAuthor
                         ? "Try adjusting your filters or search terms."
                         : "No threads have been created yet."}
                     </p>
-                    {!currentSearch && !currentCategory && !currentFilter && (
+                    {!currentSearch && !currentCategory && !currentFilter && !currentAuthor && (
                       <Button asChild>
                         <Link href="/forum/categories">Browse Categories</Link>
                       </Button>
@@ -701,132 +752,134 @@ export function AllThreadsView({
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Stats */}
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-medium mb-3">Forum Overview</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Threads:</span>
-                    <span className="font-medium">{pagination.total}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Categories:</span>
-                    <span className="font-medium">{categories.length}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Active Filters */}
-            {(currentCategory || currentSearch || currentFilter) && (
+          {/* Sidebar - Only show when NOT filtering by author */}
+          {!isFilteringByAuthor && (
+            <div className="space-y-6">
+              {/* Quick Stats */}
               <Card>
                 <CardContent className="p-4">
-                  <h3 className="font-medium mb-3">Active Filters</h3>
-                  <div className="space-y-2">
-                    {currentCategory && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Category:</span>
-                        <Badge variant="secondary">
-                          {categories.find((c) => c.slug === currentCategory)?.name || "Unknown"}
-                        </Badge>
-                      </div>
-                    )}
-                    {currentSearch && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Search:</span>
-                        <Badge variant="secondary" className="max-w-[120px] truncate">
-                          {currentSearch}
-                        </Badge>
-                      </div>
-                    )}
-                    {currentFilter && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Type:</span>
-                        <Badge variant="secondary">{getFilterLabel(currentFilter)}</Badge>
-                      </div>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={() => router.push("/forum/threads")}
-                    >
-                      Clear All Filters
-                    </Button>
+                  <h3 className="font-medium mb-3">Forum Overview</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Threads:</span>
+                      <span className="font-medium">{pagination.total}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Categories:</span>
+                      <span className="font-medium">{categories.length}</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            {/* Quick Links */}
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-medium mb-3">Quick Links</h3>
-                <div className="space-y-2">
-                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                    <Link href="/forum">
-                      <Home className="mr-2 h-4 w-4" />
-                      Forum Home
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                    <Link href="/forum/categories">
-                      <Tag className="mr-2 h-4 w-4" />
-                      Browse Categories
-                    </Link>
-                  </Button>
-                  {isAuthenticated && (
-                    <>
-                      <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                        <Link href="/forum/bookmarks">
-                          <Bookmark className="mr-2 h-4 w-4" />
-                          My Bookmarks
-                        </Link>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                        <Link href="/forum/participated">
-                          <User className="mr-2 h-4 w-4" />
-                          My Threads
-                        </Link>
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Popular Categories */}
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-medium mb-3">Popular Categories</h3>
-                <div className="space-y-2">
-                  {categories.slice(0, 5).map((category) => (
-                    <Link
-                      key={category.id}
-                      href={`/forum/categories/${category.slug}`}
-                      className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-sm"
-                    >
-                      <CategoryIcon
-                        iconName={category.iconClass}
-                        color={category.color}
+              {/* Active Filters */}
+              {(currentCategory || currentSearch || currentFilter) && (
+                <Card>
+                  <CardContent className="p-4">
+                    <h3 className="font-medium mb-3">Active Filters</h3>
+                    <div className="space-y-2">
+                      {currentCategory && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Category:</span>
+                          <Badge variant="secondary">
+                            {categories.find((c) => c.slug === currentCategory)?.name || "Unknown"}
+                          </Badge>
+                        </div>
+                      )}
+                      {currentSearch && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Search:</span>
+                          <Badge variant="secondary" className="max-w-[120px] truncate">
+                            {currentSearch}
+                          </Badge>
+                        </div>
+                      )}
+                      {currentFilter && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Type:</span>
+                          <Badge variant="secondary">{getFilterLabel(currentFilter)}</Badge>
+                        </div>
+                      )}
+                      <Button
+                        variant="ghost"
                         size="sm"
-                        className="h-4 w-4"
-                      />
-                      <span className="truncate">{category.name}</span>
-                    </Link>
-                  ))}
-                  {categories.length > 5 && (
-                    <Button variant="ghost" size="sm" className="w-full mt-2" asChild>
-                      <Link href="/forum/categories">View All Categories</Link>
+                        className="w-full mt-2"
+                        onClick={() => router.push("/forum/threads")}
+                      >
+                        Clear All Filters
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Quick Links */}
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-medium mb-3">Quick Links</h3>
+                  <div className="space-y-2">
+                    <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                      <Link href="/forum">
+                        <Home className="mr-2 h-4 w-4" />
+                        Forum Home
+                      </Link>
                     </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                    <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                      <Link href="/forum/categories">
+                        <Tag className="mr-2 h-4 w-4" />
+                        Browse Categories
+                      </Link>
+                    </Button>
+                    {isAuthenticated && (
+                      <>
+                        <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                          <Link href="/forum/bookmarks">
+                            <Bookmark className="mr-2 h-4 w-4" />
+                            My Bookmarks
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                          <Link href="/forum/participated">
+                            <User className="mr-2 h-4 w-4" />
+                            My Threads
+                          </Link>
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Popular Categories */}
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-medium mb-3">Popular Categories</h3>
+                  <div className="space-y-2">
+                    {categories.slice(0, 5).map((category) => (
+                      <Link
+                        key={category.id}
+                        href={`/forum/categories/${category.slug}`}
+                        className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-sm"
+                      >
+                        <CategoryIcon
+                          iconName={category.iconClass}
+                          color={category.color}
+                          size="sm"
+                          className="h-4 w-4"
+                        />
+                        <span className="truncate">{category.name}</span>
+                      </Link>
+                    ))}
+                    {categories.length > 5 && (
+                      <Button variant="ghost" size="sm" className="w-full mt-2" asChild>
+                        <Link href="/forum/categories">View All Categories</Link>
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </main>
     </>

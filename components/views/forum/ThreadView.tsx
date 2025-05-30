@@ -756,7 +756,7 @@ export function ThreadView({ session, thread, posts, pagination, categorySlug }:
             {/* Posts */}
             <div className="space-y-4">
               {posts.map((post, index) => (
-                <Card key={post.id} className={`${index === 0 ? "border-primary/20" : ""}`}>
+                <Card key={post.id} className={`${index === 0 ? "border-primary/20" : ""}`} id={`post-${post.id}`}>
                   <CardContent className="p-6">
                     <div className="flex gap-4">
                       {/* Vote Controls */}

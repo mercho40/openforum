@@ -6,6 +6,7 @@ import { headers } from "next/headers"
 import { ForumHomeView } from "@/components/views/forum/ForumHomeView"
 import { getCategories } from "@/actions/category"
 import { getHomePageThreads } from "@/actions/thread"
+import { getUserStats, getForumStats } from "@/actions/stats"
 
 // Define a type that matches what ForumHomeView expects
 type CategoryWithStats = {
@@ -59,6 +60,13 @@ export default async function ForumPage() {
   const recentThreads = homePageThreadsResult.success ? homePageThreadsResult.recentThreads : [];
   const trendingThreads = homePageThreadsResult.success ? homePageThreadsResult.trendingThreads : [];
 
+  // Fetch stats
+  const [rawUserStats, forumStats] = await Promise.all([
+    session?.user?.id ? getUserStats(session.user.id) : Promise.resolve(null),
+    getForumStats()
+  ]);
+  const userStats = rawUserStats === null ? undefined : rawUserStats;
+
   return (
     <Suspense fallback={<main className="flex min-h-[100dvh] flex-col items-center justify-center p-4"><Loader2 className="animate-spin text-muted-foreground" /></main>}>
       <ForumHomeView
@@ -66,6 +74,8 @@ export default async function ForumPage() {
         categories={categories}
         recentThreads={recentThreads}
         trendingThreads={trendingThreads}
+        userStats={userStats}
+        forumStats={forumStats}
       />
     </Suspense>
   )

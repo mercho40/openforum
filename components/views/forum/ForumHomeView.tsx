@@ -40,7 +40,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Session } from "@/lib/auth"
 import { formatDistanceToNow } from "date-fns"
 import { authClient } from "@/lib/auth-client"
@@ -88,14 +88,42 @@ interface Thread {
   }
 }
 
+interface UserStats {
+  threadCount: number
+  postCount: number
+  reputation: number
+  reactionsReceived: number
+}
+
+interface ForumStats {
+  totalThreads: number
+  totalPosts: number
+  totalMembers: number
+  newestMember: {
+    id: string
+    name: string | null
+    username: string | null
+    displayUsername: string | null
+  } | null
+}
+
 interface ForumHomeViewProps {
   session: Session | null
   categories: Category[]
   recentThreads: Thread[]
   trendingThreads: Thread[]
+  userStats?: UserStats
+  forumStats: ForumStats
 }
 
-export function ForumHomeView({ session, categories, recentThreads, trendingThreads }: ForumHomeViewProps) {
+export function ForumHomeView({ 
+  session, 
+  categories, 
+  recentThreads, 
+  trendingThreads, 
+  userStats,
+  forumStats 
+}: ForumHomeViewProps) {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -557,7 +585,7 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
           {/* Sidebar */}
           <div className="space-y-6">
             {/* User Stats Card - Only for authenticated users */}
-            {isAuthenticated && (
+            {isAuthenticated && userStats && (
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Your Activity</CardTitle>
@@ -565,19 +593,19 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
                 <CardContent className="pb-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col items-center justify-center rounded-lg border bg-card/50 p-3">
-                      <span className="text-xl font-bold">0</span>
+                      <span className="text-xl font-bold">{userStats.threadCount}</span>
                       <span className="text-xs text-muted-foreground">Threads</span>
                     </div>
                     <div className="flex flex-col items-center justify-center rounded-lg border bg-card/50 p-3">
-                      <span className="text-xl font-bold">0</span>
-                      <span className="text-xs text-muted-foreground">Replies</span>
+                      <span className="text-xl font-bold">{userStats.postCount}</span>
+                      <span className="text-xs text-muted-foreground">Posts</span>
                     </div>
                     <div className="flex flex-col items-center justify-center rounded-lg border bg-card/50 p-3">
-                      <span className="text-xl font-bold">0</span>
+                      <span className="text-xl font-bold">{userStats.reactionsReceived}</span>
                       <span className="text-xs text-muted-foreground">Reactions</span>
                     </div>
                     <div className="flex flex-col items-center justify-center rounded-lg border bg-card/50 p-3">
-                      <span className="text-xl font-bold">0</span>
+                      <span className="text-xl font-bold">{userStats.reputation}</span>
                       <span className="text-xs text-muted-foreground">Reputation</span>
                     </div>
                   </div>
@@ -642,32 +670,6 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
               </CardContent>
             </Card>
 
-            {/* Online Users */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Online Now</CardTitle>
-                <CardDescription className="text-xs">Members currently browsing</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {/* This would be populated with actual online users */}
-                  <Avatar className="h-8 w-8 border-2 border-primary">
-                    <AvatarImage src="/api/placeholder/32/32" alt="User" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/api/placeholder/32/32" alt="User" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/api/placeholder/32/32" alt="User" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs">+5</div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Forum Stats */}
             <Card>
               <CardHeader className="pb-2">
@@ -676,22 +678,28 @@ export function ForumHomeView({ session, categories, recentThreads, trendingThre
               <CardContent className="grid gap-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Threads:</span>
-                  <span className="font-medium">1,234</span>
+                  <span className="font-medium">{forumStats.totalThreads.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Posts:</span>
-                  <span className="font-medium">5,678</span>
+                  <span className="font-medium">{forumStats.totalPosts.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Members:</span>
-                  <span className="font-medium">789</span>
+                  <span className="font-medium">{forumStats.totalMembers.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Newest Member:</span>
-                  <Link href="#" className="font-medium hover:text-primary">
-                    NewUser123
-                  </Link>
-                </div>
+                {forumStats.newestMember && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Newest Member:</span>
+                    <Link 
+                      href={`/forum/profile/${forumStats.newestMember.id}`} 
+                      className="font-medium hover:text-primary truncate max-w-[120px]"
+                      title={forumStats.newestMember.displayUsername || forumStats.newestMember.name || "Unknown User"}
+                    >
+                      {forumStats.newestMember.displayUsername || forumStats.newestMember.name || "Unknown User"}
+                    </Link>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
