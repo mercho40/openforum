@@ -6,6 +6,29 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { threadSubscription, thread } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
+import { revalidateTag } from 'next/cache'
+
+// Helper function for subscription-related cache invalidation
+function invalidateSubscriptionCaches(options: {
+  userId?: string
+  threadId?: string
+  operation: 'subscribe' | 'unsubscribe'
+}) {
+  const { userId, threadId, operation } = options
+  
+  // Invalidate user-specific subscription caches
+  if (userId) {
+    revalidateTag(`user-subscriptions-${userId}`)
+  }
+  
+  // Invalidate thread-specific subscription data
+  if (threadId) {
+    revalidateTag(`thread-subscriptions-${threadId}`)
+  }
+  
+  // General subscription lists
+  revalidateTag('user-subscriptions')
+}
 
 // Subscribe to thread
 export async function subscribeToThreadAction(threadId: string) {
@@ -50,7 +73,12 @@ export async function subscribeToThreadAction(threadId: string) {
         })
     }
 
-    // revalidatePath(`/threads/${threadData.slug}`)
+    // Invalidate caches
+    invalidateSubscriptionCaches({
+      userId,
+      threadId,
+      operation: 'subscribe'
+    })
 
     return { success: true }
   } catch (error) {
@@ -96,7 +124,12 @@ export async function unsubscribeFromThreadAction(threadId: string) {
         )
       )
 
-    // revalidatePath(`/threads/${threadData.slug}`)
+    // Invalidate caches
+    invalidateSubscriptionCaches({
+      userId,
+      threadId,
+      operation: 'unsubscribe'
+    })
 
     return { success: true }
   } catch (error) {

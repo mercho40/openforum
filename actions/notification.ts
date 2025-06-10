@@ -7,9 +7,37 @@ import { headers } from "next/headers"
 import { notification } from "@/db/schema"
 import { eq, and, desc } from "drizzle-orm"
 import { count } from 'drizzle-orm'
+import { revalidateTag } from 'next/cache'
+import { unstable_cacheTag as cacheTag } from 'next/cache'
+import { unstable_cacheLife as cacheLife } from 'next/cache'
+
+// Helper function for notification-related cache invalidation
+function invalidateNotificationCaches(options: {
+  userId?: string
+  notificationId?: string
+  operation: 'read' | 'mark_all_read' | 'delete'
+}) {
+  const { userId, notificationId, operation } = options
+  
+  // Invalidate user-specific notification caches
+  if (userId) {
+    revalidateTag(`user-notifications-${userId}`)
+    revalidateTag(`user-unread-count-${userId}`)
+  }
+  
+  // Invalidate specific notification cache
+  if (notificationId) {
+    revalidateTag(`notification-${notificationId}`)
+  }
+  
+  // General notification caches
+  revalidateTag('user-notifications')
+}
 
 // Get notifications for current user
 export async function getNotifications(page = 1, perPage = 20) {
+  "use cache"
+  
   try {
     const session = await auth.api.getSession({
       headers: await headers()
@@ -20,6 +48,12 @@ export async function getNotifications(page = 1, perPage = 20) {
     }
 
     const userId = session.user.id
+    
+    // Create user-specific cache tags
+    cacheTag(`user-notifications-${userId}`)
+    cacheTag(`user-notifications-page-${page}`)
+    cacheLife("minutes")
+    
     const offset = (page - 1) * perPage
 
     // Get notifications with pagination
@@ -92,7 +126,12 @@ export async function markNotificationAsRead(notificationId: string) {
         )
       )
 
-    revalidatePath('/notifications')
+    // Invalidate caches
+    invalidateNotificationCaches({
+      userId,
+      notificationId,
+      operation: 'read'
+    })
 
     return { success: true }
   } catch (error) {
@@ -127,7 +166,11 @@ export async function markAllNotificationsAsRead() {
         )
       )
 
-    revalidatePath('/notifications')
+    // Invalidate caches
+    invalidateNotificationCaches({
+      userId,
+      operation: 'mark_all_read'
+    })
 
     return { success: true }
   } catch (error) {

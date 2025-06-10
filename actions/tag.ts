@@ -8,6 +8,32 @@ import { slugify } from "@/lib/utils"
 import { unstable_cacheTag as cacheTag } from 'next/cache'
 import { unstable_cacheLife as cacheLife } from 'next/cache'
 
+// Helper function for tag-related cache invalidation
+function invalidateTagCaches(options: {
+  tagId?: string
+  tagSlug?: string
+  operation: 'create' | 'update' | 'delete'
+}) {
+  const { tagId, tagSlug, operation } = options
+  
+  // Always invalidate general tags list
+  revalidateTag('get-tags')
+  
+  // Invalidate tag-specific caches
+  if (tagId) {
+    revalidateTag(`tag-${tagId}`)
+  }
+  
+  if (tagSlug) {
+    revalidateTag(`tag-slug-${tagSlug}`)
+  }
+  
+  // Invalidate search results that might include tags
+  if (operation === 'create' || operation === 'delete') {
+    revalidateTag('tag-search')
+  }
+}
+
 interface TagCreateData {
   name: string
   description?: string
@@ -43,7 +69,12 @@ export async function createTag(data: TagCreateData) {
       })
       .returning({ id: tag.id, name: tag.name, slug: tag.slug, description: tag.description, color: tag.color })
 
-    revalidateTag("get-tags")
+    invalidateTagCaches({
+      tagId: result.id,
+      tagSlug: result.slug,
+      operation: 'create'
+    })
+    
     return { success: true, tag: result }
   } catch (error) {
     console.error("Error creating tag:", error)
@@ -66,7 +97,11 @@ export async function updateTag(tagId: string, data: TagUpdateData) {
       .set(updateValues)
       .where(eq(tag.id, tagId))
 
-    revalidateTag("get-tags")
+    invalidateTagCaches({
+      tagId,
+      operation: 'update'
+    })
+    
     return { success: true }
   } catch (error) {
     console.error("Error updating tag:", error)
@@ -85,7 +120,11 @@ export async function deleteTag(tagId: string) {
     // Delete the tag itself
     await db.delete(tag).where(eq(tag.id, tagId))
 
-    revalidateTag("get-tags")
+    invalidateTagCaches({
+      tagId,
+      operation: 'delete'
+    })
+    
     return { success: true }
   } catch (error) {
     console.error("Error deleting tag:", error)
@@ -99,7 +138,17 @@ export async function deleteTag(tagId: string) {
 // Get all tags (optionally with search)
 export async function getAllTags(options?: { search?: string, limit?: number }) {
   "use cache"
-  cacheTag('get-tags')
+  
+  const { search, limit = 100 } = options || {}
+  
+  // Create specific cache tags based on search
+  if (search) {
+    cacheTag(`tag-search-${encodeURIComponent(search)}`)
+  } else {
+    cacheTag('get-tags')
+    cacheTag('all-tags')
+  }
+  
   cacheLife("hours")
   try {
     const { search, limit = 100 } = options || {}
@@ -132,6 +181,7 @@ export async function getAllTags(options?: { search?: string, limit?: number }) 
 // Get a single tag by ID or slug
 export async function getTagByIdOrSlug(idOrSlug: string) {
   "use cache"
+  cacheTag(`tag-${idOrSlug}`)
   cacheTag('get-tags')
   cacheLife("hours")
   try {

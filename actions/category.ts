@@ -13,6 +13,41 @@ import { unstable_cacheTag as cacheTag } from 'next/cache'
 import { unstable_cacheLife as cacheLife } from 'next/cache'
 import { revalidateTag } from 'next/cache'
 
+// Helper function for category-related cache invalidation
+function invalidateCategoryCaches(options: {
+  categoryId?: string
+  categorySlug?: string
+  operation: 'create' | 'update' | 'delete' | 'subscribe' | 'unsubscribe'
+}) {
+  const { categoryId, categorySlug, operation } = options
+  
+  // Always invalidate general categories list
+  revalidateTag('get-categories')
+  revalidateTag('categories-with-stats')
+  revalidateTag('categories-only')
+  
+  // Invalidate category-specific caches
+  if (categoryId) {
+    revalidateTag(`category-${categoryId}`)
+  }
+  
+  if (categorySlug) {
+    revalidateTag(`category-slug-${categorySlug}`)
+    revalidateTag(`category-data-${categorySlug}`)
+    revalidateTag(`category-threads-${categorySlug}`)
+  }
+  
+  // Category changes affect thread lists and homepage
+  revalidateTag('get-threads')
+  revalidateTag('get-homepage-threads')
+  
+  // Invalidate paths
+  revalidatePath("/forum/categories")
+  revalidatePath("/forum")
+  revalidatePath("/forum/admin/categories")
+  revalidatePath("/forum/admin")
+}
+
 const createCategorySchema = z.object({
   name: z.string().min(3).max(50),
   description: z.string().optional(),
@@ -38,6 +73,7 @@ export type CategoryFormData = z.infer<typeof updateCategorySchema>;
 export async function getCategories() {
   "use cache"
   cacheTag('get-categories')
+  cacheTag('categories-with-stats')
   cacheLife("hours")
   try {
     const categories = await db.query.category.findMany({
@@ -127,7 +163,8 @@ export async function getCategories() {
 // Get category with threads
 export async function getCategoryWithThreads(slug: string, page = 1, perPage = 20) {
   "use cache"
-  cacheTag('get-categories')
+  cacheTag(`category-slug-${slug}`)
+  cacheTag(`category-threads-${slug}-page-${page}`)
   cacheLife("hours")
   try {
     // Get category using basic query
@@ -317,16 +354,12 @@ export async function createCategory(input: z.infer<typeof createCategorySchema>
 
     if (!newCategory) {
       throw new Error("Failed to create category");
-    }
-
-    // Revalidate the categories page
-    revalidatePath("/forum/categories");
-    revalidatePath("/forum");
-    revalidatePath("/forum/admin/categories");
-    revalidatePath("/forum/admin");
-    revalidateTag('get-threads')
-    revalidateTag('get-categories')
-
+    }    // Revalidate caches
+    invalidateCategoryCaches({
+      categoryId: newCategory.id,
+      operation: 'create'
+    })
+    
     return { success: true, data: newCategory };
 
 
@@ -371,14 +404,12 @@ export async function updateCategory(categoryId: string, input: CategoryFormData
       throw new Error("Failed to update category");
     }
 
-    // Revalidate the categories page
-    revalidatePath("/forum/categories");
-    revalidatePath("/forum");
-    revalidatePath("/forum/admin/categories");
-    revalidatePath("/forum/admin");
-    revalidateTag('get-threads')
-    revalidateTag('get-categories')
-
+    // Revalidate caches
+    invalidateCategoryCaches({
+      categoryId,
+      operation: 'update'
+    })
+    
     return { success: true, data: updatedCategory };
   } catch (error) {
     console.error("Error updating category:", error)
@@ -411,14 +442,12 @@ export async function deleteCategory(categoryId: string) {
       throw new Error("Failed to delete category");
     }
 
-    // Revalidate the categories page
-    revalidatePath("/forum/categories");
-    revalidatePath("/forum");
-    revalidatePath("/forum/admin/categories");
-    revalidatePath("/forum/admin");
-    revalidateTag('get-threads')
-    revalidateTag('get-categories')
-
+    // Revalidate caches
+    invalidateCategoryCaches({
+      categoryId,
+      operation: 'delete'
+    })
+    
     return { success: true };
   } catch (error) {
     console.error("Error deleting category:", error)
@@ -432,6 +461,7 @@ export async function deleteCategory(categoryId: string) {
 export async function getOnlyCategories() {
   "use cache"
   cacheTag('get-categories')
+  cacheTag('categories-only')
   cacheLife("hours")
   try {
     const categories = await db.query.category.findMany({
@@ -449,7 +479,7 @@ export async function getOnlyCategories() {
 }
 export async function getCategoryData(categorySlug: string) {
   "use cache"
-  cacheTag('get-categories')
+  cacheTag(`category-data-${categorySlug}`)
   cacheLife("hours")
   try {
     const categoryData = await db.query.category.findFirst({
@@ -469,7 +499,7 @@ export async function getCategoryData(categorySlug: string) {
 
 export async function getCategoryById(id: string) {
   "use cache"
-  cacheTag('get-categories')
+  cacheTag(`category-${id}`)
   cacheLife("hours")
   try {
     const categoryData = await db.select().from(category).where(eq(category.id, id)).limit(1)

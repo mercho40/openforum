@@ -7,10 +7,38 @@ import { thread, post, user, vote } from "@/db/schema"
 import { eq, and, sql, desc, count } from "drizzle-orm"
 import { unstable_cacheTag as cacheTag } from 'next/cache'
 import { unstable_cacheLife as cacheLife } from 'next/cache'
+import { revalidateTag } from 'next/cache'
+
+// Helper function for stats-related cache invalidation
+function invalidateStatsCaches(options: {
+  userId?: string
+  operation: 'user_activity' | 'forum_activity'
+}) {
+  const { userId, operation } = options
+  
+  if (operation === 'user_activity' && userId) {
+    // Invalidate user-specific stats
+    revalidateTag(`user-stats-${userId}`)
+    revalidateTag('user-stats')
+  }
+  
+  if (operation === 'forum_activity') {
+    // Invalidate forum-wide stats
+    revalidateTag('forum-stats')
+    revalidateTag('get-stats')
+  }
+}
 
 export async function getUserStats(userId?: string) {
   "use cache"
-  cacheTag('user-stats')
+  
+  // Create specific cache tags based on userId
+  if (userId) {
+    cacheTag(`user-stats-${userId}`)
+  } else {
+    cacheTag('user-stats')
+  }
+  
   cacheLife("minutes")
   
   try {

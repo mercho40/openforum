@@ -8,6 +8,55 @@ import { post, thread, vote, user, notification } from "@/db/schema"
 import { eq, and, sql } from "drizzle-orm"
 import { revalidateTag } from 'next/cache'
 
+// Helper function for post-related cache invalidation
+function invalidatePostCaches(options: {
+  postId?: string
+  threadId?: string
+  threadSlug?: string
+  categoryId?: string
+  authorId?: string
+  operation: 'create' | 'update' | 'delete' | 'vote'
+}) {
+  const { postId, threadId, threadSlug, categoryId, authorId, operation } = options
+  
+  // Always invalidate general threads list
+  revalidateTag('get-threads')
+  
+  // Invalidate thread-specific caches
+  if (threadId) {
+    revalidateTag(`thread-${threadId}`)
+  }
+  
+  if (threadSlug) {
+    revalidateTag(`thread-slug-${threadSlug}`)
+    revalidateTag(`thread-data-${threadSlug}`)
+    // Invalidate all pages of thread posts
+    revalidateTag(`thread-posts-${threadSlug}`)
+  }
+  
+  // Invalidate category-specific cache
+  if (categoryId) {
+    revalidateTag(`category-${categoryId}`)
+  }
+  
+  // Invalidate author-specific cache
+  if (authorId) {
+    revalidateTag(`author-threads-${authorId}`)
+    revalidateTag(`user-activity-${authorId}`)
+    revalidateTag(`user-profile-${authorId}`)
+  }
+  
+  // Invalidate homepage threads on create/delete (affects activity)
+  if (operation === 'create' || operation === 'delete') {
+    revalidateTag('get-homepage-threads')
+  }
+  
+  // Invalidate post-specific cache
+  if (postId) {
+    revalidateTag(`post-${postId}`)
+  }
+}
+
 interface PostCreateData {
   content: string
   threadId: string
@@ -37,11 +86,13 @@ export async function createPost(data: PostCreateData) {
         isLocked: true,
         slug: true,
         authorId: true,
+        categoryId: true,
       },
       with: {
         category: {
           columns: {
             name: true,
+            id: true,
           },
         },
       },
@@ -98,10 +149,16 @@ export async function createPost(data: PostCreateData) {
         })
       }
 
-      revalidatePath(`/forum/categories/${threadData.category.name}/threads/`)
-      revalidatePath("/forum")
-      revalidatePath("/forum/threads/")
-      revalidateTag('get-threads')
+      // Invalidate caches
+      invalidatePostCaches({
+        postId: postResult.id,
+        threadId: data.threadId,
+        threadSlug: threadData.slug,
+        categoryId: threadData.categoryId,
+        authorId,
+        operation: 'create'
+      })
+      
       return {
         success: true,
         postId: postResult.id
@@ -161,9 +218,14 @@ export async function updatePost(postId: string, data: PostUpdateData) {
       })
       .where(eq(post.id, postId))
 
-    // revalidatePath(`/forum/categories/${postData.thread?.slug}/`)
-
-    revalidateTag('get-threads')
+    // Invalidate caches
+    invalidatePostCaches({
+      postId,
+      threadId: postData.threadId,
+      threadSlug: postData.thread?.slug,
+      operation: 'update'
+    })
+    
     return { success: true }
   } catch (error) {
     console.error("Error updating post:", error)
@@ -227,9 +289,14 @@ export async function deletePost(postId: string) {
       })
       .where(eq(thread.id, postData.threadId))
 
-    // revalidatePath(`/threads/${postData.thread.slug}`)
-
-    revalidateTag('get-threads')
+    // Invalidate caches
+    invalidatePostCaches({
+      postId,
+      threadId: postData.threadId,
+      threadSlug: postData.thread?.slug,
+      operation: 'delete'
+    })
+    
     return { success: true }
   } catch (error) {
     console.error("Error deleting post:", error)
@@ -361,9 +428,13 @@ export async function votePost(postId: string, value: 1 | 0 | -1) {
         })
       }
 
-      // revalidatePath(`/threads/${postData.thread.slug}`)
-
-      revalidateTag('get-threads')
+      // Invalidate caches
+      invalidatePostCaches({
+        postId,
+        threadId: postData.threadId,
+        operation: 'vote'
+      })
+      
       return { success: true }
     })
   } catch (error) {

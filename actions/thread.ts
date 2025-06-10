@@ -12,6 +12,47 @@ import { unstable_cacheTag as cacheTag } from 'next/cache'
 import { unstable_cacheLife as cacheLife } from 'next/cache'
 import { revalidateTag } from 'next/cache'
 
+// Helper function for thread-related cache invalidation
+function invalidateThreadCaches(options: {
+  threadId?: string
+  categoryId?: string
+  authorId?: string
+  slug?: string
+  operation: 'create' | 'update' | 'delete'
+}) {
+  const { threadId, categoryId, authorId, slug, operation } = options
+  
+  // Always invalidate general threads list
+  revalidateTag('get-threads')
+  
+  // Invalidate homepage threads on create/delete
+  if (operation === 'create' || operation === 'delete') {
+    revalidateTag('get-homepage-threads')
+  }
+  
+  // Invalidate category-specific cache
+  if (categoryId) {
+    revalidateTag(`category-${categoryId}`)
+  }
+  
+  // Invalidate author-specific cache
+  if (authorId) {
+    revalidateTag(`author-threads-${authorId}`)
+    revalidateTag(`user-activity-${authorId}`)
+    revalidateTag(`user-profile-${authorId}`)
+  }
+  
+  // Invalidate thread-specific caches
+  if (threadId) {
+    revalidateTag(`thread-${threadId}`)
+  }
+  
+  if (slug) {
+    revalidateTag(`thread-slug-${slug}`)
+    revalidateTag(`thread-data-${slug}`)
+  }
+}
+
 interface ThreadCreateData {
   title: string
   content: string
@@ -96,7 +137,15 @@ export async function createThread(data: ThreadCreateData) {
         }
       }
 
-      revalidateTag('get-threads')
+      // Invalidate caches
+      invalidateThreadCaches({
+        threadId,
+        categoryId: data.categoryId,
+        authorId,
+        slug,
+        operation: 'create'
+      })
+      
       return {
         success: true,
         threadId,
@@ -127,7 +176,8 @@ export async function updateThread(threadId: string, data: ThreadUpdateData) {
     const threadData = await db.query.thread.findFirst({
       where: eq(thread.id, threadId),
       columns: {
-        authorId: true
+        authorId: true,
+        categoryId: true
       }
     })
 
@@ -160,10 +210,15 @@ export async function updateThread(threadId: string, data: ThreadUpdateData) {
       .set(updateValues)
       .where(eq(thread.id, threadId))
 
-    // revalidatePath('/threads/[slug]')
-    // revalidatePath('/categories/[slug]')
-    revalidateTag('get-threads')
-
+    // Invalidate caches
+    invalidateThreadCaches({
+      threadId,
+      categoryId: threadData.categoryId,
+      authorId: threadData.authorId,
+      slug: updateValues.slug,
+      operation: 'update'
+    })
+    
     return {
       success: true,
       slug: updateValues.slug
@@ -206,12 +261,21 @@ export async function deleteThread(threadId: string) {
       throw new Error("Not authorized to delete this thread")
     }
 
+    // Get the category ID for cache invalidation
+    const categoryId = threadData.categoryId
+    const authorId = threadData.authorId
+    
     // Delete thread (will cascade to posts and threadTags)
     await db.delete(thread).where(eq(thread.id, threadId))
 
-    // revalidatePath('/categories/[slug]')
-
-    revalidateTag('get-threads')
+    // Invalidate caches
+    invalidateThreadCaches({
+      threadId,
+      categoryId,
+      authorId,
+      operation: 'delete'
+    })
+    
     return { success: true }
   } catch (error) {
     console.error("Error deleting thread:", error)
@@ -225,7 +289,8 @@ export async function deleteThread(threadId: string) {
 // Get thread details with posts
 export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
   "use cache"
-  cacheTag('get-threads')
+  cacheTag(`thread-slug-${slug}`)
+  cacheTag(`thread-posts-${slug}-page-${page}`)
   cacheLife("hours")
   try {
     // Get thread by slug
@@ -282,7 +347,7 @@ export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
       limit: perPage
     })
 
-    // Increment view count
+    // Increment view count (this doesn't need cache invalidation since it's just a counter)
     await db.update(thread)
       .set({
         viewCount: sql`${thread.viewCount} + 1`
@@ -319,7 +384,7 @@ export async function getThreadWithPosts(slug: string, page = 1, perPage = 20) {
 // Get recent and trending threads for the home page
 export async function getHomePageThreads() {
   "use cache"
-  cacheTag('get-threads')
+  cacheTag('get-homepage-threads')
   cacheLife("hours")
   try {
     // Fetch recent threads
@@ -393,7 +458,7 @@ export async function getHomePageThreads() {
 }
 export async function getThreadData(threadSlug: string) {
   "use cache"
-  cacheTag('get-threads')
+  cacheTag(`thread-data-${threadSlug}`)
   cacheLife("hours")
   try {
 
@@ -433,7 +498,36 @@ export async function getAllThreads(options?: {
   authorId?: string // Add author filter
 }) {
   "use cache"
-  cacheTag('get-threads')
+  
+  const {
+    page = 1,
+    perPage = 20,
+    categoryId,
+    sortBy = 'recent',
+    searchQuery,
+    filter,
+    authorId
+  } = options || {}
+
+  // Create specific cache tags based on options
+  const cacheTags = ['get-threads']
+  
+  if (categoryId) {
+    cacheTags.push(`category-${categoryId}`)
+  }
+  
+  if (authorId) {
+    cacheTags.push(`author-threads-${authorId}`)
+  }
+  
+  if (searchQuery) {
+    cacheTags.push(`search-${encodeURIComponent(searchQuery)}`)
+  }
+  
+  // Add cache tags for this specific query
+  cacheTags.forEach(tag => cacheTag(tag))
+  cacheTag(`threads-${sortBy}-${filter || 'all'}-page-${page}`)
+  
   cacheLife("hours")
   try {
     const {
