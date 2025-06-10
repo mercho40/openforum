@@ -6,6 +6,100 @@ import { getAllThreads } from "@/actions/thread"
 import { AllThreadsView } from "@/components/views/forum/AllThreadsView"
 import { getCategories } from "@/actions/category"
 import { getUserProfile } from "@/actions/user"
+import { unstable_cache } from 'next/cache'
+
+// Enable ISR for threads page
+export const revalidate = 180 // Revalidate every 3 minutes
+export const dynamic = 'force-dynamic' // Keep dynamic for user sessions
+
+// Cache categories for filter dropdown
+const getCachedThreadsCategories = unstable_cache(
+  async () => {
+    const result = await getCategories()
+    return result.success ? result.categories : []
+  },
+  ['threads-categories'],
+  {
+    tags: ['categories'],
+    revalidate: 1800, // Cache for 30 minutes
+  }
+)
+
+// Cache thread listings for popular pages
+const getCachedThreadListing = unstable_cache(
+  async (cacheKey: string, options: {
+    page: number
+    sortBy: 'recent' | 'popular' | 'views' | 'replies'
+    categoryId?: string
+    searchQuery?: string
+    filter?: string
+    authorId?: string
+  }) => {
+    return await getAllThreads({
+      page: options.page,
+      perPage: 20,
+      sortBy: options.sortBy,
+      categoryId: options.categoryId,
+      searchQuery: options.searchQuery,
+      filter: options.filter as 'pinned' | 'locked' | undefined,
+      authorId: options.authorId,
+    })
+  },
+  ['thread-listing'],
+  {
+    tags: ['threads', 'thread-listing'],
+    revalidate: 180, // Cache for 3 minutes
+  }
+)
+
+// Generate static metadata
+export async function generateMetadata({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ 
+    sort?: string
+    category?: string
+    search?: string
+    author?: string
+  }> 
+}) {
+  const params = await searchParams
+  const { sort, category, search, author } = params
+  
+  let title = "All Threads - OpenForum"
+  let description = "Browse all forum discussions and join the conversation."
+  
+  if (search) {
+    title = `Search: "${search}" - Threads | OpenForum`
+    description = `Search results for "${search}" in forum threads.`
+  } else if (category) {
+    title = `${category} Threads - OpenForum`
+    description = `Browse threads in the ${category} category.`
+  } else if (author) {
+    title = `Threads by ${author} - OpenForum`
+    description = `Browse all threads created by ${author}.`
+  } else if (sort) {
+    const sortMap: Record<string, string> = {
+      recent: 'Recent',
+      popular: 'Popular',
+      views: 'Most Viewed',
+      replies: 'Most Replied'
+    }
+    const sortName = sortMap[sort] || 'Recent'
+    title = `${sortName} Threads - OpenForum`
+    description = `Browse ${sortName.toLowerCase()} forum discussions.`
+  }
+  
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+  }
+}
 
 interface ThreadsPageProps {
   searchParams: Promise<{
@@ -95,24 +189,37 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
         }
     }
 
-    const threadsResult = await getAllThreads({
-        page,
-        perPage: 20,
-        sortBy,
-        categoryId: categoryFilter,
-        searchQuery,
-        filter: filter as 'pinned' | 'locked' | undefined,
-        authorId: authorFilter,
-    })
+    // Use caching for popular thread listings (first few pages without complex filters)
+    let threadsResult
+    const shouldUseCache = page <= 3 && !searchQuery && !authorFilter
+    const cacheKey = `threads-${sort}-${categoryFilter || 'all'}-${filter || 'none'}-page-${page}`
+    
+    if (shouldUseCache) {
+        threadsResult = await getCachedThreadListing(cacheKey, {
+            page,
+            sortBy,
+            categoryId: categoryFilter,
+            searchQuery,
+            filter,
+            authorId: authorFilter,
+        })
+    } else {
+        threadsResult = await getAllThreads({
+            page,
+            perPage: 20,
+            sortBy,
+            categoryId: categoryFilter,
+            searchQuery,
+            filter: filter as 'pinned' | 'locked' | undefined,
+            authorId: authorFilter,
+        })
+    }
 
-    const categoriesResult = await getCategories()
+    // Use cached categories
+    const categories = await getCachedThreadsCategories()
 
     if (!threadsResult.success) {
         throw new Error(threadsResult.error || "Failed to fetch threads")
-    }
-
-    if (!categoriesResult.success) {
-        throw new Error(categoriesResult.error || "Failed to fetch categories")
     }
 
     return (
@@ -126,7 +233,7 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
             <AllThreadsView
                 session={session}
                 threads={threadsResult.threads || []}
-                categories={categoriesResult.categories || []}
+                categories={categories || []}
                 pagination={threadsResult.pagination}
                 currentSort={sort} // Pass the original sort value for UI display
                 currentCategory={categoryFilter}

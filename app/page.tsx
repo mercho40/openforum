@@ -2,6 +2,23 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, MessageSquare, Users, Globe, Shield, Code } from "lucide-react"
 
+// Enable static generation for landing page
+export const revalidate = 3600 // Revalidate every hour
+export const dynamic = 'force-static'
+
+// Generate static metadata
+export async function generateMetadata() {
+  return {
+    title: "OpenForum - Modern Open Source Forum Platform",
+    description: "Join the conversation on OpenForum, a modern, open-source forum platform built for communities. Connect, share ideas, and engage with others.",
+    keywords: ["forum", "community", "discussion", "open source", "Next.js"],
+    openGraph: {
+      title: "OpenForum - Modern Open Source Forum Platform",
+      description: "Join the conversation on OpenForum, a modern, open-source forum platform built for communities.",
+      type: "website",
+    },
+  }
+}
 
 export default function LandingPage() {
   const year = new Date().getFullYear()

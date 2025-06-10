@@ -3,8 +3,88 @@ import { notFound } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { getThreadWithPosts } from "@/actions/thread"
+import { getThreadWithPosts, getAllThreads } from "@/actions/thread"
 import { ThreadView } from "@/components/views/forum/ThreadView"
+import { unstable_cache } from 'next/cache'
+
+// Enable ISR for thread pages
+export const revalidate = 180 // Revalidate every 3 minutes
+export const dynamic = 'force-dynamic' // Keep dynamic for user sessions
+
+// Generate static params for popular threads
+export async function generateStaticParams() {
+  try {
+    const result = await getAllThreads({
+      page: 1,
+      perPage: 50, // Generate for top 50 threads
+      sortBy: 'recent',
+    })
+    
+    if (!result.success || !result.threads) return []
+    
+    return result.threads.map((thread) => ({
+      categorySlug: thread.category?.slug || '',
+      threadSlug: thread.slug,
+    }))
+  } catch {
+    return []
+  }
+}
+
+// Cache thread metadata for SEO
+const getCachedThreadMetadata = unstable_cache(
+  async (threadSlug: string) => {
+    const result = await getThreadWithPosts(threadSlug, 1, 1)
+    return result.success ? result.thread : null
+  },
+  ['thread-metadata'],
+  {
+    tags: ['thread-metadata'],
+    revalidate: 900, // Cache for 15 minutes
+  }
+)
+
+// Generate static metadata
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ categorySlug: string, threadSlug: string }> 
+}) {
+  try {
+    const { threadSlug } = await params
+    const thread = await getCachedThreadMetadata(threadSlug)
+    
+    if (!thread) {
+      return {
+        title: "Thread Not Found - OpenForum",
+        description: "The requested thread could not be found.",
+      }
+    }
+
+    return {
+      title: `${thread.title} - OpenForum`,
+      description: `Join the discussion about ${thread.title}. Created by ${thread.author?.name || 'Anonymous'}.`,
+      openGraph: {
+        title: `${thread.title} - OpenForum`,
+        description: `Join the discussion about ${thread.title}. Created by ${thread.author?.name || 'Anonymous'}.`,
+        type: "article",
+        authors: [thread.author?.name || 'Anonymous'],
+        publishedTime: thread.createdAt.toISOString(),
+        modifiedTime: thread.updatedAt.toISOString(),
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${thread.title} - OpenForum`,
+        description: `Join the discussion about ${thread.title}. Created by ${thread.author?.name || 'Anonymous'}.`,
+      },
+    }
+  } catch {
+    return {
+      title: "Thread - OpenForum",
+      description: "Join the discussion.",
+    }
+  }
+}
 
 
 export default async function ThreadPage({

@@ -8,9 +8,58 @@ import Link from "next/link"
 import { getForumStats } from "@/actions/stats"
 import { getAllThreads } from "@/actions/thread"
 import { getForumMembers } from "@/actions/user"
+import { unstable_cache } from 'next/cache'
+
+// Enable ISR for admin dashboard with frequent updates
+export const revalidate = 60 // Revalidate every minute for admin data
+export const dynamic = 'force-dynamic' // Keep dynamic for admin sessions
+
+// Cache admin stats with short expiration
+const getCachedAdminStats = unstable_cache(
+  async () => {
+    return await getForumStats()
+  },
+  ['admin-stats'],
+  {
+    tags: ['admin-stats', 'forum-stats'],
+    revalidate: 60, // Cache for 1 minute
+  }
+)
+
+// Cache recent activity for admin dashboard
+// const getCachedRecentActivity = unstable_cache(
+//   async () => {
+//     const [threadsResult, membersResult] = await Promise.all([
+//       getAllThreads({ page: 1, perPage: 5, sortBy: 'recent' }),
+//       getForumMembers({ page: 1, search: "", sort: "newest", limit: 5 })
+//     ])
+    
+//     return {
+//       recentThreads: threadsResult.success ? threadsResult.threads : [],
+//       recentMembers: membersResult.success ? membersResult.members : []
+//     }
+//   },
+//   ['admin-activity'],
+//   {
+//     tags: ['admin-activity', 'threads', 'members'],
+//     revalidate: 60, // Cache for 1 minute
+//   }
+// )
+
+// Generate static metadata
+export async function generateMetadata() {
+  return {
+    title: "Admin Dashboard - OpenForum",
+    description: "Administrative dashboard for managing OpenForum community and content.",
+    robots: {
+      index: false, // Don't index admin pages
+      follow: false,
+    },
+  }
+}
 
 async function DashboardStats() {
-  const stats = await getForumStats()
+  const stats = await getCachedAdminStats()
   
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
