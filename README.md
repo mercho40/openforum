@@ -53,7 +53,7 @@ A modern, full-featured forum application built with Next.js 15, featuring real-
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/openforum.git
+git clone https://github.com/mercho40/openforum.git
 cd openforum
 
 # Install dependencies
