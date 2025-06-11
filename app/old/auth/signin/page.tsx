@@ -1,9 +1,9 @@
+export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth"
+import { SignInView } from "@/components/(olds)/views/auth/SignInView"
 import { headers } from "next/headers";
 import { Suspense } from 'react'
-// import { SignInView } from "@/components/(olds)/views/auth/SignInView"
-import LoadingSpinner from "@/components/new/LoadingSpinner";
-import { redirect } from "next/navigation";
+import { Loader2 } from "lucide-react"
 
 export default async function Page() {
   // Get session data on the server
@@ -17,17 +17,12 @@ export default async function Page() {
   } catch (err) {
     error = err as Error;
     console.error("Error fetching session:", error);
-  } finally {
-        // If session is found, redirect to callback
-        if (session?.user?.id) {
-            redirect("/auth/callback");
-        }
-    }
+  }
 
   // Pass session data to the client component
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      {/* <SignInView session={session} isLoading={false} error={error} />; */}
+    <Suspense fallback={<Loader2 className="animate-spin text-muted-foreground" />}>
+      <SignInView session={session} isLoading={false} error={error} />;
     </Suspense>
   )
 }
