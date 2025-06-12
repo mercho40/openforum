@@ -1,0 +1,90 @@
+{
+    "appName": "OpenForum",
+    "auth": {
+        "signUp": {
+            "success": {
+                "title": "Registration successful!"
+            },
+            "error": {
+                "emailExists": "An account with this email already exists.",
+                "invalidEmail": "Please enter a valid email address.",
+                "weakPassword": "Your password does not meet the required criteria.",
+                "passwordMismatch": "Passwords do not match.",
+                "verifyEmail": "Plaease verify your email address.",
+                "genericError": "An error occurred during registration. Please try again later."
+            }
+        },
+        "signIn": {
+            "success": {
+                "title": "Login successful!"
+            },
+            "error": {
+                "invalidCredentials": "Invalid email or password.",
+                "accountLocked": "Your account has been locked due to multiple failed login attempts. Please try again later.",
+                "genericError": "An error occurred during login. Please try again later."
+            },
+            "form": {
+                "email": {
+                    "label": "Email",
+                    "placeholder": "email@domain.com"
+                },
+                "password": {
+                    "label": "Password",
+                    "placeholder": "Type your password"
+                },
+                "forgotPassword": "Forgot your password?",
+                "signInButton": {
+                    "label": "Login",
+                    "loading": "Logging in...",
+                    "tooltip": "Click to log in to your account"
+                },
+                "signUpLink": {
+                    "text": "Don't have an account?",
+                    "link": "Sign Up",
+                    "tooltip": "Click to create a new account"
+                },
+                "termsAndPrivacy": {
+                    "text": "By signing in, you agree to our",
+                    "terms": "Terms",
+                    "and": "and",
+                    "privacy": "Privacy",
+                    "tooltip": "Click to read our terms and privacy"
+                }
+            }
+        },
+        "socialSignIn": {
+            "orContinueWith": "or continue with",
+            "google": {
+                "button": {
+                    "label": "Google",
+                    "loading": "Logging in..."
+                },
+                "error": {
+                    "genericError": "An error occurred while signing in with Google. Please try again later."
+                },
+                "success": {
+                    "title": "Signed in with Google successfully!"
+                }
+            },
+            "github": {
+                "button": {
+                    "label": "GitHub",
+                    "loading": "Logging in..."
+                },
+                "error": {
+                    "genericError": "An error occurred while signing in with GitHub. Please try again later."
+                },
+                "success": {
+                    "title": "Signed in with GitHub successfully!"
+                }
+            }
+        },
+        "passwordRequirements": {
+            "length": "Password must be at least 8 characters long.",
+            "uppercase": "Password must contain at least one uppercase letter.",
+            "lowercase": "Password must contain at least one lowercase letter.",
+            "number": "Password must contain at least one number.",
+            "specialChar": "Password must contain at least one special character."
+        }
+    }
+}

@@ -4,6 +4,8 @@ import { Suspense } from 'react'
 // import { SignInView } from "@/components/(olds)/views/auth/SignInView"
 import LoadingSpinner from "@/components/new/LoadingSpinner";
 import { redirect } from "next/navigation";
+import { BackButton } from "@/components/new/BackButton";
+import { SignInForm } from "@/components/new/auth/SignInForm";
 
 export default async function Page() {
   // Get session data on the server
@@ -26,8 +28,11 @@ export default async function Page() {
 
   // Pass session data to the client component
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      {/* <SignInView session={session} isLoading={false} error={error} />; */}
-    </Suspense>
+    <main className="flex min-h-[100dvh] w-full flex-col items-center justify-center p-4">
+      <BackButton />
+      <Suspense fallback={<LoadingSpinner />}>
+        <SignInForm />
+      </Suspense>
+    </main>
   )
 }
