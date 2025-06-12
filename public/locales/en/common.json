@@ -128,6 +128,52 @@
             "lowercase": "At least one lowercase letter.",
             "number": "At least one number.",
             "specialChar": "At least one special character."
+        },
+        "verifyEmail": {
+            "success": {
+                "verified": {
+                    "title": "Email verified successfully!",
+                    "message": "Your email has been verified successfully. You can now log in."
+                },
+                "codeSent": {
+                    "title": "Verification email sent to your email!",
+                    "message": "A verification email has been sent to your email address. Please check your inbox and click the verification link."
+                }
+            },
+            "error": {
+                "invalidToken": "The verification token is invalid or has expired.",
+                "alreadyVerified": "Your email is already verified.",
+                "resendWait1": "Please wait ",
+                "resendWait2": " seconds before resending the code.",
+                "failedToSend": "Failed to send verification email. Please try again later.",
+                "verificationFailed": "Email verification failed. Please try again later.",
+                "invalidCode": "The verification code is invalid or has expired.",
+                "genericError": "An error occurred while verifying your email. Please try again later."
+            },
+            "form": {
+                "texts": {
+                    "title": "Verify Your Email",
+                    "subtitle": "We need to verify your email address to continue.",
+                    "text1": "We'll send a verification code to",
+                    "text2": "Enter the 6-digit code.",
+                    "text3": "We sent a code to your email address",
+                    "resendIn": "Resend in",
+                    "didntReceiveCode": "Didn't receive the code?"
+                },
+                "button": {
+                    "send": {
+                        "label": "Send Verification Code",
+                        "loading": "Sending..."
+                    },
+                    "verify": {
+                        "label": "Verify Email",
+                        "loading": "Verifying..."
+                    },
+                    "verified": {
+                        "label": "Email Verified"
+                    }
+                }
+            }
         }
     }
 }

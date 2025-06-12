@@ -89,14 +89,7 @@ export function ForgotPasswordForm({ email: initialEmail = "", onForgotComplete 
         }
 
         // Check if resend timer is active
-        if (resendOtpTimer > 0) {
-            toast.error(`Please wait ${resendOtpTimer} seconds before resending the code.`)
-            setIsSending(false)
-            return
-        }
-
-        // Check if resend is disabled
-        if (resendOtpDisabled) {
+        if (resendOtpTimer > 0 || resendOtpDisabled) {
             toast.error(`Please wait ${resendOtpTimer} seconds before resending the code.`)
             setIsSending(false)
             return

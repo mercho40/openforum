@@ -19,25 +19,18 @@ export default async function Page() {
     } catch (err) {
         error = err as Error;
         console.error("Error fetching session:", error);
-        redirect("/auth/signin");
+        redirect("/auth/callback");
     } finally {
         // Handle redirects based on user data
 
-        // If no session or user ID, redirect to sign in
-        if (!session?.user?.id) {
-            redirect("/auth/signin");
-        }
-
-        // If user is not verified, redirect to verify email
-        if (!session.user.emailVerified) {
-            redirect("/auth/verify-email");
-        }
-
         // If user has completed profile setup, redirect to forum
-        const metadata = session.user.metadata ? JSON.parse(session.user.metadata as string) : {};
+        const metadata = session?.user.metadata ? JSON.parse(session.user.metadata as string) : {};
         const hasSeenSetup = Boolean(metadata.profileSetupSeen);
-        if (hasSeenSetup) {
-            redirect("/auth/complete-profile");
+
+        // If user there no user or user has not verified his email
+        // or has completed profile setup, redirect to complete profile
+        if (!session?.user?.id || !session.user.emailVerified || hasSeenSetup) {
+            redirect("/auth/callback");
         }
     }
 

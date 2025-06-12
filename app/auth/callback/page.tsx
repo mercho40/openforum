@@ -37,8 +37,8 @@ export default async function Page() {
             redirect("/auth/complete-profile");
         }
 
-        // If all checks pass, redirect to forum
-        redirect("/forum");
+        // If all checks pass, redirect to the home page
+        redirect("/");
     }
 
     return (

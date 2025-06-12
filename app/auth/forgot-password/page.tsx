@@ -20,10 +20,6 @@ export default async function Page() {
     } catch (err) {
         error = err as Error;
         console.error("Error fetching session:", error);
-    } finally {
-        if (session?.user?.email) {
-
-        }
     }
 
     const handleForgotComplete = async () => {
@@ -31,19 +27,17 @@ export default async function Page() {
             await authClient.revokeSessions({
             fetchOptions: {
                 onSuccess: () => {
-                    redirect("/auth/signin")
+                    redirect("/auth/callback")
                 },
                 onError: (error) => {
                     console.error("Error revoking sessions:", error)
-                    redirect("/auth/signin")
+                    redirect("/auth/callback");
                 },
             },
             })
         } catch (err) {
             console.error("Error during forgot password completion:", err);
-            redirect("/auth/signin");
-        } finally {
-            // Any additional cleanup if needed
+            redirect("/auth/callback");
         }
     }
 
