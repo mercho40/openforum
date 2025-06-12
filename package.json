@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "algolia:build": "tsx scripts/build-algolia-search.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -25,6 +26,7 @@
     "@radix-ui/react-tabs": "^1.1.12",
     "@react-email/components": "^0.0.41",
     "@vercel/speed-insights": "^1.2.0",
+    "algoliasearch": "^5.27.0",
     "better-auth": "^1.2.7",
     "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.1",
