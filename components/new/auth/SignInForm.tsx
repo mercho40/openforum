@@ -16,12 +16,28 @@ export function SignInForm() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
+    
     const router = useRouter()
-
     const { t } = useTranslation('common');
 
     const handleSignIn = async () => {
         setLoading(true)
+
+        // Validate email and password fields
+        if (!email || !password) {
+            toast.error(t('auth.signIn.error.emptyFields'));
+            setLoading(false);
+            return;
+        }
+
+        // Basic email format validation
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            toast.error(t('auth.signIn.error.invalidEmailFormat'));
+            setLoading(false);
+            return;
+        }
+
         try {
             await signIn.email(
                 {
@@ -39,22 +55,22 @@ export function SignInForm() {
                     onError: (ctx: { error: { message: string, status: number } }) => {
                         console.error("Sign-in error:", ctx.error.message);
                         if (ctx.error.status === 403) {
-                            toast.error(t('signIn.verifyEmail'))
+                            toast.error(t('auth.signIn.verifyEmail'))
                         } else {
-                            toast.error(ctx.error.message || "Failed to sign in");
+                            toast.error(ctx.error.message || t('auth.signIn.error.genericError'));
                         }
                         setLoading(false);
                     },
                     onSuccess: async () => {
                         setLoading(false);
-                        toast.success("Authentication successful");
+                        // toast.success(t('auth.signIn.success.title'));
                         router.push("/auth/callback");
                     }
                 }
             )
         } catch (error) {
-            console.error("Error during sign-in:", error)
-            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
+            const errorMessage = error instanceof Error ? error.message : t('auth.signIn.error.genericError')
+            console.error("Error during sign-in:", errorMessage)
             toast.error(errorMessage)
             setLoading(false)
         } finally {
@@ -79,18 +95,18 @@ export function SignInForm() {
                 },
                 onError: (ctx: { error: { message: string } }) => {
                     console.error("Social sign-in error:", ctx.error.message);
-                    toast.error(ctx.error.message || "Failed to sign in");
+                    toast.error(ctx.error.message || t(`auth.socialAuthentication.${provider}.error.genericError`));
                     setLoading(false);
                 },
                 onSuccess: async () => {
                     setLoading(false);
-                    toast.success("Authentication successful");
+                    // toast.success(t(`auth.socialAuthentication.${provider}.success.title`));
                 },
             }
         );
         } catch (error: unknown) {
             console.error("Exception during social sign-in:", error);
-            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+            const errorMessage = error instanceof Error ? error.message : t(`auth.socialAuthentication.${provider}.error.genericError`);
             toast.error(errorMessage);
             setLoading(false);
         } finally {
@@ -102,18 +118,18 @@ export function SignInForm() {
         <Card className="w-full max-w-[95%] sm:max-w-md shadow-none bg-card/0 border-border/0">
             <CardHeader className="space-y-4 pb-2 sm:pb-4">
                 <div className="text-center">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">OpenForum</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('appName')}</h1>
                 </div>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6">
                 <div className="flex flex-col space-y-1 sm:space-y-2">
                     <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="email">
-                        Email
+                        {t('auth.signIn.form.email.label')}
                     </label>
                     <div className="relative">
                         <Input
                             id="email"
-                            placeholder="email@domain.com"
+                            placeholder={t('auth.signIn.form.email.placeholder')}
                             type="email"
                             className="bg-card/30 backdrop-blur-sm border border-border/10"
                             value={email}
@@ -123,13 +139,13 @@ export function SignInForm() {
                 </div>
                 <div className="flex flex-col space-y-1 sm:space-y-2">
                     <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="password">
-                        Password
+                        {t('auth.signIn.form.password.label')}
                     </label>
                     <div className="relative">
                         <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="Type your password"
+                            placeholder={t('auth.signIn.form.password.placeholder')}
                             className="bg-card/30 backdrop-blur-sm border border-border/10 pr-10"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -145,7 +161,7 @@ export function SignInForm() {
                     </div>
                     <div className="text-right">
                         <Link href="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
-                            Forgot your password?
+                            {t('auth.signIn.form.forgotPassword')}
                         </Link>
                     </div>
                 </div>
@@ -157,14 +173,14 @@ export function SignInForm() {
                     }
                     disabled={loading}
                 >
-                    {loading ? "Signing in..." : "Login"}
+                    {loading ? t('auth.signIn.form.signInButton.loading') : t('auth.signIn.form.signInButton.label')}
                 </Button>
                 <div className="relative my-3 sm:my-4">
                     <div className="absolute inset-0 flex items-center">
                         <span className="w-full border-t border-border/20"></span>
                     </div>
                     <div className="relative flex justify-center text-xs">
-                        <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                        <span className="bg-background px-2 text-muted-foreground">{t('auth.socialAuthentication.orContinueWith')}</span>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -194,7 +210,7 @@ export function SignInForm() {
                             />
                             <path d="M1 1h22v22H1z" fill="none" />
                         </svg>
-                        <span className="ml-1.5 hidden xs:inline">Google</span>
+                        <span className="ml-1.5 hidden xs:inline">{loading ? t('auth.socialAuthentication.form.google.button.loading') : t('auth.socialAuthentication.form.google.button.label')}</span>
                     </Button>
                     <Button
                         variant="outline"
@@ -215,26 +231,26 @@ export function SignInForm() {
                             d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"
                         />
                         </svg>
-                        <span className="ml-1.5 hidden xs:inline">GitHub</span>
+                        <span className="ml-1.5 hidden xs:inline">{loading ? t('auth.socialAuthentication.form.github.button.loading') : t('auth.socialAuthentication.form.github.button.label')}</span>
                     </Button>
                 </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-3 sm:space-y-4 pt-0 px-3 sm:px-6">
                 <div className="text-center text-xs sm:text-sm">
-                    <span className="text-muted-foreground">Don&apos;t have an account? </span>
+                    <span className="text-muted-foreground">{t('auth.signIn.form.signUpLink.text')}</span>
                     <Link href="/auth/signup" className="font-medium text-foreground hover:underline">
-                        Sign Up
+                        {t('auth.signIn.form.signUpLink.link')}
                     </Link>
                 </div>
                 <div className="text-center text-xs text-muted-foreground">
                     <p>
-                        By continuing, you agree to OpenForum&apos;s{" "}
+                        {t('auth.signIn.form.termsAndPrivacy.text')}
                         <Link href="#" className="underline hover:text-foreground">
-                        Terms
-                        </Link>{" "}
-                        and{" "}
+                            {t('auth.signIn.form.termsAndPrivacy.terms')}
+                        </Link>
+                        {t('auth.signIn.form.termsAndPrivacy.and')}
                         <Link href="#" className="underline hover:text-foreground">
-                        Privacy
+                            {t('auth.signIn.form.termsAndPrivacy.privacyPolicy')}
                         </Link>
                     </p>
                 </div>

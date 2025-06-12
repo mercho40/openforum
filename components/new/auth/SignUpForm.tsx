@@ -10,8 +10,9 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { useTranslation } from "next-i18next"
 
-export function RegisterForm() {
+export function SignUpForm() {
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -21,14 +22,16 @@ export function RegisterForm() {
     const [loading, setLoading] = useState(false)
     const [passwordMeetsRequirements, setPasswordMeetsRequirements] = useState(false)
     const [passwordsMatch, setPasswordsMatch] = useState(false)
+
     const router = useRouter()
+    const { t } = useTranslation("common")
 
     const requirements = useMemo(() => [
-        { id: "length", label: "At least 8 characters", met: password.length >= 8 },
-        { id: "uppercase", label: "At least 1 uppercase letter", met: /[A-Z]/.test(password) },
-        { id: "lowercase", label: "At least 1 lowercase letter", met: /[a-z]/.test(password) },
-        { id: "number", label: "At least 1 number", met: /\d/.test(password) },
-        { id: "special", label: "At least 1 special character", met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
+        { id: "length", label: t('auth.passwordRequirements.lenght'), met: password.length >= 8 },
+        { id: "uppercase", label: t('auth.passwordRequirements.uppercase'), met: /[A-Z]/.test(password) },
+        { id: "lowercase", label: t('auth.passwordRequirements.lowercase'), met: /[a-z]/.test(password) },
+        { id: "number", label: t('auth.passwordRequirements.number'), met: /\d/.test(password) },
+        { id: "special", label: t('auth.passwordRequirements.specialChar'), met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
     ], [password]);
 
     // Check if password meets all requirements
@@ -37,112 +40,143 @@ export function RegisterForm() {
         setPasswordMeetsRequirements(meetsAllRequirements)
     }, [requirements])
 
-  // Check if passwords match
-  useEffect(() => {
-    if (password && confirmPassword) {
-      setPasswordsMatch(password === confirmPassword)
-    } else {
-      setPasswordsMatch(false)
-    }
-  }, [password, confirmPassword])
+    // Check if passwords match
+    useEffect(() => {
+      if (password && confirmPassword) {
+        setPasswordsMatch(password === confirmPassword)
+      } else {
+        setPasswordsMatch(false)
+      }
+    }, [password, confirmPassword])
 
-  // Clear repeat password input when password is cleared
-  useEffect(() => {
-    if (password === "") {
-      setConfirmPassword("")
-    }
-  }, [password])
+    // Clear repeat password input when password is cleared
+    useEffect(() => {
+      if (password === "") {
+        setConfirmPassword("")
+      }
+    }, [password])
 
-  const handleSignUp = async () => {
-    if (!passwordMeetsRequirements || !passwordsMatch) return;
-    setLoading(true);
-    try {
-      await signUp.email(
-        {
-          email,
-          password,
-          name: username,
-          callbackURL: `/auth/callback`,
-        },
-        {
-          onResponse: () => {
-            setLoading(false);
-          },
-          onRequest: () => {
-            setLoading(true);
-          },
-          onError: (ctx: { error: { message: string } }) => {
-            console.error("Error during sign-up:", ctx.error.message);
-            toast.error(ctx.error.message || "Failed to sign up");
-            setLoading(false);
-          },
-          onSuccess: async () => {
-            setLoading(false);
-            toast.success("Registration successful!");
-            router.push("/auth/callback");
-          },
-        }
-      );
-    } catch (error) {
-      // Error handling
-      console.error("Exception during sign-up:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      toast.error(errorMessage);
-      setLoading(false);
-    }
-  };
-
-  const handleSocialSignUp = async (provider: "github" | "google") => {
-    try {
+    const handleSignUp = async () => {
       setLoading(true);
 
-      await signIn.social(
-        {
-          provider,
-          callbackURL: "/auth/callback",
-        },
-        {
-          onError: (ctx: { error: { message: string } }) => {
-            console.error("Social sign-up error:", ctx.error.message);
-            toast.error(ctx.error.message || "Failed to sign in with social provider");
-            setLoading(false);
+      // Validate inputs
+      if (!username || !email || !password || !confirmPassword) {
+        toast.error(t('auth.signUp.error.emptyFields'));
+        setLoading(false);
+        return;
+      }
+
+      // Check if email is valid
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) {
+        toast.error(t('auth.signUp.error.invalidEmail'));
+        setLoading(false);
+        return;
+      }
+
+      // Check if passwords match
+      if (!passwordsMatch) {
+        toast.error(t('auth.signUp.error.passwordMismatch'));
+        setLoading(false);
+        return;
+      }
+
+      // Check if password meets requirements
+      if (!passwordMeetsRequirements) {
+        toast.error(t('auth.signUp.error.weakPassword'));
+        setLoading(false);
+        return;
+      }
+
+      // Attempt to sign up
+      try {
+        await signUp.email(
+          {
+            email,
+            password,
+            name: username,
+            callbackURL: `/auth/callback`,
           },
-          onResponse: () => {
-            setLoading(false);
+          {
+            onResponse: () => {
+              setLoading(false);
+            },
+            onRequest: () => {
+              setLoading(true);
+            },
+            onError: (ctx: { error: { message: string } }) => {
+              console.error("Error during sign-up:", ctx.error.message);
+              toast.error(ctx.error.message || t('auth.signUp.error.genericError'));
+              setLoading(false);
+            },
+            onSuccess: async () => {
+              setLoading(false);
+              // toast.success(t('auth.signUp.success.title'));
+              router.push("/auth/callback");
+            },
+          }
+        );
+      } catch (error) {
+        // Error handling
+        const errorMessage = error instanceof Error ? error.message : t('auth.signUp.error.genericError');
+        console.error("Exception during sign-up:", errorMessage);
+        toast.error(errorMessage);
+        setLoading(false);
+      }
+    };
+
+    const handleSocialSignUp = async (provider: "github" | "google") => {
+      setLoading(true);
+      try {
+          await signIn.social(
+          {
+              provider,
+              callbackURL: "/auth/callback",
           },
-          onRequest: () => {
-            setLoading(true);
-          },
-          onSuccess: async () => {
-            setLoading(false);
-            toast.success("Registration successful!");
-          },
-        }
+          {
+              onRequest: () => {
+                  setLoading(true);
+              },
+              onResponse: () => {
+                  setLoading(false);
+              },
+              onError: (ctx: { error: { message: string } }) => {
+                  console.error("Social sign-up error:", ctx.error.message);
+                  toast.error(ctx.error.message || t(`auth.socialAuthentication.${provider}.error.genericError`));
+                  setLoading(false);
+              },
+              onSuccess: async () => {
+                  setLoading(false);
+                  // toast.success(t(`auth.socialAuthentication.${provider}.success.title`));
+              },
+          }
       );
-    } catch (error) {
-      console.error("Exception during social sign-up:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      toast.error(errorMessage);
-      setLoading(false);
-    }
+      } catch (error: unknown) {
+          console.error("Exception during social sign-up:", error);
+          const errorMessage = error instanceof Error ? error.message : t(`auth.socialAuthentication.${provider}.error.genericError`);
+          toast.error(errorMessage);
+          setLoading(false);
+      } finally {
+          setLoading(false);
+      }
   };
 
   return (
     <Card className="w-full max-w-[95%] sm:max-w-md shadow-none bg-card/0 border-border/0">
       <CardHeader className="space-y-4 pb-2 sm:pb-4">
         <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">OpenForum</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('appName')}</h1>
         </div>
       </CardHeader>
       <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6">
         <div className="flex flex-col space-y-1 sm:space-y-2">
           <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="username">
-            Username
+            {t('auth.signUp.form.username.label')}
           </label>
           <div className="relative">
             <Input
               id="username"
-              placeholder="johndoe"
+              placeholder={t('auth.signUp.form.username.placeholder')}
               type="text"
               className="bg-card/30 backdrop-blur-sm border border-border/10"
               value={username}
@@ -152,12 +186,12 @@ export function RegisterForm() {
         </div>
         <div className="flex flex-col space-y-1 sm:space-y-2">
           <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="email">
-            Email
+            {t('auth.signUp.form.email.label')}
           </label>
           <div className="relative">
             <Input
               id="email"
-              placeholder="email@domain.com"
+              placeholder={t('auth.signUp.form.email.placeholder')}
               type="email"
               className="bg-card/30 backdrop-blur-sm border border-border/10"
               value={email}
@@ -167,13 +201,13 @@ export function RegisterForm() {
         </div>
         <div className="flex flex-col space-y-1 sm:space-y-2">
           <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="password">
-            Password
+            {t('auth.signUp.form.password.label')}
           </label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Create a strong password"
+              placeholder={t('auth.signUp.form.password.placeholder')}
               className="bg-card/30 backdrop-blur-sm border border-border/10 pr-10"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -216,7 +250,7 @@ export function RegisterForm() {
                 const reqToShow = firstNotMet || requirements[requirements.length - 1];
 
                 if (reqToShow.met) {
-                  return (<span className={"text-green-500"}>Password meets requirements</span>);
+                  return (<span className={"text-green-500"}>{t('auth.signUp.form.password.meetRequirements')}</span>);
                 }
                 return (<span className={"text-muted-foreground"}>{reqToShow.label}</span>);
               })()}
@@ -234,13 +268,13 @@ export function RegisterForm() {
           )}
         >
           <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="confirmPassword">
-            Repeat Password
+            {t('auth.signUp.form.repeatPassword.label')}
           </label>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm your password"
+              placeholder={t('auth.signUp.form.repeatPassword.placeholder')}
               className={cn(
                 "bg-card/30 backdrop-blur-sm border border-border/10 pr-10",
                 confirmPassword && (passwordsMatch ? "border-green-500" : "border-red-500"),
@@ -257,7 +291,7 @@ export function RegisterForm() {
               {showConfirmPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
             </button>
           </div>
-          {confirmPassword && !passwordsMatch && <p className="text-xs sm:text-sm text-red-500">Passwords do not match</p>}
+          {confirmPassword && !passwordsMatch && <p className="text-xs sm:text-sm text-red-500">{t('auth.signUp.error.passwordMismatch')}</p>}
         </div>
 
         <Button
@@ -268,7 +302,7 @@ export function RegisterForm() {
           }
           disabled={loading || !passwordMeetsRequirements || !passwordsMatch || !username || !email}
         >
-          {loading ? "Creating Account..." : "Create Account"}
+          {loading ? t('auth.signUp.form.button.label') : t('auth.signUp.form.button.label')}
         </Button>
 
         <div className="relative my-3 sm:my-4">
@@ -276,7 +310,7 @@ export function RegisterForm() {
             <span className="w-full border-t border-border/20"></span>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            <span className="bg-background px-2 text-muted-foreground">{t('auth.socialAuthentication.orContinueWith')}</span>
           </div>
         </div>
 
@@ -307,7 +341,7 @@ export function RegisterForm() {
               />
               <path d="M1 1h22v22H1z" fill="none" />
             </svg>
-            <span className="ml-1.5 hidden xs:inline">Google</span>
+            <span className="ml-1.5 hidden xs:inline">{loading ? t('auth.socialAuthentication.form.google.button.loading') : t('auth.socialAuthentication.form.google.button.label')}</span>
           </Button>
           <Button
             variant="outline"
@@ -328,26 +362,26 @@ export function RegisterForm() {
                 d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"
               ></path>
             </svg>
-            <span className="ml-1.5 hidden xs:inline">GitHub</span>
+            <span className="ml-1.5 hidden xs:inline">{loading ? t('auth.socialAuthentication.form.github.button.loading') : t('auth.socialAuthentication.form.github.button.label')}</span>
           </Button>
         </div>
       </CardContent>
       <CardFooter className="flex flex-col space-y-3 sm:space-y-4 pt-0 px-3 sm:px-6">
         <div className="text-center text-xs sm:text-sm">
-          <span className="text-muted-foreground">Already have an account? </span>
+          <span className="text-muted-foreground">{t('auth.signIn.form.signInLink.text')}</span>
           <Link href="/auth/signin" className="font-medium text-foreground hover:underline">
-            Sign In
+            {t('auth.signIn.form.signInLink.link')}
           </Link>
         </div>
         <div className="text-center text-xs text-muted-foreground">
           <p>
-            By signing up, you agree to OpenForum&apos;s{" "}
+            {t('auth.signIn.form.termsAndPrivacy.text')}
             <Link href="#" className="underline hover:text-foreground">
-              Terms
-            </Link>{" "}
-            and{" "}
+              {t('auth.signIn.form.termsAndPrivacy.terms')}
+            </Link>
+            {t('auth.signIn.form.termsAndPrivacy.and')}
             <Link href="#" className="underline hover:text-foreground">
-              Privacy Policy
+              {t('auth.signIn.form.termsAndPrivacy.privacyPolicy')}
             </Link>
           </p>
         </div>

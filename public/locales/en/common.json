@@ -10,8 +10,42 @@
                 "invalidEmail": "Please enter a valid email address.",
                 "weakPassword": "Your password does not meet the required criteria.",
                 "passwordMismatch": "Passwords do not match.",
-                "verifyEmail": "Plaease verify your email address.",
+                "emptyFields": "Please fill in all required fields.",
+                "invalidEmailFormat": "Please enter a valid email address format.",
                 "genericError": "An error occurred during registration. Please try again later."
+            },
+            "form": {
+                "username": {
+                    "label": "Username",
+                    "placeholder": "johndoe123"
+                },
+                "email": {
+                    "label": "Email",
+                    "placeholder": "email@domain.com"
+                },
+                "password": {
+                    "label": "Password",
+                    "placeholder": "Create a strong password",
+                    "meetRequirements": "Password meets requirements"
+                },
+                "repeatPassword": {
+                    "label": "Repeat Password",
+                    "placeholder": "Confirm your password"
+                },
+                "button": {
+                    "label": "Create Account",
+                    "loading": "Creating account..."
+                },
+                "signInLink": {
+                    "text": "Already have an account? ",
+                    "link": "Sign In"
+                },
+                "termsAndPrivacy": {
+                    "text": "By continuing, you agree to our ",
+                    "terms": "Terms ",
+                    "and": "and ",
+                    "privacyPolicy": "Privacy Policy."
+                }
             }
         },
         "signIn": {
@@ -21,7 +55,9 @@
             "error": {
                 "invalidCredentials": "Invalid email or password.",
                 "accountLocked": "Your account has been locked due to multiple failed login attempts. Please try again later.",
-                "genericError": "An error occurred during login. Please try again later."
+                "genericError": "An error occurred during login. Please try again later.",
+                "emptyFields": "Please fill in all required fields.",
+                "invalidEmailFormat": "Please enter a valid email address."
             },
             "form": {
                 "email": {
@@ -35,56 +71,63 @@
                 "forgotPassword": "Forgot your password?",
                 "signInButton": {
                     "label": "Login",
-                    "loading": "Logging in...",
-                    "tooltip": "Click to log in to your account"
+                    "loading": "Logging in..."
                 },
                 "signUpLink": {
-                    "text": "Don't have an account?",
-                    "link": "Sign Up",
-                    "tooltip": "Click to create a new account"
+                    "text": "Don't have an account? ",
+                    "link": "Sign Up"
                 },
                 "termsAndPrivacy": {
-                    "text": "By signing in, you agree to our",
-                    "terms": "Terms",
-                    "and": "and",
-                    "privacy": "Privacy",
-                    "tooltip": "Click to read our terms and privacy"
+                    "text": "By continuing, you agree to our ",
+                    "terms": "Terms ",
+                    "and": "and ",
+                    "privacyPolicy": "Privacy Policy."
                 }
             }
         },
-        "socialSignIn": {
+        "socialAuthentication": {
             "orContinueWith": "or continue with",
             "google": {
                 "button": {
                     "label": "Google",
-                    "loading": "Logging in..."
+                    "loading": "Authenticating..."
                 },
                 "error": {
-                    "genericError": "An error occurred while signing in with Google. Please try again later."
+                    "genericError": "An error occurred while authenticating in with Google. Please try again later."
                 },
                 "success": {
-                    "title": "Signed in with Google successfully!"
+                    "title": "Authenticathed with Google successfully!"
                 }
             },
             "github": {
                 "button": {
                     "label": "GitHub",
-                    "loading": "Logging in..."
+                    "loading": "Authenticating..."
                 },
                 "error": {
-                    "genericError": "An error occurred while signing in with GitHub. Please try again later."
+                    "genericError": "An error occurred while authenticating in with GitHub. Please try again later."
                 },
                 "success": {
-                    "title": "Signed in with GitHub successfully!"
+                    "title": "Authenticated with GitHub successfully!"
                 }
             }
         },
+        "session": {
+            "expired": "Your session has expired. Please log in again.",
+            "logout": {
+                "success": "You have been logged out successfully.",
+                "error": "An error occurred while logging out. Please try again later."
+            },
+            "loading": "Checking session...",
+            "failed": "Failed to check session. Please try again later.",
+            "notAuthenticated": "You are not authenticated. Please log in to continue."
+        },
         "passwordRequirements": {
-            "length": "Password must be at least 8 characters long.",
-            "uppercase": "Password must contain at least one uppercase letter.",
-            "lowercase": "Password must contain at least one lowercase letter.",
-            "number": "Password must contain at least one number.",
-            "specialChar": "Password must contain at least one special character."
+            "length": "At least 8 characters long.",
+            "uppercase": "At least one uppercase letter.",
+            "lowercase": "At least one lowercase letter.",
+            "number": "At least one number.",
+            "specialChar": "At least one special character."
         }
     }
 }
