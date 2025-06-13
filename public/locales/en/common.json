@@ -188,6 +188,11 @@
             },
             "form": {
                 "title": "Complete Your Profile",
+                "subtitles": {
+                    "bio": "Tell us a bit about yourself",
+                    "avatar": "Add a profile picture",
+                    "welcome": "Welcome to OpenForum!"
+                },
                 "biography": {
                     "label": "Biography",
                     "placeholder": "Tell us about yourself...",

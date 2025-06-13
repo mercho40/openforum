@@ -141,9 +141,9 @@ export function CompleteProfileForm({ session }: { session: Session }) {
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t(`auth.completeProfile.form.title`)}</h1>
           <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
-            {currentStep === "bio" && "Tell us a bit about yourself"}
-            {currentStep === "avatar" && "Add a profile picture"}
-            {currentStep === "welcome" && "Welcome to OpenForum!"}
+            {currentStep === "bio" && t(`auth.completeProfile.subtitles.bio`)}
+            {currentStep === "avatar" && t(`auth.completeProfile.form.subtitles.avatar`)}
+            {currentStep === "welcome" && t(`auth.completeProfile.form.subtitles.welcome`)}
           </p>
         </div>
 
