@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Session } from "@/lib/auth"
 import { cn } from "@/lib/utils"
+import { useTranslation } from 'next-i18next';
 import { updateUserProfile, markProfileSetupSeen } from "@/actions/user"
 
 import { ArrowRight, ArrowLeft, Upload, User, Check, X } from "lucide-react"
@@ -27,6 +28,8 @@ export function CompleteProfileForm({ session }: { session: Session }) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  const { t } = useTranslation('common')
+
   // Load user's existing avatar if available
   useEffect(() => {
     if (session?.user?.image) {
@@ -37,6 +40,18 @@ export function CompleteProfileForm({ session }: { session: Session }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
+
+      // Validate file type and size
+      if (!file.type.startsWith("image/")) {
+        toast.error(t(`auth.completeProfile.error.invalidImage`))
+        return
+      }
+
+      // Check file size (limit to 5MB)
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        toast.error(t(`auth.completeProfile.error.imageTooLarge`))
+        return
+      }
 
       // Create a preview
       const reader = new FileReader()
@@ -61,7 +76,7 @@ export function CompleteProfileForm({ session }: { session: Session }) {
         setLoading(false)
         return
       }
-      
+
       try {
         // Update the user profile with bio and avatar
         const result = await updateUserProfile({ 
@@ -70,13 +85,13 @@ export function CompleteProfileForm({ session }: { session: Session }) {
         })
         
         if (!result.success) {
-          throw new Error(result.error || "Failed to update profile")
+          throw new Error(result.error || t(`auth.completeProfile.error.genericError`))
         }
         
         setCurrentStep("welcome")
       } catch (err) {
         console.error("Error saving profile:", err)
-        toast.error("Failed to save profile. Please try again.")
+        toast.error(t(`auth.completeProfile.error.genericError`))
       } finally {
         setLoading(false)
       }
@@ -97,7 +112,7 @@ export function CompleteProfileForm({ session }: { session: Session }) {
       router.push("/")
     } catch (error) {
       console.error("Error completing profile setup:", error)
-      toast.error("Failed to complete profile setup.")
+      toast.error(t(`auth.completeProfile.error.genericError`))
       router.push("/")
     } finally {
       setLoading(false)
@@ -124,7 +139,7 @@ export function CompleteProfileForm({ session }: { session: Session }) {
     <Card className="w-full max-w-[95%] sm:max-w-md shadow-none bg-card/0 border-border/0">
       <CardHeader className="space-y-3 sm:space-y-6 pb-2 sm:pb-4">
         <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Complete Your Profile</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t(`auth.completeProfile.form.title`)}</h1>
           <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
             {currentStep === "bio" && "Tell us a bit about yourself"}
             {currentStep === "avatar" && "Add a profile picture"}
@@ -151,16 +166,16 @@ export function CompleteProfileForm({ session }: { session: Session }) {
           >
             <div className="flex flex-col space-y-1 sm:space-y-2">
               <label className="font-semibold text-foreground text-sm sm:text-base" htmlFor="bio">
-                Biography
+                {t(`auth.completeProfile.form.biography.label`)}
               </label>
               <Textarea
                 id="bio"
-                placeholder="Tell us about yourself..."
+                placeholder={t(`auth.completeProfile.form.placeholder`)}
                 className="bg-card/30 backdrop-blur-sm border border-border/10 min-h-24 sm:min-h-32 resize-none text-sm sm:text-base"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">This will be displayed on your profile. You can change this later.</p>
+              <p className="text-xs text-muted-foreground">{t(`auth.completeProfile.form.biography.text`)}</p>
             </div>
           </div>
 
@@ -212,8 +227,8 @@ export function CompleteProfileForm({ session }: { session: Session }) {
               </div>
 
               <div className="text-center">
-                <p className="font-medium text-sm sm:text-base">Upload a profile picture</p>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Choose a square image for best results</p>
+                <p className="font-medium text-sm sm:text-base">{t(`auth.completeProfile.form.profilePicture.label`)}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">{t(`auth.completeProfile.form.profilePicture.text`)}</p>
               </div>
             </div>
           </div>
@@ -230,10 +245,9 @@ export function CompleteProfileForm({ session }: { session: Session }) {
               </div>
 
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold">Welcome to OpenForum!</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">{t(`auth.completeProfile.form.welcome.label`)}</h2>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-                  Your account has been successfully created and your profile is complete. You&apos;re all set to start
-                  exploring our community.
+                  {t(`auth.completeProfile.form.welcome.text`)}
                 </p>
               </div>
             </div>
@@ -249,17 +263,17 @@ export function CompleteProfileForm({ session }: { session: Session }) {
             ) : (
               <Button variant="outline" onClick={handleBack} className="flex items-center p-2 h-auto" disabled={loading}>
                 <ArrowLeft className="h-4 w-4" />
-                <span className="ml-1 sm:ml-2 text-sm">Back</span>
+                <span className="ml-1 sm:ml-2 text-sm">{t(`auth.completeProfile.form.button.back`)}</span>
               </Button>
             )}
             <Button 
               onClick={handleNext} 
               className="bg-primary text-background hover:bg-primary/60 p-2 h-auto" 
               disabled={loading}>
-              {loading ? "Saving..." : (
+              {loading ? t(`auth.completeProfile.form.button.saving`) : (
                 currentStep === "bio" 
-                  ? (bio.trim() ? "Next" : "Skip") 
-                  : (avatarPreview ? "Finish" : "Skip")
+                  ? (bio.trim() ? t(`auth.completeProfile.form.button.next`) : t(`auth.completeProfile.form.button.skip`)) 
+                  : (avatarPreview ? t(`auth.completeProfile.form.button.finish`) : t(`auth.completeProfile.form.button.skip`))
               )}
               {!loading && <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />}
             </Button>
@@ -270,7 +284,7 @@ export function CompleteProfileForm({ session }: { session: Session }) {
             className="w-full bg-primary text-background hover:bg-primary/60"
             disabled={loading}
           >
-            {loading ? "Redirecting..." : "Get Started"}
+            {loading ? t(`auth.completeProfile.form.button.redirecting`) : t(`auth.completeProfile.form.button.getStarted`)}
           </Button>
         )}
       </CardFooter>

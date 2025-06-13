@@ -174,6 +174,43 @@
                     }
                 }
             }
+        },
+        "completeProfile": {
+            "success": {
+                "title": "Profile updated successfully!",
+                "message": "Your profile has been updated successfully."
+            },
+            "error": {
+                "genericError": "An error occurred while updating your profile.",
+                "emptyFields": "Please fill in all required fields.",
+                "invalidImage": "The uploaded image is not valid. Please upload a valid image file.",
+                "imageTooLarge": "The uploaded image is too large. Please upload an image smaller than 5MB."
+            },
+            "form": {
+                "title": "Complete Your Profile",
+                "biography": {
+                    "label": "Biography",
+                    "placeholder": "Tell us about yourself...",
+                    "text": "This will be displayed on your profile. You can change this later."
+                },
+                "profilePicture": {
+                    "label": "Upload a profile picture",
+                    "text": "Choose a square image for best results. You can change this later."
+                },
+                "welcome": {
+                    "label": "Welcome to OpenForum!",
+                    "text": "Your account has been successfully created and your profile is complete. You're all set to startexploring our community."
+                },
+                "button": {
+                    "back": "Back",
+                    "next": "Next",
+                    "finish": "Finish",
+                    "skip": "Skip",
+                    "saving": "Saving...",
+                    "redirecting": "Redirecting...",
+                    "getStarted": "Get Started"
+                }
+            }
         }
     }
 }
